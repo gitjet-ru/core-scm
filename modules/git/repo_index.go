@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // ReadTreeToIndex reads a treeish to the index

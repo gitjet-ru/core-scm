@@ -7,13 +7,13 @@ package user
 import (
 	"net/http"
 
-	activities_model "code.gitea.io/gitea/models/activities"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/routers/api/v1/utils"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/convert"
-	feed_service "code.gitea.io/gitea/services/feed"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/routers/api/v1/utils"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/convert"
+	feed_service "github.com/gitjet-ru/core-scm/services/feed"
 )
 
 // Search search users

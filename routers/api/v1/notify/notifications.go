@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"strings"
 
-	activities_model "code.gitea.io/gitea/models/activities"
-	"code.gitea.io/gitea/models/db"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/routers/api/v1/utils"
-	"code.gitea.io/gitea/services/context"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	"github.com/gitjet-ru/core-scm/models/db"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/routers/api/v1/utils"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // NewAvailable check if unread notifications exist

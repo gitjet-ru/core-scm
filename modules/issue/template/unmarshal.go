@@ -8,11 +8,11 @@ import (
 	"path"
 	"strconv"
 
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/markup/markdown"
-	"code.gitea.io/gitea/modules/setting"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/markup/markdown"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"gopkg.in/yaml.v3"
 )

@@ -4,10 +4,10 @@
 package label
 
 import (
-	"code.gitea.io/gitea/modules/label"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/forms"
+	"github.com/gitjet-ru/core-scm/modules/label"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/forms"
 )
 
 func GetLabelEditForm(ctx *context.Context) *forms.CreateLabelForm {

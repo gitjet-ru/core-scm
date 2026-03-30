@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/contexttest"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/contexttest"
 
-	_ "code.gitea.io/gitea/models/actions"
+	_ "github.com/gitjet-ru/core-scm/models/actions"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

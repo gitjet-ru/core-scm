@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"testing"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/tests"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/tests"
 )
 
 func TestAPIUserVariables(t *testing.T) {

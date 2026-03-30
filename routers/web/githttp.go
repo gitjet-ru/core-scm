@@ -4,8 +4,8 @@
 package web
 
 import (
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/routers/web/repo"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/routers/web/repo"
 )
 
 func addOwnerRepoGitHTTPRouters(m *web.Router, middlewares ...any) {

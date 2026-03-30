@@ -10,17 +10,17 @@ import (
 	"net/url"
 	"strconv"
 
-	"code.gitea.io/gitea/models/db"
-	packages_model "code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/modules/optional"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	composer_module "code.gitea.io/gitea/modules/packages/composer"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/routers/api/packages/helper"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/convert"
-	packages_service "code.gitea.io/gitea/services/packages"
+	"github.com/gitjet-ru/core-scm/models/db"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	composer_module "github.com/gitjet-ru/core-scm/modules/packages/composer"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/routers/api/packages/helper"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/convert"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 )
 
 func apiError(ctx *context.Context, status int, obj any) {

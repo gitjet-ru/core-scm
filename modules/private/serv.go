@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"net/url"
 
-	asymkey_model "code.gitea.io/gitea/models/asymkey"
-	"code.gitea.io/gitea/models/perm"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/setting"
+	asymkey_model "github.com/gitjet-ru/core-scm/models/asymkey"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // KeyAndOwner is the response from ServNoCommand

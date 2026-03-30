@@ -13,11 +13,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	asymkey_model "code.gitea.io/gitea/models/asymkey"
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	asymkey_service "code.gitea.io/gitea/services/asymkey"
+	asymkey_model "github.com/gitjet-ru/core-scm/models/asymkey"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	asymkey_service "github.com/gitjet-ru/core-scm/services/asymkey"
 )
 
 func checkAuthorizedKeys(ctx context.Context, logger log.Logger, autofix bool) error {

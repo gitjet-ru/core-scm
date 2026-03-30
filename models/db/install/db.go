@@ -6,8 +6,8 @@ package install
 import (
 	"context"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // CheckDatabaseConnection checks the database connection

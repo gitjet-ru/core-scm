@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/modules/json"
-	base "code.gitea.io/gitea/modules/migration"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	base "github.com/gitjet-ru/core-scm/modules/migration"
 
 	"github.com/stretchr/testify/assert"
 	gitlab "gitlab.com/gitlab-org/api/client-go"

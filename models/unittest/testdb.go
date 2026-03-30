@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/system"
-	"code.gitea.io/gitea/modules/auth/password/hash"
-	"code.gitea.io/gitea/modules/cache"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/setting/config"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/modules/tempdir"
-	"code.gitea.io/gitea/modules/testlogger"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/system"
+	"github.com/gitjet-ru/core-scm/modules/auth/password/hash"
+	"github.com/gitjet-ru/core-scm/modules/cache"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	metadatapostgres "github.com/gitjet-ru/core-scm/modules/metadatastore/postgres"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting/config"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/modules/tempdir"
+	"github.com/gitjet-ru/core-scm/modules/testlogger"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"github.com/stretchr/testify/assert"
 	"xorm.io/xorm"
@@ -89,7 +89,6 @@ func mainTest(m *testing.M, testOptsArg ...*TestOptions) int {
 	setting.SSH.BuiltinServerUser = "builtinuser"
 	setting.SSH.Port = 3000
 	setting.SSH.Domain = "try.gitea.io"
-	setting.Database.Type = "sqlite3"
 	setting.Repository.DefaultBranch = "master" // many test code still assume that default branch is called "master"
 	repoRootPath, cleanup1, err := tempdir.OsTempDir("gitea-test").MkdirTempRandom("repos")
 	if err != nil {
@@ -163,16 +162,24 @@ type FixturesOptions struct {
 	Files []string
 }
 
-// CreateTestEngine creates a memory database and loads the fixture data from fixturesDir
+// CreateTestEngine connects to PostgreSQL (see tests/pgsql.ini / GITEA_TEST_CONF) and loads fixture data from fixturesDir.
 func CreateTestEngine(opts FixturesOptions) error {
-	x, err := xorm.NewEngine("sqlite3", "file::memory:?cache=shared&_txlock=immediate")
+	setting.LoadDBSetting()
+	metadatapostgres.EnsureSchemaDriverRegistered()
+	connStr, err := setting.DBConnStr()
 	if err != nil {
-		if strings.Contains(err.Error(), "unknown driver") {
-			return fmt.Errorf("sqlite3 requires: -tags sqlite,sqlite_unlock_notify\n%w", err)
-		}
 		return err
 	}
+	driverName := "postgres"
+	if len(setting.Database.Schema) > 0 {
+		driverName = "postgresschema"
+	}
+	x, err := xorm.NewEngine(driverName, connStr)
+	if err != nil {
+		return fmt.Errorf("postgres test database: %w", err)
+	}
 	x.SetMapper(names.GonicMapper{})
+	x.SetSchema(setting.Database.Schema)
 	db.SetDefaultEngine(context.Background(), x)
 
 	if err = db.SyncAllTables(); err != nil {

@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"code.gitea.io/gitea/models/db"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/models/db"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"

@@ -6,12 +6,12 @@ package utils
 import (
 	"errors"
 
-	git_model "code.gitea.io/gitea/models/git"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/reqctx"
-	"code.gitea.io/gitea/services/context"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/reqctx"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 type RefCommit struct {

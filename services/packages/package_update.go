@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	org_model "code.gitea.io/gitea/models/organization"
-	packages_model "code.gitea.io/gitea/models/packages"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unit"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/util"
+	org_model "github.com/gitjet-ru/core-scm/models/organization"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 func LinkToRepository(ctx context.Context, pkg *packages_model.Package, repo *repo_model.Repository, doer *user_model.User) error {

@@ -9,11 +9,11 @@ import (
 	"slices"
 	"time"
 
-	"code.gitea.io/gitea/models/db"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/actions/jobparser"
-	"code.gitea.io/gitea/modules/timeutil"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/db"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/actions/jobparser"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"xorm.io/builder"
 )

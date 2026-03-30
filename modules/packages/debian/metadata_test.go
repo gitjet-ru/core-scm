@@ -10,8 +10,8 @@ import (
 	"io"
 	"testing"
 
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/zstd"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/zstd"
 
 	"github.com/blakesmith/ar"
 	"github.com/stretchr/testify/assert"

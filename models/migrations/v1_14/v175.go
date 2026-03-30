@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"xorm.io/xorm"
 )

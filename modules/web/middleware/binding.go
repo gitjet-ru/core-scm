@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"strings"
 
-	"code.gitea.io/gitea/modules/translation"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/validation"
+	"github.com/gitjet-ru/core-scm/modules/translation"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/validation"
 
 	"gitea.com/go-chi/binding"
 )

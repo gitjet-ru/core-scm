@@ -9,7 +9,7 @@ import (
 	"errors"
 	"strings"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 
 	"golang.org/x/sync/errgroup"
 )

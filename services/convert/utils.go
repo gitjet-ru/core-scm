@@ -7,8 +7,8 @@ package convert
 import (
 	"strings"
 
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/structs"
 )
 
 // ToCorrectPageSize makes sure page size is in allowed range.

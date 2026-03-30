@@ -6,7 +6,7 @@ package paginator
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/unittest"
+	"github.com/gitjet-ru/core-scm/models/unittest"
 )
 
 func TestMain(m *testing.M) {

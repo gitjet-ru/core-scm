@@ -11,12 +11,12 @@ import (
 	"io"
 	"strings"
 
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/modules/markup/common"
-	"code.gitea.io/gitea/modules/markup/markdown/math"
-	"code.gitea.io/gitea/modules/setting"
-	giteautil "code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/markup/common"
+	"github.com/gitjet-ru/core-scm/modules/markup/markdown/math"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	giteautil "github.com/gitjet-ru/core-scm/modules/util"
 
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/yuin/goldmark"

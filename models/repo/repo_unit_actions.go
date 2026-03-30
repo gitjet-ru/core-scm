@@ -6,10 +6,10 @@ package repo
 import (
 	"slices"
 
-	"code.gitea.io/gitea/models/perm"
-	"code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 // ActionsTokenPermissionMode defines the default permission mode for Actions tokens

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/services/context"
 
 	"github.com/gorilla/feeds"
 )

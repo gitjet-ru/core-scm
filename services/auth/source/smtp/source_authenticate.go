@@ -10,10 +10,10 @@ import (
 	"net/textproto"
 	"strings"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/modules/util"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 // Authenticate queries if the provided login/password is authenticates against the SMTP server

@@ -8,11 +8,11 @@ import (
 	"math"
 	"time"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"xorm.io/xorm"
 )

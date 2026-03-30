@@ -15,12 +15,12 @@ import (
 	"strings"
 	"time"
 
-	charsetModule "code.gitea.io/gitea/modules/charset"
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/httpcache"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/typesniffer"
-	"code.gitea.io/gitea/modules/util"
+	charsetModule "github.com/gitjet-ru/core-scm/modules/charset"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/httpcache"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/typesniffer"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"github.com/klauspost/compress/gzhttp"
 )

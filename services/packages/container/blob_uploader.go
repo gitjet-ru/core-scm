@@ -9,10 +9,10 @@ import (
 	"io"
 	"os"
 
-	packages_model "code.gitea.io/gitea/models/packages"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/tempdir"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/tempdir"
 )
 
 var (

@@ -7,14 +7,14 @@ import (
 	"context"
 	"fmt"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	activities_model "code.gitea.io/gitea/models/activities"
-	issues_model "code.gitea.io/gitea/models/issues"
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
-	issue_service "code.gitea.io/gitea/services/issue"
-	notify_service "code.gitea.io/gitea/services/notify"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	issue_service "github.com/gitjet-ru/core-scm/services/issue"
+	notify_service "github.com/gitjet-ru/core-scm/services/notify"
 )
 
 type mailNotifier struct {

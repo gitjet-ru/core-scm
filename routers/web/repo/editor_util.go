@@ -10,17 +10,17 @@ import (
 	"strconv"
 	"strings"
 
-	git_model "code.gitea.io/gitea/models/git"
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/markup"
-	repo_module "code.gitea.io/gitea/modules/repository"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
-	context_service "code.gitea.io/gitea/services/context"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	context_service "github.com/gitjet-ru/core-scm/services/context"
 )
 
 // getUniquePatchBranchName Gets a unique branch name for a new patch branch

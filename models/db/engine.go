@@ -13,9 +13,7 @@ import (
 
 	"xorm.io/xorm"
 
-	_ "github.com/go-sql-driver/mysql"  // Needed for the MySQL driver
-	_ "github.com/lib/pq"               // Needed for the Postgresql driver
-	_ "github.com/microsoft/go-mssqldb" // Needed for the MSSQL driver
+	_ "github.com/lib/pq" // PostgreSQL driver (GitJet metadata store)
 )
 
 var (
@@ -76,7 +74,7 @@ func RegisterModel(bean any, initFunc ...func() error) {
 
 // SyncAllTables sync the schemas of all tables, is required by unit test code
 func SyncAllTables() error {
-	_, err := xormEngine.StoreEngine("InnoDB").SyncWithOptions(xorm.SyncOptions{
+	_, err := xormEngine.SyncWithOptions(xorm.SyncOptions{
 		WarnIfDatabaseColumnMissed: true,
 	}, registeredModels...)
 	return err

@@ -6,10 +6,10 @@ package repo
 import (
 	"net/http"
 
-	"code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/services/context"
-	issue_service "code.gitea.io/gitea/services/issue"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/services/context"
+	issue_service "github.com/gitjet-ru/core-scm/services/issue"
 )
 
 // IssueSuggestions returns a list of issue suggestions

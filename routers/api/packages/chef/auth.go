@@ -24,10 +24,10 @@ import (
 	"strings"
 	"time"
 
-	user_model "code.gitea.io/gitea/models/user"
-	chef_module "code.gitea.io/gitea/modules/packages/chef"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/auth"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	chef_module "github.com/gitjet-ru/core-scm/modules/packages/chef"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/auth"
 )
 
 const (

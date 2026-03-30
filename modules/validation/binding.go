@@ -8,10 +8,10 @@ import (
 	"regexp"
 	"strings"
 
-	"code.gitea.io/gitea/modules/auth"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/glob"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/auth"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/glob"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"gitea.com/go-chi/binding"
 )

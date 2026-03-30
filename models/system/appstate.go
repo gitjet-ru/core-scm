@@ -6,7 +6,7 @@ package system
 import (
 	"context"
 
-	"code.gitea.io/gitea/models/db"
+	"github.com/gitjet-ru/core-scm/models/db"
 )
 
 // AppState represents a state record in database

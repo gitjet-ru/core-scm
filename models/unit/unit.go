@@ -10,10 +10,10 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"code.gitea.io/gitea/models/perm"
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // Type is Unit's Type

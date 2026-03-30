@@ -10,11 +10,11 @@ import (
 	"sort"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
 )
 
 // Check represents a Doctor check
@@ -32,8 +32,8 @@ type Check struct {
 func initDBSkipLogger(ctx context.Context) error {
 	setting.MustInstalled()
 	setting.LoadDBSetting()
-	if err := db.InitEngine(ctx); err != nil {
-		return fmt.Errorf("db.InitEngine: %w", err)
+	if err := metadatastore.Default().Init(ctx); err != nil {
+		return fmt.Errorf("metadatastore.Init: %w", err)
 	}
 	// some doctor sub-commands need to use git command
 	if err := git.InitFull(); err != nil {

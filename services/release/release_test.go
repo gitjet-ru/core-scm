@@ -8,13 +8,13 @@ import (
 	"testing"
 	"time"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/services/attachment"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/services/attachment"
 
-	_ "code.gitea.io/gitea/models/actions"
+	_ "github.com/gitjet-ru/core-scm/models/actions"
 
 	"github.com/stretchr/testify/assert"
 )

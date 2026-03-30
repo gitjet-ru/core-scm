@@ -6,7 +6,7 @@ package user
 import (
 	"fmt"
 
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 // ErrUserAlreadyExist represents a "user already exists" error.

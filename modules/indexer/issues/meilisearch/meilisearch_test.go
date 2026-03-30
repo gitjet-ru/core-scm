@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/modules/indexer/issues/internal"
-	"code.gitea.io/gitea/modules/indexer/issues/internal/tests"
-	"code.gitea.io/gitea/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/indexer/issues/internal"
+	"github.com/gitjet-ru/core-scm/modules/indexer/issues/internal/tests"
+	"github.com/gitjet-ru/core-scm/modules/json"
 
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/stretchr/testify/assert"

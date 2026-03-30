@@ -11,13 +11,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/dump"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/modules/dump"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"gitea.com/go-chi/session"
 	"github.com/urfave/cli/v3"
@@ -54,7 +55,7 @@ func newDumpCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:    "database",
 				Aliases: []string{"d"},
-				Usage:   "Specify the database SQL syntax: sqlite3, mysql, mssql, postgres",
+				Usage:   "Specify the database SQL syntax for dump output (postgres only)",
 			},
 			&cli.BoolFlag{
 				Name:    "skip-repository",
@@ -137,7 +138,7 @@ func runDump(ctx context.Context, cmd *cli.Command) error {
 	setting.DisableLoggerInit()
 	setting.LoadSettings() // cannot access session settings otherwise
 
-	err := db.InitEngine(ctx)
+	err := metadatastore.Default().Init(ctx)
 	if err != nil {
 		return err
 	}

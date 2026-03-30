@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/perm"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/structs"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/structs"
 
 	"xorm.io/builder"
 )

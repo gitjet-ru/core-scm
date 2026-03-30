@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strings"
 
-	"code.gitea.io/gitea/modules/templates"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/mailer"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/mailer"
 
 	"gopkg.in/yaml.v3"
 )

@@ -6,10 +6,10 @@ package issues_test
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/db"
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
 
 	"github.com/stretchr/testify/assert"
 )

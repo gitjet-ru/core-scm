@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/modules/indexer/issues/internal/tests"
+	"github.com/gitjet-ru/core-scm/modules/indexer/issues/internal/tests"
 
 	"github.com/stretchr/testify/require"
 )

@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"reflect"
 
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/web/routing"
-	"code.gitea.io/gitea/modules/web/types"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/web/routing"
+	"github.com/gitjet-ru/core-scm/modules/web/types"
 )
 
 var responseStatusProviders = map[reflect.Type]func(req *http.Request) types.ResponseStatusProvider{}

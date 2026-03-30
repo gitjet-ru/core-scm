@@ -5,13 +5,13 @@
 package admin
 
 import (
-	"code.gitea.io/gitea/models/db"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/templates"
-	"code.gitea.io/gitea/routers/web/explore"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/models/db"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	"github.com/gitjet-ru/core-scm/routers/web/explore"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 const (

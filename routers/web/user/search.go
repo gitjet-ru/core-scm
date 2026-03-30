@@ -6,12 +6,12 @@ package user
 import (
 	"net/http"
 
-	"code.gitea.io/gitea/models/db"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/convert"
+	"github.com/gitjet-ru/core-scm/models/db"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/convert"
 )
 
 // SearchCandidates searches candidate users for dropdown list

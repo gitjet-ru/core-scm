@@ -8,16 +8,16 @@ import (
 	"errors"
 	"fmt"
 
-	git_model "code.gitea.io/gitea/models/git"
-	issues_model "code.gitea.io/gitea/models/issues"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unit"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/globallock"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/repository"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/globallock"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/repository"
 )
 
 // Update updates pull request with base branch.
@@ -63,8 +63,8 @@ func Update(ctx context.Context, pr *issues_model.PullRequest, doer *user_model.
 	}
 
 	defer func() {
-		// The code is from https://github.com/go-gitea/gitea/pull/9784,
-		// it seems a simple copy-paste from https://github.com/go-gitea/gitea/pull/7082 without a real reason.
+		// The code is from upstream https://github.com/go-gitea/gitea/pull/9784,
+		// it seems a simple copy-paste from upstream https://github.com/go-gitea/gitea/pull/7082 without a real reason.
 		// TODO: DUPLICATE-PR-TASK: search and see another TODO comment for more details
 		go AddTestPullRequestTask(TestPullRequestOptions{
 			RepoID:      pr.BaseRepo.ID,

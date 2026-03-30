@@ -7,8 +7,8 @@ import (
 	"context"
 	"strings"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/globallock"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/globallock"
 )
 
 func GitConfigGet(ctx context.Context, repo Repository, key string) (string, error) {

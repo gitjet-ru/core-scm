@@ -13,17 +13,17 @@ import (
 	"net/url"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	packages_model "code.gitea.io/gitea/models/packages"
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/optional"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	notify_service "code.gitea.io/gitea/services/notify"
+	"github.com/gitjet-ru/core-scm/models/db"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	notify_service "github.com/gitjet-ru/core-scm/services/notify"
 )
 
 var (

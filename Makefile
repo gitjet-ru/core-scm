@@ -117,8 +117,8 @@ LDFLAGS := $(LDFLAGS) -X "main.Version=$(GITEA_VERSION)" -X "main.Tags=$(TAGS)"
 
 LINUX_ARCHS ?= linux/amd64,linux/386,linux/arm-5,linux/arm-6,linux/arm64,linux/riscv64
 
-GO_TEST_PACKAGES ?= $(filter-out $(shell $(GO) list code.gitea.io/gitea/models/migrations/...) code.gitea.io/gitea/tests/integration/migration-test code.gitea.io/gitea/tests code.gitea.io/gitea/tests/integration,$(shell $(GO) list ./... | grep -v /vendor/))
-MIGRATE_TEST_PACKAGES ?= $(shell $(GO) list code.gitea.io/gitea/models/migrations/...)
+GO_TEST_PACKAGES ?= $(filter-out $(shell $(GO) list github.com/gitjet-ru/core-scm/models/migrations/...) github.com/gitjet-ru/core-scm/tests/integration/migration-test github.com/gitjet-ru/core-scm/tests github.com/gitjet-ru/core-scm/tests/integration,$(shell $(GO) list ./... | grep -v /vendor/))
+MIGRATE_TEST_PACKAGES ?= $(shell $(GO) list github.com/gitjet-ru/core-scm/models/migrations/...)
 
 WEBPACK_SOURCES := $(shell find web_src/js web_src/css -type f)
 WEBPACK_CONFIGS := webpack.config.ts tailwind.config.ts
@@ -139,7 +139,8 @@ TAGS ?=
 TAGS_SPLIT := $(subst $(COMMA), ,$(TAGS))
 TAGS_EVIDENCE := $(MAKE_EVIDENCE_DIR)/tags
 
-TEST_TAGS ?= $(TAGS_SPLIT) sqlite sqlite_unlock_notify
+# GitJet: integration/unit DB tests use PostgreSQL only (no sqlite build tags by default).
+TEST_TAGS ?= $(TAGS_SPLIT)
 
 TAR_EXCLUDES := .git data indexers queues log node_modules $(EXECUTABLE) $(DIST) $(MAKE_EVIDENCE_DIR) $(AIR_TMP_DIR)
 
@@ -188,7 +189,7 @@ help: Makefile ## print Makefile help information.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m[TARGETS] default target: build\033[0m\n\n\033[35mTargets:\033[0m\n"} /^[0-9A-Za-z._-]+:.*?##/ { printf "  \033[36m%-45s\033[0m %s\n", $$1, $$2 }' Makefile #$(MAKEFILE_LIST)
 	@printf "  \033[36m%-46s\033[0m %s\n" "test-e2e" "test end to end using playwright"
 	@printf "  \033[36m%-46s\033[0m %s\n" "test[#TestSpecificName]" "run unit test"
-	@printf "  \033[36m%-46s\033[0m %s\n" "test-sqlite[#TestSpecificName]" "run integration test for sqlite"
+	@printf "  \033[36m%-46s\033[0m %s\n" "test-pgsql[#TestSpecificName]" "run integration test (PostgreSQL)"
 
 .PHONY: git-check
 git-check:
@@ -207,7 +208,7 @@ clean: ## delete backend and integration files
 		integrations*.test \
 		tests/integration/gitea-integration-* \
 		tests/integration/indexers-* \
-		tests/sqlite.ini tests/mysql.ini tests/pgsql.ini tests/mssql.ini man/ \
+		tests/pgsql.ini man/ \
 		tests/e2e/gitea-e2e-*/ \
 		tests/e2e/indexers-*/ \
 		tests/e2e/reports/ tests/e2e/test-artifacts/ tests/e2e/test-snapshots/
@@ -459,15 +460,18 @@ generate-ini-sqlite:
 			tests/sqlite.ini.tmpl > tests/sqlite.ini
 
 .PHONY: test-sqlite
-test-sqlite: integrations.sqlite.test generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini ./integrations.sqlite.test
+test-sqlite: ## deprecated: alias for test-pgsql
+	@echo "GitJet uses PostgreSQL only; running test-pgsql..."
+	@$(MAKE) test-pgsql
 
 .PHONY: test-sqlite\#%
-test-sqlite\#%: integrations.sqlite.test generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini ./integrations.sqlite.test -test.run $(subst .,/,$*)
+test-sqlite\#%: ## deprecated: alias for test-pgsql
+	@echo "GitJet uses PostgreSQL only; running test-pgsql..."
+	@$(MAKE) test-pgsql\#$*
 
 .PHONY: test-sqlite-migration
-test-sqlite-migration:  migrations.sqlite.test migrations.individual.sqlite.test
+test-sqlite-migration: test-pgsql-migration ## deprecated alias
+	@true
 
 generate-ini-mysql:
 	sed -e 's|{{TEST_MYSQL_HOST}}|${TEST_MYSQL_HOST}|g' \
@@ -479,15 +483,16 @@ generate-ini-mysql:
 			tests/mysql.ini.tmpl > tests/mysql.ini
 
 .PHONY: test-mysql
-test-mysql: integrations.mysql.test generate-ini-mysql
-	GITEA_TEST_CONF=tests/mysql.ini ./integrations.mysql.test
+test-mysql: test-pgsql ## deprecated alias
+	@true
 
 .PHONY: test-mysql\#%
-test-mysql\#%: integrations.mysql.test generate-ini-mysql
-	GITEA_TEST_CONF=tests/mysql.ini ./integrations.mysql.test -test.run $(subst .,/,$*)
+test-mysql\#%: test-pgsql\#% ## deprecated alias
+	@true
 
 .PHONY: test-mysql-migration
-test-mysql-migration: migrations.mysql.test migrations.individual.mysql.test
+test-mysql-migration: test-pgsql-migration ## deprecated alias
+	@true
 
 generate-ini-pgsql:
 	sed -e 's|{{TEST_PGSQL_HOST}}|${TEST_PGSQL_HOST}|g' \
@@ -521,15 +526,16 @@ generate-ini-mssql:
 			tests/mssql.ini.tmpl > tests/mssql.ini
 
 .PHONY: test-mssql
-test-mssql: integrations.mssql.test generate-ini-mssql
-	GITEA_TEST_CONF=tests/mssql.ini ./integrations.mssql.test
+test-mssql: test-pgsql ## deprecated alias
+	@true
 
 .PHONY: test-mssql\#%
-test-mssql\#%: integrations.mssql.test generate-ini-mssql
-	GITEA_TEST_CONF=tests/mssql.ini ./integrations.mssql.test -test.run $(subst .,/,$*)
+test-mssql\#%: test-pgsql\#% ## deprecated alias
+	@true
 
 .PHONY: test-mssql-migration
-test-mssql-migration: migrations.mssql.test migrations.individual.mssql.test
+test-mssql-migration: test-pgsql-migration ## deprecated alias
+	@true
 
 .PHONY: playwright
 playwright: deps-frontend
@@ -541,65 +547,65 @@ test-e2e: playwright $(EXECUTABLE_E2E)
 	@EXECUTABLE=$(EXECUTABLE_E2E) ./tools/test-e2e.sh $(GITEA_TEST_E2E_FLAGS)
 
 .PHONY: bench-sqlite
-bench-sqlite: integrations.sqlite.test generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini ./integrations.sqlite.test -test.cpuprofile=cpu.out -test.run DontRunTests -test.bench .
+bench-sqlite: bench-pgsql ## deprecated alias
+	@true
 
 .PHONY: bench-mysql
-bench-mysql: integrations.mysql.test generate-ini-mysql
-	GITEA_TEST_CONF=tests/mysql.ini ./integrations.mysql.test -test.cpuprofile=cpu.out -test.run DontRunTests -test.bench .
+bench-mysql: bench-pgsql ## deprecated alias
+	@true
 
 .PHONY: bench-mssql
-bench-mssql: integrations.mssql.test generate-ini-mssql
-	GITEA_TEST_CONF=tests/mssql.ini ./integrations.mssql.test -test.cpuprofile=cpu.out -test.run DontRunTests -test.bench .
+bench-mssql: bench-pgsql ## deprecated alias
+	@true
 
 .PHONY: bench-pgsql
 bench-pgsql: integrations.pgsql.test generate-ini-pgsql
 	GITEA_TEST_CONF=tests/pgsql.ini ./integrations.pgsql.test -test.cpuprofile=cpu.out -test.run DontRunTests -test.bench .
 
 .PHONY: integration-test-coverage
-integration-test-coverage: integrations.cover.test generate-ini-mysql
-	GITEA_TEST_CONF=tests/mysql.ini ./integrations.cover.test -test.coverprofile=integration.coverage.out
+integration-test-coverage: integrations.cover.test generate-ini-pgsql
+	GITEA_TEST_CONF=tests/pgsql.ini ./integrations.cover.test -test.coverprofile=integration.coverage.out
 
 .PHONY: integration-test-coverage-sqlite
-integration-test-coverage-sqlite: integrations.cover.sqlite.test generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini ./integrations.cover.sqlite.test -test.coverprofile=integration.coverage.out
+integration-test-coverage-sqlite: integration-test-coverage ## deprecated alias
+	@true
 
 integrations.mysql.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration -o integrations.mysql.test
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -o integrations.mysql.test
 
 integrations.pgsql.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration -o integrations.pgsql.test
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -o integrations.pgsql.test
 
 integrations.mssql.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration -o integrations.mssql.test
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -o integrations.mssql.test
 
 integrations.sqlite.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration -o integrations.sqlite.test -tags '$(TEST_TAGS)'
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -o integrations.sqlite.test -tags '$(TEST_TAGS)'
 
 integrations.cover.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration -coverpkg $(shell echo $(GO_TEST_PACKAGES) | tr ' ' ',') -o integrations.cover.test
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -coverpkg $(shell echo $(GO_TEST_PACKAGES) | tr ' ' ',') -o integrations.cover.test
 
 integrations.cover.sqlite.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration -coverpkg $(shell echo $(GO_TEST_PACKAGES) | tr ' ' ',') -o integrations.cover.sqlite.test -tags '$(TEST_TAGS)'
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -coverpkg $(shell echo $(GO_TEST_PACKAGES) | tr ' ' ',') -o integrations.cover.sqlite.test -tags '$(TEST_TAGS)'
 
 .PHONY: migrations.mysql.test
 migrations.mysql.test: $(GO_SOURCES) generate-ini-mysql
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration/migration-test -o migrations.mysql.test
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration/migration-test -o migrations.mysql.test
 	GITEA_TEST_CONF=tests/mysql.ini ./migrations.mysql.test
 
 .PHONY: migrations.pgsql.test
 migrations.pgsql.test: $(GO_SOURCES) generate-ini-pgsql
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration/migration-test -o migrations.pgsql.test
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration/migration-test -o migrations.pgsql.test
 	GITEA_TEST_CONF=tests/pgsql.ini ./migrations.pgsql.test
 
 .PHONY: migrations.mssql.test
 migrations.mssql.test: $(GO_SOURCES) generate-ini-mssql
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration/migration-test -o migrations.mssql.test
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration/migration-test -o migrations.mssql.test
 	GITEA_TEST_CONF=tests/mssql.ini ./migrations.mssql.test
 
 .PHONY: migrations.sqlite.test
 migrations.sqlite.test: $(GO_SOURCES) generate-ini-sqlite
-	$(GO) test $(GOTESTFLAGS) -c code.gitea.io/gitea/tests/integration/migration-test -o migrations.sqlite.test -tags '$(TEST_TAGS)'
+	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration/migration-test -o migrations.sqlite.test -tags '$(TEST_TAGS)'
 	GITEA_TEST_CONF=tests/sqlite.ini ./migrations.sqlite.test
 
 .PHONY: migrations.individual.mysql.test
@@ -608,7 +614,7 @@ migrations.individual.mysql.test: $(GO_SOURCES) generate-ini-mysql
 
 .PHONY: migrations.individual.sqlite.test\#%
 migrations.individual.sqlite.test\#%: $(GO_SOURCES) generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' code.gitea.io/gitea/models/migrations/$*
+	GITEA_TEST_CONF=tests/sqlite.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' github.com/gitjet-ru/core-scm/models/migrations/$*
 
 .PHONY: migrations.individual.pgsql.test
 migrations.individual.pgsql.test: $(GO_SOURCES) generate-ini-pgsql
@@ -616,7 +622,7 @@ migrations.individual.pgsql.test: $(GO_SOURCES) generate-ini-pgsql
 
 .PHONY: migrations.individual.pgsql.test\#%
 migrations.individual.pgsql.test\#%: $(GO_SOURCES) generate-ini-pgsql
-	GITEA_TEST_CONF=tests/pgsql.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' code.gitea.io/gitea/models/migrations/$*
+	GITEA_TEST_CONF=tests/pgsql.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' github.com/gitjet-ru/core-scm/models/migrations/$*
 
 .PHONY: migrations.individual.mssql.test
 migrations.individual.mssql.test: $(GO_SOURCES) generate-ini-mssql
@@ -624,7 +630,7 @@ migrations.individual.mssql.test: $(GO_SOURCES) generate-ini-mssql
 
 .PHONY: migrations.individual.mssql.test\#%
 migrations.individual.mssql.test\#%: $(GO_SOURCES) generate-ini-mssql
-	GITEA_TEST_CONF=tests/mssql.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' code.gitea.io/gitea/models/migrations/$*
+	GITEA_TEST_CONF=tests/mssql.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' github.com/gitjet-ru/core-scm/models/migrations/$*
 
 .PHONY: migrations.individual.sqlite.test
 migrations.individual.sqlite.test: $(GO_SOURCES) generate-ini-sqlite
@@ -632,7 +638,7 @@ migrations.individual.sqlite.test: $(GO_SOURCES) generate-ini-sqlite
 
 .PHONY: migrations.individual.sqlite.test\#%
 migrations.individual.sqlite.test\#%: $(GO_SOURCES) generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' code.gitea.io/gitea/models/migrations/$*
+	GITEA_TEST_CONF=tests/sqlite.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' github.com/gitjet-ru/core-scm/models/migrations/$*
 
 .PHONY: check
 check: test

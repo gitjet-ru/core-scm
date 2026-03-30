@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // Cache represents cache settings

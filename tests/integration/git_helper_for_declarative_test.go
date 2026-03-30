@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/ssh"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/tests"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/ssh"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

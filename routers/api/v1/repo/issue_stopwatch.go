@@ -6,10 +6,10 @@ package repo
 import (
 	"net/http"
 
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/routers/api/v1/utils"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/convert"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/routers/api/v1/utils"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/convert"
 )
 
 // StartIssueStopwatch creates a stopwatch for the given issue.

@@ -6,16 +6,16 @@ package issues
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/indexer/issues/internal"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/indexer/issues/internal"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
-	_ "code.gitea.io/gitea/models"
-	_ "code.gitea.io/gitea/models/actions"
-	_ "code.gitea.io/gitea/models/activities"
+	_ "github.com/gitjet-ru/core-scm/models"
+	_ "github.com/gitjet-ru/core-scm/models/actions"
+	_ "github.com/gitjet-ru/core-scm/models/activities"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

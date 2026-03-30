@@ -15,16 +15,16 @@ import (
 	"sync"
 	"testing"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	packages_model "code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	container_module "code.gitea.io/gitea/modules/packages/container"
-	"code.gitea.io/gitea/modules/setting"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/test"
-	package_service "code.gitea.io/gitea/services/packages"
-	"code.gitea.io/gitea/tests"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	container_module "github.com/gitjet-ru/core-scm/modules/packages/container"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/test"
+	package_service "github.com/gitjet-ru/core-scm/services/packages"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
@@ -769,7 +769,7 @@ func TestPackageContainer(t *testing.T) {
 		})
 	}
 
-	// https://github.com/go-gitea/gitea/issues/19586
+	// upstream https://github.com/go-gitea/gitea/issues/19586
 	t.Run("ParallelUpload", func(t *testing.T) {
 		defer tests.PrintCurrentTest(t)()
 

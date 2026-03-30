@@ -6,9 +6,9 @@ package feed
 import (
 	"time"
 
-	"code.gitea.io/gitea/models/db"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/models/db"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/services/context"
 
 	"github.com/gorilla/feeds"
 )

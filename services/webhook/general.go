@@ -9,13 +9,13 @@ import (
 	"net/url"
 	"strings"
 
-	user_model "code.gitea.io/gitea/models/user"
-	webhook_model "code.gitea.io/gitea/models/webhook"
-	"code.gitea.io/gitea/modules/base"
-	"code.gitea.io/gitea/modules/setting"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/util"
-	webhook_module "code.gitea.io/gitea/modules/webhook"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	webhook_model "github.com/gitjet-ru/core-scm/models/webhook"
+	"github.com/gitjet-ru/core-scm/modules/base"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	webhook_module "github.com/gitjet-ru/core-scm/modules/webhook"
 )
 
 type linkFormatter = func(string, string) string

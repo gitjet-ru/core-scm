@@ -6,9 +6,9 @@ package doctor
 import (
 	"context"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/log"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 func checkOldArchives(ctx context.Context, logger log.Logger, autofix bool) error {

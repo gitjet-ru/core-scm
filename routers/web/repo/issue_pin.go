@@ -6,11 +6,11 @@ package repo
 import (
 	"net/http"
 
-	"code.gitea.io/gitea/models/db"
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // IssuePinOrUnpin pin or unpin a Issue

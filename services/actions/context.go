@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"strconv"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/models/db"
-	actions_module "code.gitea.io/gitea/modules/actions"
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/models/db"
+	actions_module "github.com/gitjet-ru/core-scm/modules/actions"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"github.com/nektos/act/pkg/model"
 )

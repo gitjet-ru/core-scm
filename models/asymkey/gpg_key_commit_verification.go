@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"hash"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
 
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
 )

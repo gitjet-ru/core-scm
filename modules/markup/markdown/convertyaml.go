@@ -6,8 +6,8 @@ package markdown
 import (
 	"strings"
 
-	"code.gitea.io/gitea/modules/htmlutil"
-	"code.gitea.io/gitea/modules/svg"
+	"github.com/gitjet-ru/core-scm/modules/htmlutil"
+	"github.com/gitjet-ru/core-scm/modules/svg"
 
 	"github.com/yuin/goldmark/ast"
 	east "github.com/yuin/goldmark/extension/ast"

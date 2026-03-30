@@ -9,15 +9,15 @@ import (
 	"os"
 	"time"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/log"
-	repo_module "code.gitea.io/gitea/modules/repository"
-	"code.gitea.io/gitea/modules/setting"
-	asymkey_service "code.gitea.io/gitea/services/asymkey"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	asymkey_service "github.com/gitjet-ru/core-scm/services/asymkey"
 )
 
 // initRepoCommit temporarily changes with work directory.

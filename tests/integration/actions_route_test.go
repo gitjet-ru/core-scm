@@ -9,10 +9,10 @@ import (
 	"net/url"
 	"testing"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	actions_web "code.gitea.io/gitea/routers/web/repo/actions"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	actions_web "github.com/gitjet-ru/core-scm/routers/web/repo/actions"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 	"github.com/stretchr/testify/assert"

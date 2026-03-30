@@ -4,6 +4,8 @@ This changelog goes through the changes that have been made in each release
 without substantial changes to our git log; to see the highlights of what has
 been added to each release, please refer to the [blog](https://blog.gitea.com).
 
+> **GitJet core-scm** is developed at [github.com/gitjet-ru/core-scm](https://github.com/gitjet-ru/core-scm). The version headings and links below still point to **upstream** [Gitea](https://github.com/go-gitea/gitea) release pages (same tag names as the baseline this fork tracks).
+
 ## [1.25.5](https://github.com/go-gitea/gitea/releases/tag/v1.25.5) - 2026-03-10
 
 * SECURITY

@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/nosql"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/nosql"
 
 	"github.com/redis/go-redis/v9"
 )

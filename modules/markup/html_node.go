@@ -6,7 +6,7 @@ package markup
 import (
 	"strings"
 
-	"code.gitea.io/gitea/modules/markup/common"
+	"github.com/gitjet-ru/core-scm/modules/markup/common"
 
 	"golang.org/x/net/html"
 )

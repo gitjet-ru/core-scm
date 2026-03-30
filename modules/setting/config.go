@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting/config"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting/config"
 )
 
 type PictureStruct struct {

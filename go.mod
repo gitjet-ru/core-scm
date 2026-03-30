@@ -1,4 +1,4 @@
-module code.gitea.io/gitea
+module github.com/gitjet-ru/core-scm
 
 go 1.26.1
 
@@ -55,7 +55,6 @@ require (
 	github.com/go-git/go-git/v5 v5.16.5
 	github.com/go-ldap/ldap/v3 v3.4.12
 	github.com/go-redsync/redsync/v4 v4.15.0
-	github.com/go-sql-driver/mysql v1.9.3
 	github.com/go-webauthn/webauthn v0.13.4
 	github.com/goccy/go-json v0.10.5
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
@@ -78,11 +77,9 @@ require (
 	github.com/lib/pq v1.11.1
 	github.com/markbates/goth v1.82.0
 	github.com/mattn/go-isatty v0.0.20
-	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/meilisearch/meilisearch-go v0.36.0
 	github.com/mholt/archives v0.1.5
 	github.com/microcosm-cc/bluemonday v1.0.27
-	github.com/microsoft/go-mssqldb v1.9.6
 	github.com/minio/minio-go/v7 v7.0.98
 	github.com/msteinert/pam v1.2.0
 	github.com/nektos/act v0.2.63
@@ -133,7 +130,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	code.gitea.io/gitea-vet v0.2.3 // indirect
 	dario.cat/mergo v1.0.2 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -193,9 +189,8 @@ require (
 	github.com/go-fed/httpsig v1.1.1-0.20201223112313-55836744818e // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
+	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/go-webauthn/x v0.1.24 // indirect
-	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
-	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
@@ -221,6 +216,7 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mattn/go-shellwords v1.0.12 // indirect
+	github.com/mattn/go-sqlite3 v1.14.33 // indirect
 	github.com/mholt/acmez/v3 v3.1.4 // indirect
 	github.com/miekg/dns v1.1.69 // indirect
 	github.com/mikelolasagasti/xz v1.0.1 // indirect
@@ -251,7 +247,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/sorairolake/lzip-go v0.3.8 // indirect

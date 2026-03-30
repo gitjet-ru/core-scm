@@ -8,19 +8,19 @@ import (
 	"net/http"
 	"testing"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/models/db"
-	issues_model "code.gitea.io/gitea/models/issues"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/json"
-	api "code.gitea.io/gitea/modules/structs"
-	issue_service "code.gitea.io/gitea/services/issue"
-	pull_service "code.gitea.io/gitea/services/pull"
-	"code.gitea.io/gitea/tests"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	issue_service "github.com/gitjet-ru/core-scm/services/issue"
+	pull_service "github.com/gitjet-ru/core-scm/services/pull"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -438,7 +438,7 @@ func TestAPIPullReviewCommentResolveEndpoints(t *testing.T) {
 }
 
 func TestAPIPullReviewStayDismissed(t *testing.T) {
-	// This test against issue https://github.com/go-gitea/gitea/issues/28542
+	// This test targets upstream issue https://github.com/go-gitea/gitea/issues/28542
 	// where old reviews surface after a review request got dismissed.
 	defer tests.PrepareTestEnv(t)()
 	pullIssue := unittest.AssertExistsAndLoadBean(t, &issues_model.Issue{ID: 3})

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/urfave/cli/v3"
 )

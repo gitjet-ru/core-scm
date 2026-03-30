@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/urfave/cli/v3"
 )

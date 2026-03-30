@@ -10,16 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"code.gitea.io/gitea/cmd"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/cmd"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	// register supported doc types
-	_ "code.gitea.io/gitea/modules/markup/asciicast"
-	_ "code.gitea.io/gitea/modules/markup/console"
-	_ "code.gitea.io/gitea/modules/markup/csv"
-	_ "code.gitea.io/gitea/modules/markup/markdown"
-	_ "code.gitea.io/gitea/modules/markup/orgmode"
+	_ "github.com/gitjet-ru/core-scm/modules/markup/asciicast"
+	_ "github.com/gitjet-ru/core-scm/modules/markup/console"
+	_ "github.com/gitjet-ru/core-scm/modules/markup/csv"
+	_ "github.com/gitjet-ru/core-scm/modules/markup/markdown"
+	_ "github.com/gitjet-ru/core-scm/modules/markup/orgmode"
 
 	"github.com/urfave/cli/v3"
 )

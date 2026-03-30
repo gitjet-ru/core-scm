@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	repo_module "code.gitea.io/gitea/modules/repository"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/tests"
+	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/stretchr/testify/assert"
 )

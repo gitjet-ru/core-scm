@@ -6,7 +6,7 @@ package v1_17
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/migrations/base"
+	"github.com/gitjet-ru/core-scm/models/migrations/base"
 )
 
 func TestMain(m *testing.M) {

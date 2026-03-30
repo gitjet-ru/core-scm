@@ -6,11 +6,11 @@ package repository_test
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/organization"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	repo_service "code.gitea.io/gitea/services/repository"
+	"github.com/gitjet-ru/core-scm/models/organization"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	repo_service "github.com/gitjet-ru/core-scm/services/repository"
 
 	"github.com/stretchr/testify/assert"
 )

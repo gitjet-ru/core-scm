@@ -6,7 +6,7 @@ package v1_18
 import (
 	"fmt"
 
-	"code.gitea.io/gitea/models/issues"
+	"github.com/gitjet-ru/core-scm/models/issues"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"

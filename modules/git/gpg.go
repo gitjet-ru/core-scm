@@ -11,8 +11,8 @@ import (
 	"strings"
 	"sync"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/process"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/process"
 )
 
 // GPGSettings represents the default GPG settings for this repository

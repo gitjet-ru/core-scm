@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 type GrepResult struct {
@@ -52,7 +52,7 @@ func GrepSearch(ctx context.Context, repo *Repository, search string, opts GrepO
 	 6^@bin = "gitea"
 
 	 HEAD:.changelog.yml
-	 2^@repo: go-gitea/gitea
+	 2^@repo: gitjet-ru/core-scm
 	*/
 	var results []*GrepResult
 	cmd := gitcmd.NewCommand("grep", "--null", "--break", "--heading", "--line-number", "--full-name")

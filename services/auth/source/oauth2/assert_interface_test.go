@@ -4,9 +4,9 @@
 package oauth2_test
 
 import (
-	auth_model "code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/services/auth"
-	"code.gitea.io/gitea/services/auth/source/oauth2"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/services/auth"
+	"github.com/gitjet-ru/core-scm/services/auth/source/oauth2"
 )
 
 // This test file exists to assert that our Source exposes the interfaces that we expect

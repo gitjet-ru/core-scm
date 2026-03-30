@@ -8,9 +8,9 @@ import (
 	"slices"
 	"strings"
 
-	"code.gitea.io/gitea/modules/base"
-	"code.gitea.io/gitea/modules/httplib"
-	"code.gitea.io/gitea/modules/references"
+	"github.com/gitjet-ru/core-scm/modules/base"
+	"github.com/gitjet-ru/core-scm/modules/httplib"
+	"github.com/gitjet-ru/core-scm/modules/references"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"

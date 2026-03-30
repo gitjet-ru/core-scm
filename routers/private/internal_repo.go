@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"net/http"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/private"
-	gitea_context "code.gitea.io/gitea/services/context"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/private"
+	gitea_context "github.com/gitjet-ru/core-scm/services/context"
 )
 
 // This file contains common functions relating to setting the Repository for the internal routes

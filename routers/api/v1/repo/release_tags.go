@@ -6,11 +6,11 @@ package repo
 import (
 	"net/http"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	unit_model "code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/convert"
-	release_service "code.gitea.io/gitea/services/release"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	unit_model "github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/convert"
+	release_service "github.com/gitjet-ru/core-scm/services/release"
 )
 
 // GetReleaseByTag get a single release of a repository by tag name

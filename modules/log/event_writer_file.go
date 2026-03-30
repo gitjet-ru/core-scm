@@ -6,8 +6,8 @@ package log
 import (
 	"io"
 
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/util/rotatingfilewriter"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util/rotatingfilewriter"
 )
 
 type WriterFileOption struct {

@@ -3,7 +3,7 @@
 
 package actions
 
-import "code.gitea.io/gitea/services/context"
+import "github.com/gitjet-ru/core-scm/services/context"
 
 // API for actions of a repository or organization
 type API interface {

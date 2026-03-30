@@ -7,8 +7,8 @@ import (
 	"context"
 	"errors"
 
-	"code.gitea.io/gitea/modules/indexer/internal"
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/indexer/internal"
+	"github.com/gitjet-ru/core-scm/modules/log"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/mapping"

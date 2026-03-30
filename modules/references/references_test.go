@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"testing"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -372,42 +372,42 @@ func TestFindRenderizableCommitCrossReference(t *testing.T) {
 			Expected: nil,
 		},
 		{
-			Input:    "go-gitea/gitea@test",
+			Input:    "gitjet-ru/core-scm@test",
 			Expected: nil,
 		},
 		{
-			Input:    "go-gitea/gitea@ab1234",
+			Input:    "gitjet-ru/core-scm@ab1234",
 			Expected: nil,
 		},
 		{
-			Input: "go-gitea/gitea@abcd1234",
+			Input: "gitjet-ru/core-scm@abcd1234",
 			Expected: &RenderizableReference{
-				Owner:       "go-gitea",
-				Name:        "gitea",
+				Owner:       "gitjet-ru",
+				Name:        "core-scm",
 				CommitSha:   "abcd1234",
-				RefLocation: &RefSpan{Start: 0, End: 23},
+				RefLocation: &RefSpan{Start: 0, End: 27},
 			},
 		},
 		{
-			Input: "go-gitea/gitea@abcd1234abcd1234abcd1234abcd1234abcd1234",
+			Input: "gitjet-ru/core-scm@abcd1234abcd1234abcd1234abcd1234abcd1234",
 			Expected: &RenderizableReference{
-				Owner:       "go-gitea",
-				Name:        "gitea",
+				Owner:       "gitjet-ru",
+				Name:        "core-scm",
 				CommitSha:   "abcd1234abcd1234abcd1234abcd1234abcd1234",
-				RefLocation: &RefSpan{Start: 0, End: 55},
+				RefLocation: &RefSpan{Start: 0, End: 59},
 			},
 		},
 		{
-			Input:    "go-gitea/gitea@abcd1234abcd1234abcd1234abcd1234abcd12341234512345123451234512345", // longer than 64 characters
+			Input:    "gitjet-ru/core-scm@abcd1234abcd1234abcd1234abcd1234abcd12341234512345123451234512345", // longer than 64 characters
 			Expected: nil,
 		},
 		{
-			Input: "test go-gitea/gitea@abcd1234 test",
+			Input: "test gitjet-ru/core-scm@abcd1234 test",
 			Expected: &RenderizableReference{
-				Owner:       "go-gitea",
-				Name:        "gitea",
+				Owner:       "gitjet-ru",
+				Name:        "core-scm",
 				CommitSha:   "abcd1234",
-				RefLocation: &RefSpan{Start: 5, End: 28},
+				RefLocation: &RefSpan{Start: 5, End: 32},
 			},
 		},
 	}

@@ -6,15 +6,15 @@ package issue
 import (
 	"context"
 
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/models/organization"
-	"code.gitea.io/gitea/models/perm"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unit"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
-	notify_service "code.gitea.io/gitea/services/notify"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/models/organization"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	notify_service "github.com/gitjet-ru/core-scm/services/notify"
 )
 
 // DeleteNotPassedAssignee deletes all assignees who aren't passed via the "assignees" array

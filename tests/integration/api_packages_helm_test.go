@@ -12,12 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	helm_module "code.gitea.io/gitea/modules/packages/helm"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/tests"
+	"github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	helm_module "github.com/gitjet-ru/core-scm/modules/packages/helm"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"

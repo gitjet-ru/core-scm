@@ -4,8 +4,8 @@
 package smtp
 
 import (
-	"code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/modules/json"
+	"github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/modules/json"
 )
 
 //   _________   __________________________

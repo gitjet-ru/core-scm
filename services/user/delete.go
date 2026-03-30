@@ -10,19 +10,19 @@ import (
 
 	_ "image/jpeg" // Needed for jpeg support
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	activities_model "code.gitea.io/gitea/models/activities"
-	asymkey_model "code.gitea.io/gitea/models/asymkey"
-	auth_model "code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/models/db"
-	git_model "code.gitea.io/gitea/models/git"
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/models/organization"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	pull_model "code.gitea.io/gitea/models/pull"
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/setting"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	asymkey_model "github.com/gitjet-ru/core-scm/models/asymkey"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/models/db"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/models/organization"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	pull_model "github.com/gitjet-ru/core-scm/models/pull"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"xorm.io/builder"
 )

@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/perm"
-	"code.gitea.io/gitea/models/unit"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"xorm.io/builder"
 )
@@ -527,12 +527,8 @@ func SearchRepositoryCondition(opts SearchRepoOptions) builder.Cond {
 		// Only show a repo that has at least a topic, an icon, or a description
 		subQueryCond := builder.NewCond()
 
-		// Topic checking. Topics are present.
-		if setting.Database.Type.IsPostgreSQL() { // postgres stores the topics as json and not as text
-			subQueryCond = subQueryCond.Or(builder.And(builder.NotNull{"topics"}, builder.Neq{"(topics)::text": "[]"}))
-		} else {
-			subQueryCond = subQueryCond.Or(builder.And(builder.Neq{"topics": "null"}, builder.Neq{"topics": "[]"}))
-		}
+		// Topic checking. Topics are present (PostgreSQL stores topics as json).
+		subQueryCond = subQueryCond.Or(builder.And(builder.NotNull{"topics"}, builder.Neq{"(topics)::text": "[]"}))
 
 		// Description checking. Description not empty
 		subQueryCond = subQueryCond.Or(builder.Neq{"description": ""})

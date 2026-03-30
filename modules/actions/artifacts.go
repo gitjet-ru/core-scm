@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"strings"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/modules/httplib"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/services/context"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/modules/httplib"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // IsArtifactV4 detects whether the artifact is likely from v4.

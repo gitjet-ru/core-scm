@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 
 	"xorm.io/xorm"
 )

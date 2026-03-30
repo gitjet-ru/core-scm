@@ -6,10 +6,10 @@ package renderhelper
 import (
 	"testing"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/modules/markup/markdown"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/markup/markdown"
 
 	"github.com/stretchr/testify/assert"
 )

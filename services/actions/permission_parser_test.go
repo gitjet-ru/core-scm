@@ -6,10 +6,10 @@ package actions
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/perm"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/modules/actions/jobparser"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/actions/jobparser"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -208,11 +208,17 @@ jobs:
 `
 
 	expectedPerms := map[string]*repo_model.ActionsTokenPermissions{}
-	expectedPerms["job-read-only"] = new(repo_model.MakeActionsTokenPermissions(perm.AccessModeRead))
-	expectedPerms["job-none-perms"] = new(repo_model.MakeActionsTokenPermissions(perm.AccessModeNone))
-	expectedPerms["job-override"] = new(repo_model.MakeActionsTokenPermissions(perm.AccessModeNone))
-	expectedPerms["job-override"].UnitAccessModes[unit.TypeCode] = perm.AccessModeWrite
-	expectedPerms["job-override"].UnitAccessModes[unit.TypeReleases] = perm.AccessModeWrite
+
+	readAll := repo_model.MakeActionsTokenPermissions(perm.AccessModeRead)
+	expectedPerms["job-read-only"] = &readAll
+
+	nonePerms := repo_model.MakeActionsTokenPermissions(perm.AccessModeNone)
+	expectedPerms["job-none-perms"] = &nonePerms
+
+	override := repo_model.MakeActionsTokenPermissions(perm.AccessModeNone)
+	override.UnitAccessModes[unit.TypeCode] = perm.AccessModeWrite
+	override.UnitAccessModes[unit.TypeReleases] = perm.AccessModeWrite
+	expectedPerms["job-override"] = &override
 
 	singleWorkflows, err := jobparser.Parse([]byte(workflowYAML))
 	require.NoError(t, err)

@@ -7,17 +7,17 @@ import (
 	"errors"
 	"net/http"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/models/db"
-	secret_model "code.gitea.io/gitea/models/secret"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/routers/api/v1/shared"
-	"code.gitea.io/gitea/routers/api/v1/utils"
-	actions_service "code.gitea.io/gitea/services/actions"
-	"code.gitea.io/gitea/services/context"
-	secret_service "code.gitea.io/gitea/services/secrets"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/models/db"
+	secret_model "github.com/gitjet-ru/core-scm/models/secret"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/routers/api/v1/shared"
+	"github.com/gitjet-ru/core-scm/routers/api/v1/utils"
+	actions_service "github.com/gitjet-ru/core-scm/services/actions"
+	"github.com/gitjet-ru/core-scm/services/context"
+	secret_service "github.com/gitjet-ru/core-scm/services/secrets"
 )
 
 // ListActionsSecrets list an organization's actions secrets

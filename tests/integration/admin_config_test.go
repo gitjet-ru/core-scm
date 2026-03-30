@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"testing"
 
-	"code.gitea.io/gitea/models/system"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/setting/config"
-	"code.gitea.io/gitea/modules/test"
-	"code.gitea.io/gitea/tests"
+	"github.com/gitjet-ru/core-scm/models/system"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting/config"
+	"github.com/gitjet-ru/core-scm/modules/test"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

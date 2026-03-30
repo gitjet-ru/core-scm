@@ -12,9 +12,9 @@ import (
 	"strings"
 	"sync"
 
-	"code.gitea.io/gitea/modules/htmlutil"
-	"code.gitea.io/gitea/modules/markup/common"
-	"code.gitea.io/gitea/modules/translation"
+	"github.com/gitjet-ru/core-scm/modules/htmlutil"
+	"github.com/gitjet-ru/core-scm/modules/markup/common"
+	"github.com/gitjet-ru/core-scm/modules/translation"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"

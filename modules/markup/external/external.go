@@ -12,9 +12,9 @@ import (
 	"runtime"
 	"strings"
 
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/modules/process"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/process"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/kballard/go-shellquote"
 )

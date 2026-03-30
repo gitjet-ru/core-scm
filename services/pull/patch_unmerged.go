@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // lsFileLine is a Quadruplet struct (+error) representing a partially parsed line from ls-files

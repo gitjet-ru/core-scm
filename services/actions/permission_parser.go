@@ -4,11 +4,11 @@
 package actions
 
 import (
-	"code.gitea.io/gitea/models/perm"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/modules/actions/jobparser"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/actions/jobparser"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"go.yaml.in/yaml/v4"
 )
@@ -61,12 +61,15 @@ func parseRawPermissionsExplicit(rawPerms *yaml.Node) *repo_model.ActionsTokenPe
 	if node.Kind == yaml.ScalarNode {
 		switch node.Value {
 		case "read-all":
-			return new(repo_model.MakeActionsTokenPermissions(perm.AccessModeRead))
+			ret := repo_model.MakeActionsTokenPermissions(perm.AccessModeRead)
+			return &ret
 		case "write-all":
-			return new(repo_model.MakeActionsTokenPermissions(perm.AccessModeWrite))
+			ret := repo_model.MakeActionsTokenPermissions(perm.AccessModeWrite)
+			return &ret
 		default:
 			// Explicit but unrecognized scalar: return all-none permissions.
-			return new(repo_model.MakeActionsTokenPermissions(perm.AccessModeNone))
+			ret := repo_model.MakeActionsTokenPermissions(perm.AccessModeNone)
+			return &ret
 		}
 	}
 

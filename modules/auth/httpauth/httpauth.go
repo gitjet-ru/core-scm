@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 type BasicAuth struct {

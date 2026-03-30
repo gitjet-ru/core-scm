@@ -11,15 +11,15 @@ import (
 	"os"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	packages_model "code.gitea.io/gitea/models/packages"
-	container_model "code.gitea.io/gitea/models/packages/container"
-	"code.gitea.io/gitea/modules/globallock"
-	"code.gitea.io/gitea/modules/log"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	container_module "code.gitea.io/gitea/modules/packages/container"
-	"code.gitea.io/gitea/modules/util"
-	packages_service "code.gitea.io/gitea/services/packages"
+	"github.com/gitjet-ru/core-scm/models/db"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	container_model "github.com/gitjet-ru/core-scm/models/packages/container"
+	"github.com/gitjet-ru/core-scm/modules/globallock"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	container_module "github.com/gitjet-ru/core-scm/modules/packages/container"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 
 	"github.com/opencontainers/go-digest"
 )
@@ -58,7 +58,7 @@ func saveAsPackageBlobInternal(ctx context.Context, hsr packages_module.HashedSi
 			return err
 		}
 		// FIXME: Workaround to be removed in v1.20
-		// https://github.com/go-gitea/gitea/issues/19586
+		// upstream https://github.com/go-gitea/gitea/issues/19586
 		if exists {
 			err = contentStore.Has(packages_module.BlobHash256Key(pb.HashSHA256))
 			if err != nil && (errors.Is(err, util.ErrNotExist) || errors.Is(err, os.ErrNotExist)) {

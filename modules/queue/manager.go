@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // Manager is a manager for the queues created by "CreateXxxQueue" functions, these queues are called "managed queues".

@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 const passwordURL = "https://api.pwnedpasswords.com/range/"

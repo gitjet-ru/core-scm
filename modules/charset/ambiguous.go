@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"code.gitea.io/gitea/modules/translation"
+	"github.com/gitjet-ru/core-scm/modules/translation"
 )
 
 // AmbiguousTablesForLocale provides the table of ambiguous characters for this locale.

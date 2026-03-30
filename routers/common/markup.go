@@ -10,14 +10,14 @@ import (
 	"path"
 	"strings"
 
-	"code.gitea.io/gitea/models/renderhelper"
-	"code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/modules/markup/markdown"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/models/renderhelper"
+	"github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/markup/markdown"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // RenderMarkup renders markup text for the /markup and /markdown endpoints

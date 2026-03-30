@@ -9,9 +9,9 @@ import (
 	"context"
 	"io"
 
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 func LineBlame(ctx context.Context, repo Repository, revision, file string, line uint) (string, error) {

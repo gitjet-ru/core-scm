@@ -9,8 +9,8 @@ import (
 	"path"
 	"strings"
 
-	"code.gitea.io/gitea/modules/httplib"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/httplib"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // resolveLinkRelative tries to resolve the link relative to the "{base}/{cur}", and returns the final link.

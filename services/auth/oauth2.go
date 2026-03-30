@@ -11,16 +11,16 @@ import (
 	"strings"
 	"time"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	auth_model "code.gitea.io/gitea/models/auth"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/auth/httpauth"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/timeutil"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/actions"
-	"code.gitea.io/gitea/services/oauth2_provider"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/auth/httpauth"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/actions"
+	"github.com/gitjet-ru/core-scm/services/oauth2_provider"
 )
 
 var _ Method = &OAuth2{}

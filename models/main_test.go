@@ -6,14 +6,14 @@ package models
 import (
 	"testing"
 
-	activities_model "code.gitea.io/gitea/models/activities"
-	"code.gitea.io/gitea/models/organization"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	"github.com/gitjet-ru/core-scm/models/organization"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
 
-	_ "code.gitea.io/gitea/models/actions"
-	_ "code.gitea.io/gitea/models/system"
+	_ "github.com/gitjet-ru/core-scm/models/actions"
+	_ "github.com/gitjet-ru/core-scm/models/system"
 
 	"github.com/stretchr/testify/assert"
 )

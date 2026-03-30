@@ -15,24 +15,24 @@ import (
 	"strings"
 	"sync"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	packages_model "code.gitea.io/gitea/models/packages"
-	container_model "code.gitea.io/gitea/models/packages/container"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/httplib"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/optional"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	container_module "code.gitea.io/gitea/modules/packages/container"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/routers/api/packages/helper"
-	auth_service "code.gitea.io/gitea/services/auth"
-	"code.gitea.io/gitea/services/context"
-	packages_service "code.gitea.io/gitea/services/packages"
-	container_service "code.gitea.io/gitea/services/packages/container"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	container_model "github.com/gitjet-ru/core-scm/models/packages/container"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/httplib"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	container_module "github.com/gitjet-ru/core-scm/modules/packages/container"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/routers/api/packages/helper"
+	auth_service "github.com/gitjet-ru/core-scm/services/auth"
+	"github.com/gitjet-ru/core-scm/services/context"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
+	container_service "github.com/gitjet-ru/core-scm/services/packages/container"
 
 	"github.com/opencontainers/go-digest"
 )
@@ -784,7 +784,7 @@ func GetTagsList(ctx *context.Context) {
 
 // FIXME: Workaround to be removed in v1.20.
 // Update maybe we should never really remote it, as long as there is legacy data?
-// https://github.com/go-gitea/gitea/issues/19586
+// upstream https://github.com/go-gitea/gitea/issues/19586
 func workaroundGetContainerBlob(ctx *context.Context, opts *container_model.BlobSearchOptions) (*packages_model.PackageFileDescriptor, error) {
 	blob, err := container_model.GetContainerBlob(ctx, opts)
 	if err != nil {

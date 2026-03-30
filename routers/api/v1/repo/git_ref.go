@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"net/url"
 
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/routers/api/v1/utils"
-	"code.gitea.io/gitea/services/context"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/routers/api/v1/utils"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // GetGitAllRefs get ref or an list all the refs of a repository

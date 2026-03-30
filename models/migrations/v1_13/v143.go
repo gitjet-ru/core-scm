@@ -4,13 +4,13 @@
 package v1_13
 
 import (
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 
 	"xorm.io/xorm"
 )
 
 func RecalculateStars(x *xorm.Engine) (err error) {
-	// because of issue https://github.com/go-gitea/gitea/issues/11949,
+	// because of upstream issue https://github.com/go-gitea/gitea/issues/11949,
 	// recalculate Stars number for all users to fully fix it.
 
 	type User struct {

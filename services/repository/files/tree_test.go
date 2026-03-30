@@ -7,11 +7,11 @@ import (
 	"html/template"
 	"testing"
 
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/fileicon"
-	"code.gitea.io/gitea/modules/git"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/services/contexttest"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/fileicon"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/services/contexttest"
 
 	"github.com/stretchr/testify/assert"
 )

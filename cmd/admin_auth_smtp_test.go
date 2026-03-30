@@ -7,8 +7,8 @@ import (
 	"context"
 	"testing"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/services/auth/source/smtp"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/services/auth/source/smtp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v3"

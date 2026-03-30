@@ -5,6 +5,8 @@ This changelog (archived) contains changes for old releases.
 * Recent changelogs: [CHANGELOG.md](CHANGELOG.md)
 * Release blogs with highlights: [blog.gitea.com](https://blog.gitea.com).
 
+> **GitJet core-scm:** [github.com/gitjet-ru/core-scm](https://github.com/gitjet-ru/core-scm). Links below are **upstream** [Gitea](https://github.com/go-gitea/gitea) releases.
+
 ## [1.15.11](https://github.com/go-gitea/gitea/releases/tag/v1.15.11) - 2022-01-29
 
 * SECURITY
@@ -1720,7 +1722,7 @@ This changelog (archived) contains changes for old releases.
   * Support unicode emojis and remove emojify.js (#11032)
   * Add git hook "warning" to admin panel (#11030)
   * Add flash notify for email preference setting success (#11027)
-  * Remove package code.gitea.io/gitea/modules/git import out of models (#11025)
+  * Remove package github.com/gitjet-ru/core-scm/modules/git import out of models (#11025)
   * Match arc-green code tag color to code blocks (#11023)
   * Move syntax highlighting to web worker (#11017)
   * Prevent merge of outdated PRs on protected branches (#11012)
@@ -3281,7 +3283,7 @@ WARNING: v1.10.5 is incorrectly tagged targeting 1.12-dev and should __not__ be 
   * Drop the docker Makefile from the image (#6507)
   * Add make version on gitea version (#6485)
   * Fix #6468 - Uses space match and adds newline for all sed flavors (#6473)
-  * Move code.gitea.io/git to code.gitea.io/gitea/modules/git (#6364)
+  * Move code.gitea.io/git to github.com/gitjet-ru/core-scm/modules/git (#6364)
   * Update npm dependencies and various tweaks (#7344)
   * Fix updated drone file (#7336)
   * Add 'npm' and 'npm-update' make targets and lockfile (#7246)

@@ -4,7 +4,7 @@
 package v1_8
 
 import (
-	"code.gitea.io/gitea/models/migrations/base"
+	"github.com/gitjet-ru/core-scm/models/migrations/base"
 
 	"xorm.io/xorm"
 )

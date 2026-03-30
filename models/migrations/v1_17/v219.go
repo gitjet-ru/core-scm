@@ -6,8 +6,8 @@ package v1_17
 import (
 	"time"
 
-	"code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
 
 	"xorm.io/xorm"
 )

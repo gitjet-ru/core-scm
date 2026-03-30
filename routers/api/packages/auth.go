@@ -6,10 +6,10 @@ package packages
 import (
 	"net/http"
 
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/services/auth"
-	"code.gitea.io/gitea/services/packages"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/services/auth"
+	"github.com/gitjet-ru/core-scm/services/packages"
 )
 
 var _ auth.Method = &Auth{}

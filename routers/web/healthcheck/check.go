@@ -6,14 +6,13 @@ package healthcheck
 import (
 	"context"
 	"net/http"
-	"os"
 	"time"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/cache"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/modules/cache"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 type status string
@@ -108,20 +107,6 @@ func checkDatabase(ctx context.Context, checks checks) status {
 	} else {
 		st.Status = pass
 		st.Time = getCheckTime()
-	}
-
-	if setting.Database.Type.IsSQLite3() && st.Status == pass {
-		if !setting.EnableSQLite3 {
-			st.Status = fail
-			st.Time = getCheckTime()
-			log.Error("SQLite3 health check failed with error: %v", "this Gitea binary is built without SQLite3 enabled")
-		} else {
-			if _, err := os.Stat(setting.Database.Path); err != nil {
-				st.Status = fail
-				st.Time = getCheckTime()
-				log.Error("SQLite3 file exists check failed with error: %v", err)
-			}
-		}
 	}
 
 	checks["database:ping"] = []componentStatus{st}

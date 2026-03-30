@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 )
 
 // CommitTreeOpts represents the possible options to CommitTree

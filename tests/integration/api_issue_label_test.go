@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	issues_model "code.gitea.io/gitea/models/issues"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	api "code.gitea.io/gitea/modules/structs"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
 
 	"github.com/stretchr/testify/assert"
 )

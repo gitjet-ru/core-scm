@@ -8,13 +8,13 @@ import (
 	"html"
 	"net/http"
 
-	"code.gitea.io/gitea/modules/public"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/routers/common"
-	"code.gitea.io/gitea/routers/web/healthcheck"
-	"code.gitea.io/gitea/routers/web/misc"
-	"code.gitea.io/gitea/services/forms"
+	"github.com/gitjet-ru/core-scm/modules/public"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/routers/common"
+	"github.com/gitjet-ru/core-scm/routers/web/healthcheck"
+	"github.com/gitjet-ru/core-scm/routers/web/misc"
+	"github.com/gitjet-ru/core-scm/services/forms"
 )
 
 // Routes registers the installation routes

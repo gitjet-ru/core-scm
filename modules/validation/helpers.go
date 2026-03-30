@@ -11,8 +11,8 @@ import (
 	"strings"
 	"sync"
 
-	"code.gitea.io/gitea/modules/glob"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/glob"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 type globalVarsStruct struct {

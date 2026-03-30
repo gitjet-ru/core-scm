@@ -12,10 +12,10 @@ import (
 	"os"
 	"path"
 
-	"code.gitea.io/gitea/modules/httplib"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/public"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/httplib"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/public"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // ErrURLNotSupported represents url is not supported

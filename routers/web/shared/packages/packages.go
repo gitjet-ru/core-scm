@@ -8,16 +8,16 @@ import (
 	"net/http"
 	"time"
 
-	packages_model "code.gitea.io/gitea/models/packages"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/modules/templates"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/forms"
-	cargo_service "code.gitea.io/gitea/services/packages/cargo"
-	container_service "code.gitea.io/gitea/services/packages/container"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/forms"
+	cargo_service "github.com/gitjet-ru/core-scm/services/packages/cargo"
+	container_service "github.com/gitjet-ru/core-scm/services/packages/container"
 )
 
 func SetPackagesContext(ctx *context.Context, owner *user_model.User) {

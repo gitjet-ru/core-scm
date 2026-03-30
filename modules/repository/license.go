@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"code.gitea.io/gitea/modules/options"
+	"github.com/gitjet-ru/core-scm/modules/options"
 )
 
 type LicenseValues struct {

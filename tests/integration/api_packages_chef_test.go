@@ -25,13 +25,13 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	chef_module "code.gitea.io/gitea/modules/packages/chef"
-	"code.gitea.io/gitea/modules/setting"
-	chef_router "code.gitea.io/gitea/routers/api/packages/chef"
-	"code.gitea.io/gitea/tests"
+	"github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	chef_module "github.com/gitjet-ru/core-scm/modules/packages/chef"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	chef_router "github.com/gitjet-ru/core-scm/routers/api/packages/chef"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/stretchr/testify/assert"
 )

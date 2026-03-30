@@ -6,7 +6,7 @@ package setting
 import (
 	"time"
 
-	"code.gitea.io/gitea/modules/setting/config"
+	"github.com/gitjet-ru/core-scm/modules/setting/config"
 )
 
 // WebBannerType fields are directly used in templates,

@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	asymkey_model "code.gitea.io/gitea/models/asymkey"
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/perm"
+	asymkey_model "github.com/gitjet-ru/core-scm/models/asymkey"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/perm"
 )
 
 // AddPrincipalKey adds new principal to database and authorized_principals file.

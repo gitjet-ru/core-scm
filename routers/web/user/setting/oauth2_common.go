@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/modules/templates"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/web"
-	shared_user "code.gitea.io/gitea/routers/web/shared/user"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/forms"
+	"github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	shared_user "github.com/gitjet-ru/core-scm/routers/web/shared/user"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/forms"
 )
 
 type OAuth2CommonHandlers struct {

@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/cache"
-	"code.gitea.io/gitea/modules/json"
-	setting_module "code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/modules/cache"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	setting_module "github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"xorm.io/builder"
 	"xorm.io/xorm/convert"

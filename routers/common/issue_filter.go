@@ -4,7 +4,7 @@
 package common
 
 import (
-	"code.gitea.io/gitea/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/optional"
 )
 
 func ParseIssueFilterStateIsClosed(state string) optional.Option[bool] {

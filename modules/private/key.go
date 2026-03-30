@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // UpdatePublicKeyInRepo update public key and if necessary deploy key updates

@@ -15,12 +15,12 @@ import (
 	"strings"
 	"testing"
 
-	"code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	rpm_module "code.gitea.io/gitea/modules/packages/rpm"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/tests"
+	"github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	rpm_module "github.com/gitjet-ru/core-scm/modules/packages/rpm"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/sassoftware/go-rpmutils"

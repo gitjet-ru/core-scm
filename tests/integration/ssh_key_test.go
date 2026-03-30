@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/modules/git"
-	api "code.gitea.io/gitea/modules/structs"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
 
 	"github.com/stretchr/testify/assert"
 )

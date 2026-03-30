@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"testing"
 
-	"code.gitea.io/gitea/modules/json"
-	api "code.gitea.io/gitea/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -6,9 +6,9 @@ package actions
 import (
 	"context"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/modules/util"
-	secret_service "code.gitea.io/gitea/services/secrets"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	secret_service "github.com/gitjet-ru/core-scm/services/secrets"
 )
 
 func CreateVariable(ctx context.Context, ownerID, repoID int64, name, data, description string) (*actions_model.ActionVariable, error) {

@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	_ "gitea.com/go-chi/cache/memcache" //nolint:depguard // memcache plugin for cache, it is required for config "ADAPTER=memcache"
 )
@@ -41,7 +41,7 @@ func Init() error {
 const (
 	testCacheKey = "DefaultCache.TestKey"
 	// SlowCacheThreshold marks cache tests as slow
-	// set to 30ms per discussion: https://github.com/go-gitea/gitea/issues/33190
+	// set to 30ms per discussion: upstream https://github.com/go-gitea/gitea/issues/33190
 	// TODO: Replace with metrics histogram
 	SlowCacheThreshold = 30 * time.Millisecond
 )

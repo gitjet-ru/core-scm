@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	base "code.gitea.io/gitea/modules/migration"
+	base "github.com/gitjet-ru/core-scm/modules/migration"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -452,7 +452,7 @@ func TestGithubMultiToken(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			opts := base.MigrateOptions{CloneAddr: "https://github.com/go-gitea/gitea", AuthToken: tC.token}
+			opts := base.MigrateOptions{CloneAddr: "https://github.com/gitjet-ru/core-scm", AuthToken: tC.token}
 			client, err := factory.New(t.Context(), opts)
 			require.NoError(t, err)
 

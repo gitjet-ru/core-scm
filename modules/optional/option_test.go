@@ -6,7 +6,7 @@ package optional_test
 import (
 	"testing"
 
-	"code.gitea.io/gitea/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/optional"
 
 	"github.com/stretchr/testify/assert"
 )

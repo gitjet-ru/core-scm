@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"testing"
 
-	"code.gitea.io/gitea/modules/httplib"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/test"
+	"github.com/gitjet-ru/core-scm/modules/httplib"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/test"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,139 +22,139 @@ func TestParseGitURLs(t *testing.T) {
 		expected *GitURL
 	}{
 		{
-			kase: "git@127.0.0.1:go-gitea/gitea.git",
+			kase: "git@127.0.0.1:gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "ssh",
 					User:   url.User("git"),
 					Host:   "127.0.0.1",
-					Path:   "go-gitea/gitea.git",
+					Path:   "gitjet-ru/core-scm.git",
 				},
 				extraMark: 1,
 			},
 		},
 		{
-			kase: "git@[fe80::14fc:cec5:c174:d88%2510]:go-gitea/gitea.git",
+			kase: "git@[fe80::14fc:cec5:c174:d88%2510]:gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "ssh",
 					User:   url.User("git"),
 					Host:   "[fe80::14fc:cec5:c174:d88%10]",
-					Path:   "go-gitea/gitea.git",
+					Path:   "gitjet-ru/core-scm.git",
 				},
 				extraMark: 1,
 			},
 		},
 		{
-			kase: "git@[::1]:go-gitea/gitea.git",
+			kase: "git@[::1]:gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "ssh",
 					User:   url.User("git"),
 					Host:   "[::1]",
-					Path:   "go-gitea/gitea.git",
+					Path:   "gitjet-ru/core-scm.git",
 				},
 				extraMark: 1,
 			},
 		},
 		{
-			kase: "git@github.com:go-gitea/gitea.git",
+			kase: "git@github.com:gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "ssh",
 					User:   url.User("git"),
 					Host:   "github.com",
-					Path:   "go-gitea/gitea.git",
+					Path:   "gitjet-ru/core-scm.git",
 				},
 				extraMark: 1,
 			},
 		},
 		{
-			kase: "ssh://git@github.com/go-gitea/gitea.git",
+			kase: "ssh://git@github.com/gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "ssh",
 					User:   url.User("git"),
 					Host:   "github.com",
-					Path:   "/go-gitea/gitea.git",
+					Path:   "/gitjet-ru/core-scm.git",
 				},
 				extraMark: 0,
 			},
 		},
 		{
-			kase: "ssh://git@[::1]/go-gitea/gitea.git",
+			kase: "ssh://git@[::1]/gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "ssh",
 					User:   url.User("git"),
 					Host:   "[::1]",
-					Path:   "/go-gitea/gitea.git",
+					Path:   "/gitjet-ru/core-scm.git",
 				},
 				extraMark: 0,
 			},
 		},
 		{
-			kase: "/repositories/go-gitea/gitea.git",
+			kase: "/repositories/gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "file",
-					Path:   "/repositories/go-gitea/gitea.git",
+					Path:   "/repositories/gitjet-ru/core-scm.git",
 				},
 				extraMark: 2,
 			},
 		},
 		{
-			kase: "file:///repositories/go-gitea/gitea.git",
+			kase: "file:///repositories/gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "file",
-					Path:   "/repositories/go-gitea/gitea.git",
+					Path:   "/repositories/gitjet-ru/core-scm.git",
 				},
 				extraMark: 0,
 			},
 		},
 		{
-			kase: "https://github.com/go-gitea/gitea.git",
+			kase: "https://github.com/gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "https",
 					Host:   "github.com",
-					Path:   "/go-gitea/gitea.git",
+					Path:   "/gitjet-ru/core-scm.git",
 				},
 				extraMark: 0,
 			},
 		},
 		{
-			kase: "https://git:git@github.com/go-gitea/gitea.git",
+			kase: "https://git:git@github.com/gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "https",
 					Host:   "github.com",
 					User:   url.UserPassword("git", "git"),
-					Path:   "/go-gitea/gitea.git",
+					Path:   "/gitjet-ru/core-scm.git",
 				},
 				extraMark: 0,
 			},
 		},
 		{
-			kase: "https://[fe80::14fc:cec5:c174:d88%2510]:20/go-gitea/gitea.git",
+			kase: "https://[fe80::14fc:cec5:c174:d88%2510]:20/gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "https",
 					Host:   "[fe80::14fc:cec5:c174:d88%10]:20",
-					Path:   "/go-gitea/gitea.git",
+					Path:   "/gitjet-ru/core-scm.git",
 				},
 				extraMark: 0,
 			},
 		},
 
 		{
-			kase: "git://github.com/go-gitea/gitea.git",
+			kase: "git://github.com/gitjet-ru/core-scm.git",
 			expected: &GitURL{
 				URL: &url.URL{
 					Scheme: "git",
 					Host:   "github.com",
-					Path:   "/go-gitea/gitea.git",
+					Path:   "/gitjet-ru/core-scm.git",
 				},
 				extraMark: 0,
 			},

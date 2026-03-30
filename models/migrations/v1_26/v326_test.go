@@ -6,13 +6,13 @@ package v1_26
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/migrations/base"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/test"
+	"github.com/gitjet-ru/core-scm/models/migrations/base"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/test"
 
-	_ "code.gitea.io/gitea/models/actions"
-	_ "code.gitea.io/gitea/models/git"
-	_ "code.gitea.io/gitea/models/repo"
+	_ "github.com/gitjet-ru/core-scm/models/actions"
+	_ "github.com/gitjet-ru/core-scm/models/git"
+	_ "github.com/gitjet-ru/core-scm/models/repo"
 
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"

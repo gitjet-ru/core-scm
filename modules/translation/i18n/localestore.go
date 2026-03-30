@@ -10,8 +10,8 @@ import (
 	"html/template"
 	"slices"
 
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // This file implements the static LocaleStore that will not watch for changes

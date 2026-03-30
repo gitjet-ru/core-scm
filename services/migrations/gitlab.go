@@ -15,12 +15,12 @@ import (
 	"strings"
 	"time"
 
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/log"
-	base "code.gitea.io/gitea/modules/migration"
-	"code.gitea.io/gitea/modules/structs"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	base "github.com/gitjet-ru/core-scm/modules/migration"
+	"github.com/gitjet-ru/core-scm/modules/structs"
 
 	gitlab "gitlab.com/gitlab-org/api/client-go"
 )

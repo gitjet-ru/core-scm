@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"code.gitea.io/gitea/models/db"
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
-	_ "code.gitea.io/gitea/cmd" // for TestPrimaryKeys
+	_ "github.com/gitjet-ru/core-scm/cmd" // for TestPrimaryKeys
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -57,10 +57,10 @@ func TestDeleteOrphanedObjects(t *testing.T) {
 
 func TestPrimaryKeys(t *testing.T) {
 	// Some dbs require that all tables have primary keys, see
-	//   https://github.com/go-gitea/gitea/issues/21086
-	//   https://github.com/go-gitea/gitea/issues/16802
+	//   upstream https://github.com/go-gitea/gitea/issues/21086
+	//   upstream https://github.com/go-gitea/gitea/issues/16802
 	// To avoid creating tables without primary key again, this test will check them.
-	// Import "code.gitea.io/gitea/cmd" to make sure each db.RegisterModel in init functions has been called.
+	// Import "github.com/gitjet-ru/core-scm/cmd" to make sure each db.RegisterModel in init functions has been called.
 
 	beans, err := db.NamesToBean()
 	require.NoError(t, err)

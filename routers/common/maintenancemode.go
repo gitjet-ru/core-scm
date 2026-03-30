@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 func MaintenanceModeHandler() func(h http.Handler) http.Handler {

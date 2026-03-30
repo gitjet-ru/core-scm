@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"sync/atomic"
 
-	"code.gitea.io/gitea/modules/generate"
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/generate"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // OAuth2UsernameType is enum describing the way gitea generates its 'username' from oauth2 data

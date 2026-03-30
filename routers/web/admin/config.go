@@ -10,17 +10,17 @@ import (
 	"net/url"
 	"strings"
 
-	system_model "code.gitea.io/gitea/models/system"
-	"code.gitea.io/gitea/modules/cache"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/setting/config"
-	"code.gitea.io/gitea/modules/templates"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/mailer"
+	system_model "github.com/gitjet-ru/core-scm/models/system"
+	"github.com/gitjet-ru/core-scm/modules/cache"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting/config"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/mailer"
 
 	"gitea.com/go-chi/session"
 )
@@ -92,16 +92,6 @@ func shadowPassword(provider, cfgItem string) string {
 	switch provider {
 	case "redis":
 		return shadowPasswordKV(cfgItem, ",")
-	case "mysql":
-		// root:@tcp(localhost:3306)/macaron?charset=utf8
-		atIdx := strings.Index(cfgItem, "@")
-		if atIdx > 0 {
-			colonIdx := strings.Index(cfgItem[:atIdx], ":")
-			if colonIdx > 0 {
-				return cfgItem[:colonIdx+1] + "******" + cfgItem[atIdx:]
-			}
-		}
-		return cfgItem
 	case "postgres":
 		// user=jiahuachen dbname=macaron port=5432 sslmode=disable
 		if !strings.HasPrefix(cfgItem, "postgres://") {

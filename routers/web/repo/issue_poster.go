@@ -8,10 +8,10 @@ import (
 	"slices"
 	"strings"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	shared_user "code.gitea.io/gitea/routers/web/shared/user"
-	"code.gitea.io/gitea/services/context"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	shared_user "github.com/gitjet-ru/core-scm/routers/web/shared/user"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 type userSearchInfo struct {

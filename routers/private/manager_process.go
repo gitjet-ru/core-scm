@@ -11,10 +11,10 @@ import (
 	"runtime"
 	"time"
 
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/private"
-	process_module "code.gitea.io/gitea/modules/process"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/private"
+	process_module "github.com/gitjet-ru/core-scm/modules/process"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // Processes prints out the processes

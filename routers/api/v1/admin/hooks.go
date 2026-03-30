@@ -7,15 +7,15 @@ import (
 	"errors"
 	"net/http"
 
-	"code.gitea.io/gitea/models/webhook"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/modules/setting"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/routers/api/v1/utils"
-	"code.gitea.io/gitea/services/context"
-	webhook_service "code.gitea.io/gitea/services/webhook"
+	"github.com/gitjet-ru/core-scm/models/webhook"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/routers/api/v1/utils"
+	"github.com/gitjet-ru/core-scm/services/context"
+	webhook_service "github.com/gitjet-ru/core-scm/services/webhook"
 )
 
 // ListHooks list system's webhooks

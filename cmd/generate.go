@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 
-	"code.gitea.io/gitea/modules/generate"
+	"github.com/gitjet-ru/core-scm/modules/generate"
 
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v3"

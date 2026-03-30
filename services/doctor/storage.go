@@ -9,16 +9,16 @@ import (
 	"io/fs"
 	"strings"
 
-	"code.gitea.io/gitea/models/git"
-	"code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/base"
-	"code.gitea.io/gitea/modules/log"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/git"
+	"github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/base"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 type commonStorageCheckOptions struct {

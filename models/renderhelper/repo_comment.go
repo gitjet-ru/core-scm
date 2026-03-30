@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/modules/util"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 type RepoComment struct {

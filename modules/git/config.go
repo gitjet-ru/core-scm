@@ -11,8 +11,8 @@ import (
 	"runtime"
 	"strings"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // syncGitConfig only modifies gitconfig, won't change global variables (otherwise there will be data-race problem)
@@ -79,7 +79,7 @@ func syncGitConfig(ctx context.Context) (err error) {
 	// However, some docker users and samba users find it difficult to configure their systems correctly,
 	// so that Gitea's git repositories are owned by the Gitea user.
 	// (Possibly Windows Service users - but ownership in this case should really be set correctly on the filesystem.)
-	// See issue: https://github.com/go-gitea/gitea/issues/19455
+	// See issue: upstream https://github.com/go-gitea/gitea/issues/19455
 	// As Gitea now always use its internal git config file, and access to the git repositories is managed through Gitea,
 	// it is now safe to set "safe.directory=*" for internal usage only.
 	// Although this setting is only supported by some new git versions, it is also tolerated by earlier versions

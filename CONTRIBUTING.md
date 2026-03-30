@@ -87,7 +87,7 @@ Maintainers reserve the right to close pull requests and issues that appear to b
 
 Please search the issues on the issue tracker with a variety of related keywords to ensure that your issue has not already been reported.
 
-If your issue has not been reported yet, [open an issue](https://github.com/go-gitea/gitea/issues/new)
+If your issue has not been reported yet, [open an issue](https://github.com/gitjet-ru/core-scm/issues/new)
 and answer the questions so we can understand and reproduce the problematic behavior. \
 Please write clear and concise instructions so that we can reproduce the behavior — even if it seems obvious. \
 The more detailed and specific you are, the faster we can fix the issue. \
@@ -109,7 +109,7 @@ Typically, issues fall in one of the following categories:
 ### Discuss your design before the implementation
 
 We welcome submissions. \
-If you want to change or add something, please let everyone know what you're working on — [file an issue](https://github.com/go-gitea/gitea/issues/new) or comment on an existing one before starting your work!
+If you want to change or add something, please let everyone know what you're working on — [file an issue](https://github.com/gitjet-ru/core-scm/issues/new) or comment on an existing one before starting your work!
 
 Significant changes such as new features must go through the change proposal process before they can be accepted. \
 This is mainly to save yourself the trouble of implementing it, only to find out that your proposed implementation has some potential problems. \
@@ -204,7 +204,7 @@ Here's how to run the test suite:
 ## Translation
 
 All translation work happens on [Crowdin](https://translate.gitea.com).
-The only translation that is maintained in this repository is [the English translation](https://github.com/go-gitea/gitea/blob/main/options/locale/locale_en-US.json).
+The only translation that is maintained in this repository is [the English translation](https://github.com/gitjet-ru/core-scm/blob/main/options/locale/locale_en-US.json).
 It is synced regularly with Crowdin. \
 Other locales on main branch **should not** be updated manually as they will be overwritten with each sync. \
 Once a language has reached a **satisfactory percentage** of translated keys (~25%), it will be synced back into this repo and included in the next released version.
@@ -329,7 +329,7 @@ If a PR has the `lgtm/done` label and there are no open discussions or merge con
 This label means that the PR is part of the merge queue and will be merged as soon as possible. \
 The merge queue will be cleared in the order of the list below:
 
-<https://github.com/go-gitea/gitea/pulls?q=is%3Apr+label%3Areviewed%2Fwait-merge+sort%3Acreated-asc+is%3Aopen>
+<https://github.com/gitjet-ru/core-scm/pulls?q=is%3Apr+label%3Areviewed%2Fwait-merge+sort%3Acreated-asc+is%3Aopen>
 
 Gitea uses it's own tool, the <https://github.com/GiteaBot/gitea-backporter> to automate parts of the review process. \
 This tool does the things listed below automatically:
@@ -396,13 +396,13 @@ The same applies to status responses. If you notice a problem, feel free to leav
 
 ### Adding/Maintaining API routes
 
-All expected results (errors, success, fail messages) must be documented ([example](https://github.com/go-gitea/gitea/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/repo/issue.go#L319-L327)). \
-All JSON input types must be defined as a struct in [modules/structs/](modules/structs/) ([example](https://github.com/go-gitea/gitea/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/modules/structs/issue.go#L76-L91)) \
-and referenced in [routers/api/v1/swagger/options.go](https://github.com/go-gitea/gitea/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/swagger/options.go). \
-They can then be used like [this example](https://github.com/go-gitea/gitea/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/repo/issue.go#L318). \
-All JSON responses must be defined as a struct in [modules/structs/](modules/structs/) ([example](https://github.com/go-gitea/gitea/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/modules/structs/issue.go#L36-L68)) \
-and referenced in its category in [routers/api/v1/swagger/](routers/api/v1/swagger/) ([example](https://github.com/go-gitea/gitea/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/swagger/issue.go#L11-L16)) \
-They can be used like [this example](https://github.com/go-gitea/gitea/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/repo/issue.go#L277-L279).
+All expected results (errors, success, fail messages) must be documented ([example](https://github.com/gitjet-ru/core-scm/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/repo/issue.go#L319-L327)). \
+All JSON input types must be defined as a struct in [modules/structs/](modules/structs/) ([example](https://github.com/gitjet-ru/core-scm/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/modules/structs/issue.go#L76-L91)) \
+and referenced in [routers/api/v1/swagger/options.go](https://github.com/gitjet-ru/core-scm/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/swagger/options.go). \
+They can then be used like [this example](https://github.com/gitjet-ru/core-scm/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/repo/issue.go#L318). \
+All JSON responses must be defined as a struct in [modules/structs/](modules/structs/) ([example](https://github.com/gitjet-ru/core-scm/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/modules/structs/issue.go#L36-L68)) \
+and referenced in its category in [routers/api/v1/swagger/](routers/api/v1/swagger/) ([example](https://github.com/gitjet-ru/core-scm/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/swagger/issue.go#L11-L16)) \
+They can be used like [this example](https://github.com/gitjet-ru/core-scm/blob/c620eb5b2d0d874da68ebd734d3864c5224f71f7/routers/api/v1/repo/issue.go#L277-L279).
 
 ### When to use what HTTP method
 
@@ -421,7 +421,7 @@ All parameters of endpoints changing/editing an object must be optional (except 
 Endpoints returning lists must
 
 - support pagination (`page` & `limit` options in query)
-- set `X-Total-Count` header via **SetTotalCountHeader** ([example](https://github.com/go-gitea/gitea/blob/7aae98cc5d4113f1e9918b7ee7dd09f67c189e3e/routers/api/v1/repo/issue.go#L444))
+- set `X-Total-Count` header via **SetTotalCountHeader** ([example](https://github.com/gitjet-ru/core-scm/blob/7aae98cc5d4113f1e9918b7ee7dd09f67c189e3e/routers/api/v1/repo/issue.go#L444))
 
 ## Backports and Frontports
 
@@ -555,12 +555,12 @@ If an elected member that accepts the seat does not have 2FA configured yet, the
 
 Here's the history of the owners and the time they served:
 
-- [Lunny Xiao](https://gitea.com/lunny) - 2016, 2017, [2018](https://github.com/go-gitea/gitea/issues/3255), [2019](https://github.com/go-gitea/gitea/issues/5572), [2020](https://github.com/go-gitea/gitea/issues/9230), [2021](https://github.com/go-gitea/gitea/issues/13801), [2022](https://github.com/go-gitea/gitea/issues/17872), 2023
+- [Lunny Xiao](https://gitea.com/lunny) - 2016, 2017, [2018](https://github.com/gitjet-ru/core-scm/issues/3255), [2019](https://github.com/gitjet-ru/core-scm/issues/5572), [2020](https://github.com/gitjet-ru/core-scm/issues/9230), [2021](https://github.com/gitjet-ru/core-scm/issues/13801), [2022](https://github.com/gitjet-ru/core-scm/issues/17872), 2023
 - [Kim Carlbäcker](https://github.com/bkcsoft) - 2016, 2017
 - [Thomas Boerger](https://gitea.com/tboerger) - 2016, 2017
-- [Lauris Bukšis-Haberkorns](https://gitea.com/lafriks) - [2018](https://github.com/go-gitea/gitea/issues/3255), [2019](https://github.com/go-gitea/gitea/issues/5572), [2020](https://github.com/go-gitea/gitea/issues/9230), [2021](https://github.com/go-gitea/gitea/issues/13801)
-- [Matti Ranta](https://gitea.com/techknowlogick) - [2019](https://github.com/go-gitea/gitea/issues/5572), [2020](https://github.com/go-gitea/gitea/issues/9230), [2021](https://github.com/go-gitea/gitea/issues/13801), [2022](https://github.com/go-gitea/gitea/issues/17872), 2023
-- [Andrew Thornton](https://gitea.com/zeripath) - [2020](https://github.com/go-gitea/gitea/issues/9230), [2021](https://github.com/go-gitea/gitea/issues/13801), [2022](https://github.com/go-gitea/gitea/issues/17872), 2023
+- [Lauris Bukšis-Haberkorns](https://gitea.com/lafriks) - [2018](https://github.com/gitjet-ru/core-scm/issues/3255), [2019](https://github.com/gitjet-ru/core-scm/issues/5572), [2020](https://github.com/gitjet-ru/core-scm/issues/9230), [2021](https://github.com/gitjet-ru/core-scm/issues/13801)
+- [Matti Ranta](https://gitea.com/techknowlogick) - [2019](https://github.com/gitjet-ru/core-scm/issues/5572), [2020](https://github.com/gitjet-ru/core-scm/issues/9230), [2021](https://github.com/gitjet-ru/core-scm/issues/13801), [2022](https://github.com/gitjet-ru/core-scm/issues/17872), 2023
+- [Andrew Thornton](https://gitea.com/zeripath) - [2020](https://github.com/gitjet-ru/core-scm/issues/9230), [2021](https://github.com/gitjet-ru/core-scm/issues/13801), [2022](https://github.com/gitjet-ru/core-scm/issues/17872), 2023
 - [6543](https://gitea.com/6543) - 2023
 - [John Olheiser](https://gitea.com/jolheiser) - 2023
 - [Jason Song](https://gitea.com/wolfogre) - 2023

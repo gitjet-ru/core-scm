@@ -9,7 +9,7 @@ package git
 import (
 	"errors"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 
 	"github.com/go-git/go-git/v5/plumbing"
 )

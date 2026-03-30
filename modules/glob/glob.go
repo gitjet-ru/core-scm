@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 // Reference: https://github.com/gobwas/glob/blob/master/glob.go

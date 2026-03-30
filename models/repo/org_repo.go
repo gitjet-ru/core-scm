@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	org_model "code.gitea.io/gitea/models/organization"
-	user_model "code.gitea.io/gitea/models/user"
+	"github.com/gitjet-ru/core-scm/models/db"
+	org_model "github.com/gitjet-ru/core-scm/models/organization"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
 
 	"xorm.io/builder"
 )

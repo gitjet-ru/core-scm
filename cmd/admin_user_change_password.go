@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/auth/password"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/modules/setting"
-	user_service "code.gitea.io/gitea/services/user"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/auth/password"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	user_service "github.com/gitjet-ru/core-scm/services/user"
 
 	"github.com/urfave/cli/v3"
 )

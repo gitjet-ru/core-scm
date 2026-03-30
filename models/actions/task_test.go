@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.gitea.io/gitea/modules/actions/jobparser"
+	"github.com/gitjet-ru/core-scm/modules/actions/jobparser"
 
 	"github.com/stretchr/testify/assert"
 )

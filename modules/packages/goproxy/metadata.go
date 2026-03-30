@@ -9,7 +9,7 @@ import (
 	"path"
 	"strings"
 
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 const (

@@ -7,10 +7,10 @@ import (
 	"errors"
 	"net/http"
 
-	issues_model "code.gitea.io/gitea/models/issues"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/services/context"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // LockIssue lock an issue

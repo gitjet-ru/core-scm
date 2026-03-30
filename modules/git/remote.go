@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"strings"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 // GetRemoteAddress returns remote url of git repository in the repoPath with special remote name
@@ -72,7 +72,7 @@ func (err *ErrInvalidCloneAddr) Unwrap() error {
 
 // IsRemoteNotExistError checks the prefix of the error message to see whether a remote does not exist.
 func IsRemoteNotExistError(err error) bool {
-	// see: https://github.com/go-gitea/gitea/issues/32889#issuecomment-2571848216
+	// see: upstream https://github.com/go-gitea/gitea/issues/32889#issuecomment-2571848216
 	// Should not add space in the end, sometimes git will add a `:`
 	prefix1 := "fatal: No such remote" // git < 2.30, exit status 128
 	prefix2 := "error: No such remote" // git >= 2.30. exit status 2

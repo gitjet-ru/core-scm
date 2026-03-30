@@ -7,15 +7,15 @@ import (
 	"errors"
 	"fmt"
 
-	issue_model "code.gitea.io/gitea/models/issues"
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/gitrepo"
-	repo_module "code.gitea.io/gitea/modules/repository"
-	"code.gitea.io/gitea/modules/reqctx"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/pull"
+	issue_model "github.com/gitjet-ru/core-scm/models/issues"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
+	"github.com/gitjet-ru/core-scm/modules/reqctx"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/pull"
 )
 
 // MergeUpstream merges the base repository's default branch into the fork repository's current branch.

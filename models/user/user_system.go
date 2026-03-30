@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"code.gitea.io/gitea/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/structs"
 )
 
 const (

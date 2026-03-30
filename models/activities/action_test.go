@@ -8,14 +8,14 @@ import (
 	"path"
 	"testing"
 
-	activities_model "code.gitea.io/gitea/models/activities"
-	"code.gitea.io/gitea/models/db"
-	issue_model "code.gitea.io/gitea/models/issues"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/test"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issue_model "github.com/gitjet-ru/core-scm/models/issues"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/test"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -83,9 +83,7 @@ func TestActivityReadable(t *testing.T) {
 }
 
 func TestConsistencyUpdateAction(t *testing.T) {
-	if !setting.Database.Type.IsSQLite3() {
-		t.Skip("Test is only for SQLite database.")
-	}
+	t.Skip("Historical SQLite-only test; GitJet uses PostgreSQL only.")
 	assert.NoError(t, unittest.PrepareTestDatabase())
 	id := 8
 	unittest.AssertExistsAndLoadBean(t, &activities_model.Action{

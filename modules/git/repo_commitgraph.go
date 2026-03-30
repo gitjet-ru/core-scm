@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 )
 
 // WriteCommitGraph write commit graph to speed up repo access

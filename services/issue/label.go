@@ -6,11 +6,11 @@ package issue
 import (
 	"context"
 
-	"code.gitea.io/gitea/models/db"
-	issues_model "code.gitea.io/gitea/models/issues"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	user_model "code.gitea.io/gitea/models/user"
-	notify_service "code.gitea.io/gitea/services/notify"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	notify_service "github.com/gitjet-ru/core-scm/services/notify"
 )
 
 // ClearLabels clears all of an issue's labels

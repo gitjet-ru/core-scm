@@ -8,7 +8,7 @@ on:
 jobs:
   cron-licenses:
     runs-on: ubuntu-latest
-    if: github.repository == 'go-gitea/gitea'
+    if: github.repository == 'gitjet-ru/core-scm'
     permissions:
       contents: write
     steps:

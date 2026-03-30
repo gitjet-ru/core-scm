@@ -6,8 +6,8 @@ package repo
 import (
 	"context"
 
-	"code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 func (repo *Repository) GetPullRequestTargetBranch(ctx context.Context) string {

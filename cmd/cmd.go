@@ -15,9 +15,9 @@ import (
 	"strings"
 	"syscall"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/urfave/cli/v3"
 )
@@ -66,7 +66,7 @@ func initDB(ctx context.Context) error {
 Ensure you are running in the correct environment or set the correct configuration file with -c.
 If this is the intended configuration file complete the [database] section.`, setting.CustomConf)
 	}
-	if err := db.InitEngine(ctx); err != nil {
+	if err := metadatastore.Default().Init(ctx); err != nil {
 		return fmt.Errorf("unable to initialize the database using the configuration in %q. Error: %w", setting.CustomConf, err)
 	}
 	return nil

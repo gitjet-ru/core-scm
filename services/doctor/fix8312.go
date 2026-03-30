@@ -6,11 +6,11 @@ package doctor
 import (
 	"context"
 
-	"code.gitea.io/gitea/models/db"
-	org_model "code.gitea.io/gitea/models/organization"
-	"code.gitea.io/gitea/models/perm"
-	"code.gitea.io/gitea/modules/log"
-	org_service "code.gitea.io/gitea/services/org"
+	"github.com/gitjet-ru/core-scm/models/db"
+	org_model "github.com/gitjet-ru/core-scm/models/organization"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	org_service "github.com/gitjet-ru/core-scm/services/org"
 
 	"xorm.io/builder"
 )

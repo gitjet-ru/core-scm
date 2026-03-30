@@ -13,15 +13,15 @@ import (
 	"strings"
 	"time"
 
-	packages_model "code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/modules/json"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	pub_module "code.gitea.io/gitea/modules/packages/pub"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/routers/api/packages/helper"
-	"code.gitea.io/gitea/services/context"
-	packages_service "code.gitea.io/gitea/services/packages"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	pub_module "github.com/gitjet-ru/core-scm/modules/packages/pub"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/routers/api/packages/helper"
+	"github.com/gitjet-ru/core-scm/services/context"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 )
 
 func jsonResponse(ctx *context.Context, status int, obj any) {

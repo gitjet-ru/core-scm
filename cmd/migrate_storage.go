@@ -10,17 +10,18 @@ import (
 	"io/fs"
 	"strings"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/models/db"
-	git_model "code.gitea.io/gitea/models/git"
-	packages_model "code.gitea.io/gitea/models/packages"
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/services/versioned_migration"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/models/db"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/services/versioned_migration"
 
 	"github.com/urfave/cli/v3"
 )
@@ -225,7 +226,7 @@ func runMigrateStorage(ctx context.Context, cmd *cli.Command) error {
 	log.Info("Log path: %s", setting.Log.RootPath)
 	log.Info("Configuration file: %s", setting.CustomConf)
 
-	if err := db.InitEngineWithMigration(context.Background(), versioned_migration.Migrate); err != nil {
+	if err := metadatastore.Default().InitWithMigration(context.Background(), versioned_migration.Migrate); err != nil {
 		log.Fatal("Failed to initialize ORM engine: %v", err)
 		return err
 	}

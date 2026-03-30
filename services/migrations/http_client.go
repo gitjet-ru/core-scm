@@ -7,9 +7,9 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	"code.gitea.io/gitea/modules/hostmatcher"
-	"code.gitea.io/gitea/modules/proxy"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/hostmatcher"
+	"github.com/gitjet-ru/core-scm/modules/proxy"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // NewMigrationHTTPClient returns a HTTP client for migration

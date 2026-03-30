@@ -17,11 +17,11 @@ import (
 	"sync/atomic"
 	texttemplate "text/template"
 
-	"code.gitea.io/gitea/modules/assetfs"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/templates/scopedtmpl"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/assetfs"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/templates/scopedtmpl"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 type TemplateExecutor scopedtmpl.TemplateExecutor

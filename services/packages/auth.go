@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/golang-jwt/jwt/v5"
 )

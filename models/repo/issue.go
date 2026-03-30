@@ -6,9 +6,9 @@ package repo
 import (
 	"context"
 
-	"code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 // ___________.__             ___________                     __

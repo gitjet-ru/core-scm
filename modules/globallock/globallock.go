@@ -7,7 +7,7 @@ import (
 	"context"
 	"sync"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 var (

@@ -11,15 +11,15 @@ import (
 	"sync"
 	"time"
 
-	"code.gitea.io/gitea/models/db"
-	system_model "code.gitea.io/gitea/models/system"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/globallock"
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/process"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/translation"
+	"github.com/gitjet-ru/core-scm/models/db"
+	system_model "github.com/gitjet-ru/core-scm/models/system"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/globallock"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/process"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/translation"
 )
 
 var (

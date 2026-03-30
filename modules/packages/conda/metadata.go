@@ -10,10 +10,10 @@ import (
 	"io"
 	"strings"
 
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/validation"
-	"code.gitea.io/gitea/modules/zstd"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/validation"
+	"github.com/gitjet-ru/core-scm/modules/zstd"
 )
 
 var (

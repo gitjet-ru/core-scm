@@ -4,7 +4,7 @@
 package v1_20
 
 import (
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 
 	"xorm.io/xorm"
 )

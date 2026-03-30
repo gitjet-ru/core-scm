@@ -12,14 +12,14 @@ import (
 	"path"
 	"strings"
 
-	"code.gitea.io/gitea/modules/assetfs"
-	"code.gitea.io/gitea/modules/avatar"
-	"code.gitea.io/gitea/modules/httpcache"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/web/routing"
+	"github.com/gitjet-ru/core-scm/modules/assetfs"
+	"github.com/gitjet-ru/core-scm/modules/avatar"
+	"github.com/gitjet-ru/core-scm/modules/httpcache"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/web/routing"
 )
 
 func avatarStorageHandler(storageSetting *setting.Storage, prefix string, objStore storage.ObjectStorage) http.HandlerFunc {

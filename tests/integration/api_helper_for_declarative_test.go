@@ -12,13 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/models/perm"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/queue"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/services/forms"
+	"github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/queue"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/services/forms"
 
 	"github.com/stretchr/testify/assert"
 )

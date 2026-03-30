@@ -8,12 +8,12 @@ import (
 	"io"
 	"strings"
 
-	packages_model "code.gitea.io/gitea/models/packages"
-	container_service "code.gitea.io/gitea/models/packages/container"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/packages"
-	container_module "code.gitea.io/gitea/modules/packages/container"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	container_service "github.com/gitjet-ru/core-scm/models/packages/container"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/packages"
+	container_module "github.com/gitjet-ru/core-scm/modules/packages/container"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )

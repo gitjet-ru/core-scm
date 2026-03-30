@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/modules/nosql"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/nosql"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

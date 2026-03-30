@@ -15,25 +15,26 @@ import (
 	"strings"
 	"time"
 
-	"code.gitea.io/gitea/models/db"
-	db_install "code.gitea.io/gitea/models/db/install"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/auth/password/hash"
-	"code.gitea.io/gitea/modules/generate"
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/optional"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/templates"
-	"code.gitea.io/gitea/modules/timeutil"
-	"code.gitea.io/gitea/modules/user"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/modules/web/middleware"
-	"code.gitea.io/gitea/routers/common"
-	auth_service "code.gitea.io/gitea/services/auth"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/forms"
-	"code.gitea.io/gitea/services/versioned_migration"
+	"github.com/gitjet-ru/core-scm/models/db"
+	db_install "github.com/gitjet-ru/core-scm/models/db/install"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/auth/password/hash"
+	"github.com/gitjet-ru/core-scm/modules/generate"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/modules/user"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/modules/web/middleware"
+	"github.com/gitjet-ru/core-scm/routers/common"
+	auth_service "github.com/gitjet-ru/core-scm/services/auth"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/forms"
+	"github.com/gitjet-ru/core-scm/services/versioned_migration"
 )
 
 const (
@@ -79,7 +80,7 @@ func Install(ctx *context.Context) {
 
 	curDBType := setting.Database.Type.String()
 	if !slices.Contains(setting.SupportedDatabaseTypes, curDBType) {
-		curDBType = "mysql"
+		curDBType = "postgres"
 	}
 	ctx.Data["CurDbType"] = curDBType
 
@@ -132,25 +133,13 @@ func Install(ctx *context.Context) {
 func checkDatabase(ctx *context.Context, form *forms.InstallForm) bool {
 	var err error
 
-	if (setting.Database.Type == "sqlite3") &&
-		len(setting.Database.Path) == 0 {
-		ctx.Data["Err_DbPath"] = true
-		ctx.RenderWithErrDeprecated(ctx.Tr("install.err_empty_db_path"), tplInstall, form)
-		return false
-	}
-
 	// Check if the user is trying to re-install in an installed database
 	db.UnsetDefaultEngine()
 	defer db.UnsetDefaultEngine()
 
-	if err = db.InitEngine(ctx); err != nil {
-		if strings.Contains(err.Error(), `Unknown database type: sqlite3`) {
-			ctx.Data["Err_DbType"] = true
-			ctx.RenderWithErrDeprecated(ctx.Tr("install.sqlite3_not_available", "https://docs.gitea.com/installation/install-from-binary"), tplInstall, form)
-		} else {
-			ctx.Data["Err_DbSetting"] = true
-			ctx.RenderWithErrDeprecated(ctx.Tr("install.invalid_db_setting", err), tplInstall, form)
-		}
+	if err = metadatastore.Default().Init(ctx); err != nil {
+		ctx.Data["Err_DbSetting"] = true
+		ctx.RenderWithErrDeprecated(ctx.Tr("install.invalid_db_setting", err), tplInstall, form)
 		return false
 	}
 
@@ -326,7 +315,7 @@ func SubmitInstall(ctx *context.Context) {
 	}
 
 	// Init the engine with migration
-	if err = db.InitEngineWithMigration(ctx, versioned_migration.Migrate); err != nil {
+	if err = metadatastore.Default().InitWithMigration(ctx, versioned_migration.Migrate); err != nil {
 		db.UnsetDefaultEngine()
 		ctx.Data["Err_DbSetting"] = true
 		ctx.RenderWithErrDeprecated(ctx.Tr("install.invalid_db_setting", err), tplInstall, &form)
