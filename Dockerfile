@@ -84,3 +84,31 @@ VOLUME ["/data"]
 # HINT: HEALTH-CHECK-ENDPOINT: don't use HEALTHCHECK, search this hint keyword for more information
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/usr/bin/s6-svscan", "/etc/s6"]
+
+# Build geesefs once (for local/dev S3 mount image)
+FROM docker.io/library/alpine:3.23 AS geesefs-build
+ARG GEESEFS_VERSION=0.43.5
+ARG TARGETARCH
+RUN apk add --no-cache curl && \
+    case "${TARGETARCH}" in \
+      amd64) ARCH=amd64 ;; \
+      arm64) ARCH=arm64 ;; \
+      *) echo "Unsupported TARGETARCH: ${TARGETARCH}" && exit 1 ;; \
+    esac && \
+    curl -fsSL "https://github.com/yandex-cloud/geesefs/releases/download/v${GEESEFS_VERSION}/geesefs-linux-${ARCH}" \
+      -o /usr/local/bin/geesefs && \
+    chmod +x /usr/local/bin/geesefs
+
+# Local / dev image: mount S3 over /data/git via geesefs before starting Gitea.
+# Build: docker build --target gitea-s3fs -t core-scm:s3fs .
+FROM gitea AS gitea-s3fs
+
+RUN apk add --no-cache fuse3 util-linux
+
+COPY --from=geesefs-build /usr/local/bin/geesefs /usr/local/bin/geesefs
+
+COPY docker/s3fs-local/entrypoint-s3fs.sh /usr/local/bin/entrypoint-s3fs.sh
+RUN chmod 755 /usr/local/bin/entrypoint-s3fs.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint-s3fs.sh"]
+CMD ["/usr/bin/s6-svscan", "/etc/s6"]
