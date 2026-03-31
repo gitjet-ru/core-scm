@@ -11,6 +11,7 @@ import (
 	"html"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 
@@ -668,6 +669,14 @@ func RepoAssignment(ctx *Context) {
 	ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, repo)
 	if err != nil {
 		if strings.Contains(err.Error(), "repository does not exist") || strings.Contains(err.Error(), "no such file or directory") {
+			if strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+				strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow") {
+				log.Warn("Repository %-v is not available as local mirror yet in remote backend: %s (err: %v)", ctx.Repo.Repository, ctx.Repo.Repository.RelativePath(), err)
+				if !isHomeOrSettings {
+					ctx.Redirect(ctx.Repo.RepoLink)
+				}
+				return
+			}
 			log.Error("Repository %-v has a broken repository on the file system: %s Error: %v", ctx.Repo.Repository, ctx.Repo.Repository.RelativePath(), err)
 			ctx.Repo.Repository.MarkAsBrokenEmpty()
 			// Only allow access to base of repo or settings
@@ -852,6 +861,15 @@ func repoRefFullName(typ git.RefType, shortName string) git.RefName {
 
 func RepoRefByDefaultBranch() func(*Context) {
 	return func(ctx *Context) {
+		if ctx.Repo.GitRepo == nil {
+			// In remote backend we may not have a local mirror yet.
+			ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.Repository.DefaultBranch)
+			ctx.Repo.BranchName = ctx.Repo.Repository.DefaultBranch
+			ctx.Data["RefFullName"] = ctx.Repo.RefFullName
+			ctx.Data["BranchName"] = ctx.Repo.BranchName
+			ctx.Data["CommitsCount"] = int64(0)
+			return
+		}
 		ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.Repository.DefaultBranch)
 		ctx.Repo.BranchName = ctx.Repo.Repository.DefaultBranch
 		ctx.Repo.Commit, _ = ctx.Repo.GitRepo.GetBranchCommit(ctx.Repo.BranchName)
@@ -878,6 +896,15 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 			ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.BranchName)
 			// these variables are used by the template to "add/upload" new files
 			ctx.Data["BranchName"] = ctx.Repo.BranchName
+			ctx.Data["TreePath"] = ""
+			return
+		}
+		if ctx.Repo.GitRepo == nil {
+			// Remote backend fallback: repo metadata is available, local mirror may lag.
+			ctx.Repo.BranchName = ctx.Repo.Repository.DefaultBranch
+			ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.BranchName)
+			ctx.Data["BranchName"] = ctx.Repo.BranchName
+			ctx.Data["RefFullName"] = ctx.Repo.RefFullName
 			ctx.Data["TreePath"] = ""
 			return
 		}

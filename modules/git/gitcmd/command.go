@@ -54,6 +54,7 @@ type Command struct {
 	cmdStderr io.Writer
 
 	cmdManagedStderr *bytes.Buffer
+	stdinBytes       []byte
 }
 
 func logArgSanitize(arg string) string {
@@ -224,6 +225,7 @@ type runOpts struct {
 type RemoteCommandSpec struct {
 	Args         []string
 	Env          []string
+	Stdin        []byte
 	Dir          string
 	HasCustomIO  bool
 	HasPipeline  bool
@@ -234,11 +236,12 @@ func (c *Command) ExportRemoteSpec() RemoteCommandSpec {
 	spec := RemoteCommandSpec{
 		Args:         append([]string{}, c.args...),
 		Env:          append([]string{}, c.opts.Env...),
+		Stdin:        append([]byte{}, c.stdinBytes...),
 		Dir:          c.opts.Dir,
 		HasPipeline:  c.opts.PipelineFunc != nil,
 		HasPreErrors: len(c.preErrors) > 0,
 	}
-	spec.HasCustomIO = c.cmdStdin != nil || c.cmdStdout != nil || c.cmdStderr != nil
+	spec.HasCustomIO = (c.cmdStdin != nil && len(c.stdinBytes) == 0) || c.cmdStdout != nil || c.cmdStderr != nil
 	return spec
 }
 
@@ -320,6 +323,7 @@ func (c *Command) MakeStdinPipe() (writer PipeWriter, closer func()) {
 	}
 	c.childrenPipeFiles = append(c.childrenPipeFiles, pr)
 	c.parentPipeFiles = append(c.parentPipeFiles, pw)
+	c.stdinBytes = nil
 	c.cmdStdin = pr
 	return &pipeWriter{pw}, func() { pw.Close() }
 }
@@ -350,7 +354,8 @@ func (c *Command) MakeStdinStdoutPipe() (stdin PipeWriter, stdout PipeReader, cl
 }
 
 func (c *Command) WithStdinBytes(stdin []byte) *Command {
-	c.cmdStdin = bytes.NewReader(stdin)
+	c.stdinBytes = append([]byte{}, stdin...)
+	c.cmdStdin = bytes.NewReader(c.stdinBytes)
 	return c
 }
 
@@ -366,6 +371,7 @@ func (c *Command) WithStdoutBuffer(w PipeBufferWriter) *Command {
 // * `r,w:=io.Pipe(); cmd.Stdin=r; defer w.Close(); cmd.Run()`: the Run() will never return because stdin reader is blocked forever and w.Close() will never be called.
 // If the reader/writer won't block forever (for example: read from a file or buffer), then these functions are safe to use.
 func (c *Command) WithStdinCopy(w io.Reader) *Command {
+	c.stdinBytes = nil
 	c.cmdStdin = w
 	return c
 }

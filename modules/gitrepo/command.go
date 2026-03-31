@@ -125,6 +125,7 @@ func runRemoteCommandBytes(ctx context.Context, repo Repository, cmd *gitcmd.Com
 			RepoRelativePath: repo.RelativePath(),
 			Args:             spec.Args,
 			Env:              spec.Env,
+			Stdin:            spec.Stdin,
 		})
 		return reqErr
 	})
@@ -151,6 +152,7 @@ func isMutatingGitArgs(args []string) bool {
 	switch strings.ToLower(strings.TrimSpace(args[0])) {
 	case "update-ref", "symbolic-ref", "branch", "tag", "commit-tree", "write-tree", "reset",
 		"revert", "cherry-pick", "merge", "rebase", "checkout", "switch", "fetch", "pull", "push",
+		"fast-import",
 		"gc", "prune", "pack-refs", "repack":
 		return true
 	default:

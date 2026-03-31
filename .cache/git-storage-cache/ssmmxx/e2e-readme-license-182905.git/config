@@ -1,0 +1,10 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = true
+	ignorecase = true
+[remote "origin"]
+	url = /var/lib/git-storage/repos/ssmmxx/e2e-readme-license-182905.git
+	tagOpt = --no-tags
+	fetch = +refs/*:refs/*
+	mirror = true

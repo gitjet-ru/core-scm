@@ -347,19 +347,61 @@ func ensureRemoteMirror(ctx context.Context, repo Repository) (string, error) {
 	if shouldReuseRemoteMirror(localPath) {
 		return localPath, nil
 	}
-	err = callRemoteWithTimeout(ctx, func(cctx context.Context) error {
-		_, err := client.CloneRepositoryToLocal(cctx, &gitstoragev1.CloneRepositoryToLocalRequest{
-			FromRepoRelativePath: repo.RelativePath(),
-			ToLocalPath:          localPath,
-			Mirror:               true,
-		})
-		return err
-	})
-	if err != nil {
+	if err := hydrateRemoteMirrorViaBundle(ctx, client, repo.RelativePath(), localPath); err != nil {
 		return "", err
 	}
 	_ = touchRemoteMirror(localPath)
 	return localPath, nil
+}
+
+func hydrateRemoteMirrorViaBundle(ctx context.Context, client gitstoragev1.GitStorageClient, repoRelative, localPath string) error {
+	var resp *gitstoragev1.RunGitCommandResponse
+	err := callRemoteWithTimeout(ctx, func(cctx context.Context) error {
+		var reqErr error
+		resp, reqErr = client.RunGitCommand(cctx, &gitstoragev1.RunGitCommandRequest{
+			RepoRelativePath: repoRelative,
+			Args:             []string{"bundle", "create", "-", "--all"},
+		})
+		return reqErr
+	})
+	if err != nil {
+		return err
+	}
+
+	// Empty repos cannot produce a bundle; initialize an empty mirror locally.
+	if resp.GetExecError() != "" {
+		if strings.Contains(resp.GetExecError(), "Refusing to create empty bundle") ||
+			strings.Contains(string(resp.GetStderr()), "Refusing to create empty bundle") {
+			_ = os.RemoveAll(localPath)
+			return gitcmd.NewCommand("init", "--bare").AddDynamicArguments(localPath).Run(ctx)
+		}
+		return fmt.Errorf("bundle export failed: %s (%s)", resp.GetExecError(), string(resp.GetStderr()))
+	}
+	if len(resp.GetStdout()) == 0 {
+		return fmt.Errorf("bundle export failed: empty payload")
+	}
+
+	bundleFile, err := os.CreateTemp(filepath.Dir(localPath), "git-storage-*.bundle")
+	if err != nil {
+		return err
+	}
+	bundlePath := bundleFile.Name()
+	defer func() {
+		_ = bundleFile.Close()
+		_ = os.Remove(bundlePath)
+	}()
+	if _, err := bundleFile.Write(resp.GetStdout()); err != nil {
+		return err
+	}
+	if err := bundleFile.Close(); err != nil {
+		return err
+	}
+
+	_ = os.RemoveAll(localPath)
+	if err := gitcmd.NewCommand("clone", "--mirror").AddDashesAndList(bundlePath, localPath).Run(ctx); err != nil {
+		return err
+	}
+	return nil
 }
 
 func remoteMirrorPath(relative string) string {

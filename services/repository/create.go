@@ -143,6 +143,11 @@ func prepareRepoCommit(ctx context.Context, repo *repo_model.Repository, tmpDir 
 
 // InitRepository initializes README and .gitignore if needed.
 func initRepository(ctx context.Context, u *user_model.User, repo *repo_model.Repository, opts CreateRepoOptions) (err error) {
+	if isRemoteCreateFlowEnabled() {
+		// In remote mode, repository initialization consists of multiple RPC steps.
+		// Client disconnects or duplicate submits should not interrupt these steps midway.
+		ctx = context.WithoutCancel(ctx)
+	}
 	// Init git bare new repository.
 	if err = gitrepo.InitRepository(ctx, repo, repo.ObjectFormatName); err != nil {
 		return fmt.Errorf("git.InitRepository: %w", err)
@@ -152,19 +157,25 @@ func initRepository(ctx context.Context, u *user_model.User, repo *repo_model.Re
 
 	// Initialize repository according to user's choice.
 	if opts.AutoInit {
-		tmpDir, cleanup, err := setting.AppDataTempDir("git-repo-content").MkdirTempRandom("repos-" + repo.Name)
-		if err != nil {
-			return fmt.Errorf("failed to create temp dir for repository %s: %w", repo.FullName(), err)
-		}
-		defer cleanup()
+		if isRemoteCreateFlowEnabled() {
+			if err = initRepoCommitRemote(ctx, repo, u, opts); err != nil {
+				return fmt.Errorf("initRepoCommitRemote: %w", err)
+			}
+		} else {
+			tmpDir, cleanup, err := setting.AppDataTempDir("git-repo-content").MkdirTempRandom("repos-" + repo.Name)
+			if err != nil {
+				return fmt.Errorf("failed to create temp dir for repository %s: %w", repo.FullName(), err)
+			}
+			defer cleanup()
 
-		if err = prepareRepoCommit(ctx, repo, tmpDir, opts); err != nil {
-			return fmt.Errorf("prepareRepoCommit: %w", err)
-		}
+			if err = prepareRepoCommit(ctx, repo, tmpDir, opts); err != nil {
+				return fmt.Errorf("prepareRepoCommit: %w", err)
+			}
 
-		// Apply changes and commit.
-		if err = initRepoCommit(ctx, tmpDir, repo, u, opts.DefaultBranch); err != nil {
-			return fmt.Errorf("initRepoCommit: %w", err)
+			// Apply changes and commit.
+			if err = initRepoCommit(ctx, tmpDir, repo, u, opts.DefaultBranch); err != nil {
+				return fmt.Errorf("initRepoCommit: %w", err)
+			}
 		}
 	}
 
@@ -189,7 +200,11 @@ func initRepository(ctx context.Context, u *user_model.User, repo *repo_model.Re
 
 		if !repo.IsEmpty {
 			if _, err := repo_module.SyncRepoBranches(ctx, repo.ID, u.ID); err != nil {
-				return fmt.Errorf("SyncRepoBranches: %w", err)
+				if isRemoteCreateFlowEnabled() {
+					log.Error("SyncRepoBranches failed in remote create flow: %v", err)
+				} else {
+					return fmt.Errorf("SyncRepoBranches: %w", err)
+				}
 			}
 		}
 	}
@@ -232,6 +247,11 @@ func CreateRepositoryDirectly(ctx context.Context, doer, owner *user_model.User,
 	}
 	if opts.ObjectFormatName != git.Sha1ObjectFormat.Name() && opts.ObjectFormatName != git.Sha256ObjectFormat.Name() {
 		return nil, fmt.Errorf("unsupported object format: %s", opts.ObjectFormatName)
+	}
+	// If user selected initial files, force initialization even if AutoInit flag
+	// was not propagated correctly by UI/API.
+	if !opts.AutoInit && (strings.TrimSpace(opts.Readme) != "" || strings.TrimSpace(opts.License) != "" || strings.TrimSpace(opts.Gitignores) != "") {
+		opts.AutoInit = true
 	}
 
 	repo := &repo_model.Repository{

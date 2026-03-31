@@ -7,8 +7,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"slices"
 	"strings"
+	"time"
 
 	actions_model "github.com/gitjet-ru/core-scm/models/actions"
 	"github.com/gitjet-ru/core-scm/models/db"
@@ -116,6 +118,14 @@ func (input *notifyInput) Notify(ctx context.Context) {
 }
 
 func notify(ctx context.Context, input *notifyInput) error {
+	isRemoteBackend := strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow")
+	if isRemoteBackend && input.Event == webhook_module.HookEventRepository {
+		// Repository create/update events don't require workflow evaluation and can
+		// significantly delay create flow while waiting for local mirror bootstrap.
+		return nil
+	}
+
 	shouldDetectSchedules := input.Event == webhook_module.HookEventPush && input.Ref.BranchName() == input.Repo.DefaultBranch
 	if input.Doer.IsGiteaActions() {
 		// avoiding triggering cyclically, for example:
@@ -147,8 +157,20 @@ func notify(ctx context.Context, input *notifyInput) error {
 		return nil
 	}
 
-	gitRepo, err := gitrepo.OpenRepository(context.Background(), input.Repo)
+	openRepoCtx := context.Background()
+	if isRemoteBackend {
+		// Do not block request lifecycle for long mirror bootstrap attempts.
+		var cancel context.CancelFunc
+		openRepoCtx, cancel = context.WithTimeout(openRepoCtx, 2*time.Second)
+		defer cancel()
+	}
+	gitRepo, err := gitrepo.OpenRepository(openRepoCtx, input.Repo)
 	if err != nil {
+		if isRemoteBackend &&
+			(strings.Contains(err.Error(), "repository does not exist") || strings.Contains(err.Error(), "no such file or directory")) {
+			log.Warn("skip actions notify due to unavailable remote mirror for %s: %v", input.Repo.RelativePath(), err)
+			return nil
+		}
 		return fmt.Errorf("git.OpenRepository: %w", err)
 	}
 	defer gitRepo.Close()

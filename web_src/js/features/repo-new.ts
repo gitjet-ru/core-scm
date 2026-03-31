@@ -65,12 +65,14 @@ export function initRepoNew() {
   const form = document.querySelector<HTMLFormElement>('.new-repo-form')!;
   const inputGitIgnores = form.querySelector<HTMLInputElement>('input[name="gitignores"]')!;
   const inputLicense = form.querySelector<HTMLInputElement>('input[name="license"]')!;
+  const inputReadme = form.querySelector<HTMLInputElement>('input[name="readme"]')!;
   const inputAutoInit = form.querySelector<HTMLInputElement>('input[name="auto_init"]')!;
   const updateUiAutoInit = () => {
-    inputAutoInit.checked = Boolean(inputGitIgnores.value || inputLicense.value);
+    inputAutoInit.checked = Boolean(inputGitIgnores.value || inputLicense.value || inputReadme.value);
   };
   inputGitIgnores.addEventListener('change', updateUiAutoInit);
   inputLicense.addEventListener('change', updateUiAutoInit);
+  inputReadme.addEventListener('change', updateUiAutoInit);
   updateUiAutoInit();
 
   const inputRepoName = form.querySelector<HTMLInputElement>('input[name="repo_name"]')!;

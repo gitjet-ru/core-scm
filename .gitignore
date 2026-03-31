@@ -127,3 +127,4 @@ Makefile.local
 
 # s3fs / S3 credentials for docker-compose.s3fs-local.yml (use .env.s3.example as template)
 .env.s3
+.env

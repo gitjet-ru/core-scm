@@ -115,14 +115,13 @@ func CreateDelegateHooks(ctx context.Context, repo Repository) (err error) {
 }
 
 func createDelegateHooksRemote(ctx context.Context, repo Repository) error {
+	// Hook installation is part of repository initialization and should not fail
+	// if the client request context is canceled during redirect/retry.
+	ctx = context.WithoutCancel(ctx)
 	hookNames, hookTpls, giteaHookTpls := getHookTemplates()
 	for i, hookName := range hookNames {
 		oldHookPath := filepath.ToSlash(filepath.Join("hooks", hookName))
 		newHookPath := filepath.ToSlash(filepath.Join("hooks", hookName+".d", "gitea"))
-
-		if err := RemoveRepoFileOrDir(ctx, repo, oldHookPath); err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("unable to pre-remove old hook file '%s' prior to rewriting: %w ", oldHookPath, err)
-		}
 		f, err := CreateRepoFileWithMode(ctx, repo, oldHookPath, 0o777)
 		if err != nil {
 			return fmt.Errorf("write old hook file '%s': %w", oldHookPath, err)
@@ -135,8 +134,9 @@ func createDelegateHooksRemote(ctx context.Context, repo Repository) error {
 			return fmt.Errorf("write old hook file '%s': %w", oldHookPath, err)
 		}
 
-		if err = RemoveRepoFileOrDir(ctx, repo, newHookPath); err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("unable to pre-remove new hook file '%s' prior to rewriting: %w", newHookPath, err)
+		// proc-receive does not require ".d/gitea" shim script.
+		if giteaHookTpls[i] == "" {
+			continue
 		}
 		f, err = CreateRepoFileWithMode(ctx, repo, newHookPath, 0o777)
 		if err != nil {
