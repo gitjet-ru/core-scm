@@ -221,6 +221,27 @@ type runOpts struct {
 	PipelineFunc func(Context) error
 }
 
+type RemoteCommandSpec struct {
+	Args         []string
+	Env          []string
+	Dir          string
+	HasCustomIO  bool
+	HasPipeline  bool
+	HasPreErrors bool
+}
+
+func (c *Command) ExportRemoteSpec() RemoteCommandSpec {
+	spec := RemoteCommandSpec{
+		Args:         append([]string{}, c.args...),
+		Env:          append([]string{}, c.opts.Env...),
+		Dir:          c.opts.Dir,
+		HasPipeline:  c.opts.PipelineFunc != nil,
+		HasPreErrors: len(c.preErrors) > 0,
+	}
+	spec.HasCustomIO = c.cmdStdin != nil || c.cmdStdout != nil || c.cmdStderr != nil
+	return spec
+}
+
 func commonBaseEnvs() []string {
 	envs := []string{
 		// Make Gitea use internal git config only, to prevent conflicts with user's git config

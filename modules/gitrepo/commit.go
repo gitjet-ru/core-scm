@@ -36,7 +36,7 @@ func CommitsCount(ctx context.Context, repo Repository, opts CommitsCountOptions
 		cmd.AddDashesAndList(opts.RelPath...)
 	}
 
-	stdout, _, err := cmd.WithDir(repoPath(repo)).RunStdString(ctx)
+	stdout, _, err := RunCmdString(ctx, repo, cmd)
 	if err != nil {
 		return 0, err
 	}
@@ -97,7 +97,11 @@ func AllCommitsCount(ctx context.Context, repo Repository, hidePRRefs bool, file
 }
 
 func GetFullCommitID(ctx context.Context, repo Repository, shortID string) (string, error) {
-	return git.GetFullCommitID(ctx, repoPath(repo), shortID)
+	stdout, _, err := RunCmdString(ctx, repo, gitcmd.NewCommand("rev-parse").AddDynamicArguments(shortID))
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(stdout), nil
 }
 
 // GetLatestCommitTime returns time for latest commit in repository (across all branches)

@@ -5,6 +5,7 @@ package gitrepo
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"io"
 
@@ -68,21 +69,11 @@ func parseCommitFileStatus(fileStatus *CommitFileStatus, stdout io.Reader) {
 // GetCommitFileStatus returns file status of commit in given repository.
 func GetCommitFileStatus(ctx context.Context, repo Repository, commitID string) (*CommitFileStatus, error) {
 	cmd := gitcmd.NewCommand("log", "--name-status", "-m", "--pretty=format:", "--first-parent", "--no-renames", "-z", "-1")
-	stdout, stdoutClose := cmd.MakeStdoutPipe()
-	defer stdoutClose()
-	done := make(chan struct{})
 	fileStatus := NewCommitFileStatus()
-	go func() {
-		parseCommitFileStatus(fileStatus, stdout)
-		close(done)
-	}()
-	err := cmd.AddDynamicArguments(commitID).
-		WithDir(repoPath(repo)).
-		RunWithStderr(ctx)
+	stdout, _, err := RunCmdBytes(ctx, repo, cmd.AddDynamicArguments(commitID))
 	if err != nil {
 		return nil, err
 	}
-
-	<-done
+	parseCommitFileStatus(fileStatus, bytes.NewReader(stdout))
 	return fileStatus, nil
 }

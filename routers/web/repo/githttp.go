@@ -7,6 +7,7 @@ package repo
 import (
 	"compress/gzip"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -426,6 +427,29 @@ func serviceRPC(ctx *context.Context, service string) {
 		h.environ = append(h.environ, "GIT_PROTOCOL="+protocol)
 	}
 
+	if strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow") {
+		payload, err := io.ReadAll(reqBody)
+		if err != nil {
+			ctx.Resp.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		stdout, stderr, code, err := gitrepo.RunSmartService(ctx, h.getStorageRepo(), service, payload, h.environ)
+		if err != nil {
+			log.Error("Fail to serve remote RPC(%s) in %s: %v", service, h.getStorageRepo().RelativePath(), err)
+			ctx.Resp.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		if code != 0 {
+			log.Error("remote git service failed (%s) in %s: code=%d stderr=%s", service, h.getStorageRepo().RelativePath(), code, string(stderr))
+			ctx.Resp.WriteHeader(http.StatusInternalServerError)
+			_, _ = ctx.Resp.Write(stderr)
+			return
+		}
+		_, _ = ctx.Resp.Write(stdout)
+		return
+	}
+
 	if err := gitrepo.RunCmdWithStderr(ctx, h.getStorageRepo(), cmd.AddArguments(".").
 		WithEnv(append(os.Environ(), h.environ...)).
 		WithStdinCopy(reqBody).
@@ -494,11 +518,29 @@ func GetInfoRefs(ctx *context.Context) {
 	}
 	h.environ = append(os.Environ(), h.environ...)
 
-	cmd = cmd.AddArguments("--stateless-rpc", "--advertise-refs", ".").WithEnv(h.environ)
-	refs, _, err := gitrepo.RunCmdBytes(ctx, h.getStorageRepo(), cmd)
-	if err != nil {
-		ctx.ServerError("RunGitServiceAdvertiseRefs", err)
-		return
+	var refs []byte
+	if strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow") {
+		var stderr []byte
+		var code int32
+		var err error
+		refs, stderr, code, err = gitrepo.RunSmartService(ctx, h.getStorageRepo(), h.serviceType, nil, h.environ)
+		if err != nil {
+			ctx.ServerError("RunRemoteGitServiceAdvertiseRefs", err)
+			return
+		}
+		if code != 0 {
+			ctx.PlainText(http.StatusInternalServerError, string(stderr))
+			return
+		}
+	} else {
+		cmd = cmd.AddArguments("--stateless-rpc", "--advertise-refs", ".").WithEnv(h.environ)
+		var err error
+		refs, _, err = gitrepo.RunCmdBytes(ctx, h.getStorageRepo(), cmd)
+		if err != nil {
+			ctx.ServerError("RunGitServiceAdvertiseRefs", err)
+			return
+		}
 	}
 
 	ctx.Resp.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", h.serviceType))

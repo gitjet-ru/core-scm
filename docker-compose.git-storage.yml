@@ -1,0 +1,48 @@
+# Overlay: run external git-storage service and route bare repo ops via gRPC.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.git-storage.yml up -d --build
+#
+# Rollback:
+#   set GIT_STORAGE_BACKEND=local (or remove these vars) and restart gitea.
+
+services:
+  git-storage:
+    build:
+      context: ../git-storage
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      GIT_STORAGE_ADDR: ":9093"
+      GIT_STORAGE_ROOT: /var/lib/git-storage/repos
+      # S3-backed storage for bare repos (Selectel-compatible).
+      GIT_STORAGE_S3_ENDPOINT: ${GIT_STORAGE_S3_ENDPOINT:-}
+      GIT_STORAGE_S3_REGION: ${GIT_STORAGE_S3_REGION:-}
+      GIT_STORAGE_S3_BUCKET: ${GIT_STORAGE_S3_BUCKET:-}
+      GIT_STORAGE_S3_PREFIX: ${GIT_STORAGE_S3_PREFIX:-repos}
+      GIT_STORAGE_S3_USE_SSL: ${GIT_STORAGE_S3_USE_SSL:-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+    ports:
+      - "9093:9093"
+    volumes:
+      - git_storage_data:/var/lib/git-storage/repos
+
+  gitea:
+    build:
+      context: ..
+      dockerfile: core-scm/Dockerfile
+      target: gitea
+      args:
+        SRC_ROOT: core-scm
+    depends_on:
+      git-storage:
+        condition: service_started
+    environment:
+      GIT_STORAGE_BACKEND: ${GIT_STORAGE_BACKEND:-local}
+      GIT_STORAGE_ENDPOINT: ${GIT_STORAGE_ENDPOINT:-git-storage:9093}
+      GIT_STORAGE_TIMEOUTS: ${GIT_STORAGE_TIMEOUTS:-30s}
+
+volumes:
+  git_storage_data:

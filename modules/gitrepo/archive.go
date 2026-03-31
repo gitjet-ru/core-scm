@@ -47,7 +47,11 @@ func CreateBundle(ctx context.Context, repo Repository, commit string, out io.Wr
 	}
 	defer cleanup()
 
-	env := append(os.Environ(), "GIT_OBJECT_DIRECTORY="+filepath.Join(repoPath(repo), "objects"))
+	execRepoPath, err := localExecRepoPath(ctx, repo)
+	if err != nil {
+		return err
+	}
+	env := append(os.Environ(), "GIT_OBJECT_DIRECTORY="+filepath.Join(execRepoPath, "objects"))
 	_, _, err = gitcmd.NewCommand("init", "--bare").WithDir(tmp).WithEnv(env).RunStdString(ctx)
 	if err != nil {
 		return err

@@ -3,9 +3,10 @@
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26-alpine3.23 AS frontend-build
 RUN apk --no-cache add build-base git nodejs pnpm
 WORKDIR /src
-COPY package.json pnpm-lock.yaml .npmrc ./
+ARG SRC_ROOT=.
+COPY ${SRC_ROOT}/package.json ${SRC_ROOT}/pnpm-lock.yaml ${SRC_ROOT}/.npmrc ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
-COPY --exclude=.git/ . .
+COPY --exclude=.git/ ${SRC_ROOT}/ ./
 RUN make frontend
 
 # Build backend for each target platform
@@ -22,19 +23,21 @@ RUN apk --no-cache add \
     git
 
 WORKDIR ${GOPATH}/src/github.com/gitjet-ru/core-scm
-COPY go.mod go.sum ./
+ARG SRC_ROOT=.
+COPY ${SRC_ROOT}/go.mod ${SRC_ROOT}/go.sum ./
+# Monorepo dev mode: provide replaced git-storage module if present in build context.
+COPY git-storage /go/src/github.com/gitjet-ru/git-storage
 RUN go mod download
 # Use COPY instead of bind mount as read-only one breaks makefile state tracking and read-write one needs binary to be moved as it's discarded.
 # ".git" directory is mounted separately later only for version data extraction.
-COPY --exclude=.git/ . .
+COPY --exclude=.git/ ${SRC_ROOT}/ ./
 COPY --from=frontend-build /src/public/assets public/assets
 
 # Build gitea, .git mount is required for version data
 RUN --mount=type=cache,target="/root/.cache/go-build" \
-    --mount=type=bind,source=".git/",target=".git/" \
     make backend
 
-COPY docker/root /tmp/local
+COPY ${SRC_ROOT}/docker/root /tmp/local
 
 # Set permissions for builds that made under windows which strips the executable bit from file
 RUN chmod 755 /tmp/local/usr/bin/entrypoint \
@@ -107,7 +110,8 @@ RUN apk add --no-cache fuse3 util-linux
 
 COPY --from=geesefs-build /usr/local/bin/geesefs /usr/local/bin/geesefs
 
-COPY docker/s3fs-local/entrypoint-s3fs.sh /usr/local/bin/entrypoint-s3fs.sh
+ARG SRC_ROOT=.
+COPY ${SRC_ROOT}/docker/s3fs-local/entrypoint-s3fs.sh /usr/local/bin/entrypoint-s3fs.sh
 RUN chmod 755 /usr/local/bin/entrypoint-s3fs.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint-s3fs.sh"]

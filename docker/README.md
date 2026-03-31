@@ -12,6 +12,14 @@ Documentation on using docker image can be found on [Gitea Docs site](https://do
 - Секреты: `cp .env.s3.example .env.s3`, заполнить; `.env.s3` в `.gitignore`.
 - Compose merge: `docker compose -f docker-compose.yml -f docker-compose.s3fs-local.yml up -d --build gitea`
 
+## External git-storage (MVP)
+
+- Separate repository service: `../git-storage`.
+- Compose overlay: `docker compose -f docker-compose.yml -f docker-compose.git-storage.yml up -d --build`
+- Feature flags on `gitea`:
+  - `GIT_STORAGE_BACKEND=local|remote|shadow`
+  - `GIT_STORAGE_ENDPOINT=git-storage:9093`
+
 ## Spilo / Patroni: `waiting for leader to bootstrap`, Spilo unhealthy
 
 Patroni хранит состояние кластера **в etcd**, а не только в данных Postgres. Если сбросили том `spilo_data`, но **не** очистили ключи Patroni в etcd (или наоборот), узел может бесконечно писать `Lock owner: None` / `waiting for leader to bootstrap` (см. [zalando/spilo#690](https://github.com/zalando/spilo/issues/690)).

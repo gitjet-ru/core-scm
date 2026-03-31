@@ -6,8 +6,8 @@ package gitrepo
 import (
 	"context"
 	"errors"
+	"strings"
 
-	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	giturl "github.com/gitjet-ru/core-scm/modules/git/url"
 	"github.com/gitjet-ru/core-scm/modules/globallock"
@@ -49,10 +49,11 @@ func GitRemoteRemove(ctx context.Context, repo Repository, remoteName string) er
 
 // GitRemoteGetURL returns the url of a specific remote of the repository.
 func GitRemoteGetURL(ctx context.Context, repo Repository, remoteName string) (*giturl.GitURL, error) {
-	addr, err := git.GetRemoteAddress(ctx, repoPath(repo), remoteName)
+	addr, _, err := RunCmdString(ctx, repo, gitcmd.NewCommand("remote", "get-url").AddDynamicArguments(remoteName))
 	if err != nil {
 		return nil, err
 	}
+	addr = strings.TrimSpace(addr)
 	if addr == "" {
 		return nil, util.NewNotExistErrorf("remote '%s' does not exist", remoteName)
 	}

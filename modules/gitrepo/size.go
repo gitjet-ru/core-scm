@@ -4,6 +4,7 @@
 package gitrepo
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 )
@@ -12,8 +13,16 @@ const notRegularFileMode = os.ModeSymlink | os.ModeNamedPipe | os.ModeSocket | o
 
 // CalcRepositorySize returns the disk consumption for a given path
 func CalcRepositorySize(repo Repository) (int64, error) {
+	basePath := repoPath(repo)
+	if isRemoteBackendEnabled() {
+		localPath, err := ensureRemoteMirror(context.Background(), repo)
+		if err != nil {
+			return 0, err
+		}
+		basePath = localPath
+	}
 	var size int64
-	err := filepath.WalkDir(repoPath(repo), func(_ string, entry os.DirEntry, err error) error {
+	err := filepath.WalkDir(basePath, func(_ string, entry os.DirEntry, err error) error {
 		if os.IsNotExist(err) { // ignore the error because some files (like temp/lock file) may be deleted during traversing.
 			return nil
 		} else if err != nil {

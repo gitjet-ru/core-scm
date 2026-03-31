@@ -7,30 +7,32 @@ package gitrepo
 
 import (
 	"context"
+	"strings"
 
-	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 )
 
 // WalkReferences walks all the references from the repository
 // refname is empty, ObjectTag or ObjectBranch. All other values should be treated as equivalent to empty.
 func WalkReferences(ctx context.Context, repo Repository, walkfn func(sha1, refname string) error) (int, error) {
-	gitRepo, closer, err := RepositoryFromContextOrOpen(ctx, repo)
+	stdout, _, err := RunCmdString(ctx, repo, gitcmd.NewCommand("show-ref"))
 	if err != nil {
 		return 0, err
 	}
-	defer closer.Close()
-
-	i := 0
-	iter, err := gitRepo.GoGitRepo().References()
-	if err != nil {
-		return i, err
+	lines := strings.Split(strings.TrimSpace(stdout), "\n")
+	count := 0
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			continue
+		}
+		if err := walkfn(parts[0], parts[1]); err != nil {
+			return count, err
+		}
+		count++
 	}
-	defer iter.Close()
-
-	err = iter.ForEach(func(ref *plumbing.Reference) error {
-		err := walkfn(ref.Hash().String(), string(ref.Name()))
-		i++
-		return err
-	})
-	return i, err
+	return count, nil
 }
