@@ -6,18 +6,13 @@ package v1_25
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/migrations/base"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/migrations/base"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_ExtendCommentTreePathLength(t *testing.T) {
-	if setting.Database.Type.IsSQLite3() {
-		t.Skip("For SQLITE, varchar or char will always be represented as TEXT")
-	}
-
 	type Comment struct {
 		ID       int64  `xorm:"pk autoincr"`
 		TreePath string `xorm:"VARCHAR(255)"`

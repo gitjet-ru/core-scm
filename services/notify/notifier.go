@@ -6,14 +6,14 @@ package notify
 import (
 	"context"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	git_model "code.gitea.io/gitea/models/git"
-	issues_model "code.gitea.io/gitea/models/issues"
-	packages_model "code.gitea.io/gitea/models/packages"
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/repository"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/repository"
 )
 
 // Notifier defines an interface to notify receiver

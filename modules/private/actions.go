@@ -6,7 +6,7 @@ package private
 import (
 	"context"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 type GenerateTokenRequest struct {

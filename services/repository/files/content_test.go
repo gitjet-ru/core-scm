@@ -6,11 +6,11 @@ package files
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/unittest"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/services/contexttest"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/services/contexttest"
 
-	_ "code.gitea.io/gitea/models/actions"
+	_ "github.com/gitjet-ru/core-scm/models/actions"
 
 	"github.com/stretchr/testify/assert"
 )

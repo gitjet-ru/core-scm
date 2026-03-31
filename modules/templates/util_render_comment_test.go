@@ -7,9 +7,9 @@ import (
 	"html/template"
 	"testing"
 
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/modules/reqctx"
-	"code.gitea.io/gitea/modules/translation"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/modules/reqctx"
+	"github.com/gitjet-ru/core-scm/modules/translation"
 
 	"github.com/stretchr/testify/assert"
 )

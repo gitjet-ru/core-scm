@@ -13,14 +13,14 @@ import (
 	"strings"
 	"unicode"
 
-	packages_model "code.gitea.io/gitea/models/packages"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	pypi_module "code.gitea.io/gitea/modules/packages/pypi"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/validation"
-	"code.gitea.io/gitea/routers/api/packages/helper"
-	"code.gitea.io/gitea/services/context"
-	packages_service "code.gitea.io/gitea/services/packages"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	pypi_module "github.com/gitjet-ru/core-scm/modules/packages/pypi"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/validation"
+	"github.com/gitjet-ru/core-scm/routers/api/packages/helper"
+	"github.com/gitjet-ru/core-scm/services/context"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 )
 
 // https://peps.python.org/pep-0426/#name

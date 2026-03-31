@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"code.gitea.io/gitea/modules/auth/password/hash"
-	"code.gitea.io/gitea/modules/generate"
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/auth/password/hash"
+	"github.com/gitjet-ru/core-scm/modules/generate"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // Security settings
@@ -112,7 +112,7 @@ func loadSecurityFrom(rootCfg ConfigProvider) {
 	LogInRememberDays = sec.Key("LOGIN_REMEMBER_DAYS").MustInt(31)
 	SecretKey = loadSecret(sec, "SECRET_KEY_URI", "SECRET_KEY")
 	if SecretKey == "" {
-		// FIXME: https://github.com/go-gitea/gitea/issues/16832
+		// FIXME: upstream https://github.com/go-gitea/gitea/issues/16832
 		// Until it supports rotating an existing secret key, we shouldn't move users off of the widely used default value
 		SecretKey = "!#@FDEWREWR&*("
 	}

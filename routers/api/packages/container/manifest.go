@@ -11,19 +11,19 @@ import (
 	"os"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	packages_model "code.gitea.io/gitea/models/packages"
-	container_model "code.gitea.io/gitea/models/packages/container"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/globallock"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	container_module "code.gitea.io/gitea/modules/packages/container"
-	"code.gitea.io/gitea/modules/util"
-	notify_service "code.gitea.io/gitea/services/notify"
-	packages_service "code.gitea.io/gitea/services/packages"
-	container_service "code.gitea.io/gitea/services/packages/container"
+	"github.com/gitjet-ru/core-scm/models/db"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	container_model "github.com/gitjet-ru/core-scm/models/packages/container"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/globallock"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	container_module "github.com/gitjet-ru/core-scm/modules/packages/container"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	notify_service "github.com/gitjet-ru/core-scm/services/notify"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
+	container_service "github.com/gitjet-ru/core-scm/services/packages/container"
 
 	"github.com/opencontainers/go-digest"
 	oci "github.com/opencontainers/image-spec/specs-go/v1"
@@ -385,7 +385,7 @@ func createManifestBlob(ctx context.Context, contentStore *packages_module.Conte
 		return nil, false, "", err
 	}
 	// FIXME: Workaround to be removed in v1.20
-	// https://github.com/go-gitea/gitea/issues/19586
+	// upstream https://github.com/go-gitea/gitea/issues/19586
 	if exists {
 		err = contentStore.Has(packages_module.BlobHash256Key(pb.HashSHA256))
 		if err != nil && (errors.Is(err, util.ErrNotExist) || errors.Is(err, os.ErrNotExist)) {

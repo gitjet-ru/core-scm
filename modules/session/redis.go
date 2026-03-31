@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/nosql"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/nosql"
 
 	"gitea.com/go-chi/session"
 	"github.com/redis/go-redis/v9"

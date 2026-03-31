@@ -6,8 +6,8 @@ package doctor
 import (
 	"context"
 
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 func checkUserType(ctx context.Context, logger log.Logger, autofix bool) error {

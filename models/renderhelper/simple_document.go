@@ -6,7 +6,7 @@ package renderhelper
 import (
 	"context"
 
-	"code.gitea.io/gitea/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/markup"
 )
 
 type SimpleDocument struct {

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/json"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/json"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,7 +46,7 @@ func TestDumpAuthSource(t *testing.T) {
 	}
 	require.NoError(t, auth_model.CreateSource(t.Context(), source))
 
-	// intentionally test the "dump" to make sure the dumped JSON is correct: https://github.com/go-gitea/gitea/pull/16847
+	// intentionally test the "dump" to make sure the dumped JSON is correct: upstream https://github.com/go-gitea/gitea/pull/16847
 	sb := &strings.Builder{}
 	require.NoError(t, unittest.GetXORMEngine().DumpTables([]*schemas.Table{authSourceSchema}, sb))
 	// the dumped SQL is something like:

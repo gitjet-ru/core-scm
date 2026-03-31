@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // ParseTreeEntries parses the output of a `git ls-tree -l` command.

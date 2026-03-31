@@ -4,7 +4,7 @@
 package v1_20
 
 import (
-	"code.gitea.io/gitea/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
 
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"

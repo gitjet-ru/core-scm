@@ -4,8 +4,8 @@
 package v1_25
 
 import (
-	"code.gitea.io/gitea/models/migrations/base"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/models/migrations/base"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"

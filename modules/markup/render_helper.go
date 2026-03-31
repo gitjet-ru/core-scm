@@ -7,7 +7,7 @@ import (
 	"context"
 	"html/template"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 const (

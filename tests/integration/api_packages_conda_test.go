@@ -12,12 +12,12 @@ import (
 	"net/http"
 	"testing"
 
-	"code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	conda_module "code.gitea.io/gitea/modules/packages/conda"
-	"code.gitea.io/gitea/modules/zstd"
-	"code.gitea.io/gitea/tests"
+	"github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	conda_module "github.com/gitjet-ru/core-scm/modules/packages/conda"
+	"github.com/gitjet-ru/core-scm/modules/zstd"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/dsnet/compress/bzip2"
 	"github.com/stretchr/testify/assert"

@@ -8,13 +8,13 @@ import (
 	"strings"
 	"sync"
 
-	"code.gitea.io/gitea/models/db"
-	issue_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/modules/indexer"
-	indexer_internal "code.gitea.io/gitea/modules/indexer/internal"
-	inner_db "code.gitea.io/gitea/modules/indexer/internal/db"
-	"code.gitea.io/gitea/modules/indexer/issues/internal"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issue_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/modules/indexer"
+	indexer_internal "github.com/gitjet-ru/core-scm/modules/indexer/internal"
+	inner_db "github.com/gitjet-ru/core-scm/modules/indexer/internal/db"
+	"github.com/gitjet-ru/core-scm/modules/indexer/issues/internal"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"xorm.io/builder"
 )

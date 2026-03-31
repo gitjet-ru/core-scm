@@ -12,12 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"code.gitea.io/gitea/models/unittest"
-	webhook_model "code.gitea.io/gitea/models/webhook"
-	"code.gitea.io/gitea/modules/hostmatcher"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
-	webhook_module "code.gitea.io/gitea/modules/webhook"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	webhook_model "github.com/gitjet-ru/core-scm/models/webhook"
+	"github.com/gitjet-ru/core-scm/modules/hostmatcher"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	webhook_module "github.com/gitjet-ru/core-scm/modules/webhook"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

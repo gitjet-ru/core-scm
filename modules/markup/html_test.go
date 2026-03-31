@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"code.gitea.io/gitea/modules/emoji"
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/modules/markup/markdown"
-	"code.gitea.io/gitea/modules/setting"
-	testModule "code.gitea.io/gitea/modules/test"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/emoji"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/markup/markdown"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	testModule "github.com/gitjet-ru/core-scm/modules/test"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -84,17 +84,17 @@ func TestRender_CrossReferences(t *testing.T) {
 		"test-owner/test-repo#12345",
 		`<p><a href="/test-owner/test-repo/issues/12345" class="ref-issue" rel="nofollow">test-owner/test-repo#12345</a></p>`)
 	test(
-		"go-gitea/gitea#12345",
-		`<p><a href="/go-gitea/gitea/issues/12345" class="ref-issue" rel="nofollow">go-gitea/gitea#12345</a></p>`)
+		"gitjet-ru/core-scm#12345",
+		`<p><a href="/gitjet-ru/core-scm/issues/12345" class="ref-issue" rel="nofollow">gitjet-ru/core-scm#12345</a></p>`)
 	test(
-		"/home/gitea/go-gitea/gitea#12345",
-		`<p>/home/gitea/go-gitea/gitea#12345</p>`)
+		"/home/gitea/gitjet-ru/core-scm#12345",
+		`<p>/home/gitea/gitjet-ru/core-scm#12345</p>`)
 	test(
 		markup.TestAppURL+"gogitea/gitea/issues/12345",
 		`<p><a href="`+markup.TestAppURL+`gogitea/gitea/issues/12345" class="ref-issue" rel="nofollow">gogitea/gitea#12345</a></p>`)
 	test(
-		markup.TestAppURL+"go-gitea/gitea/issues/12345",
-		`<p><a href="`+markup.TestAppURL+`go-gitea/gitea/issues/12345" class="ref-issue" rel="nofollow">go-gitea/gitea#12345</a></p>`)
+		markup.TestAppURL+"gitjet-ru/core-scm/issues/12345",
+		`<p><a href="`+markup.TestAppURL+`gitjet-ru/core-scm/issues/12345" class="ref-issue" rel="nofollow">gitjet-ru/core-scm#12345</a></p>`)
 	test(
 		markup.TestAppURL+"gogitea/some-repo-name/issues/12345",
 		`<p><a href="`+markup.TestAppURL+`gogitea/some-repo-name/issues/12345" class="ref-issue" rel="nofollow">gogitea/some-repo-name#12345</a></p>`)
@@ -163,8 +163,8 @@ func TestRender_links(t *testing.T) {
 		"http://142.42.1.1/",
 		`<p><a href="http://142.42.1.1/" rel="nofollow">http://142.42.1.1/</a></p>`)
 	test(
-		"https://github.com/go-gitea/gitea/?p=aaa/bbb.html#ccc-ddd",
-		`<p><a href="https://github.com/go-gitea/gitea/?p=aaa/bbb.html#ccc-ddd" rel="nofollow">https://github.com/go-gitea/gitea/?p=aaa/bbb.html#ccc-ddd</a></p>`)
+		"https://github.com/gitjet-ru/core-scm/?p=aaa/bbb.html#ccc-ddd",
+		`<p><a href="https://github.com/gitjet-ru/core-scm/?p=aaa/bbb.html#ccc-ddd" rel="nofollow">https://github.com/gitjet-ru/core-scm/?p=aaa/bbb.html#ccc-ddd</a></p>`)
 	test(
 		"https://en.wikipedia.org/wiki/URL_(disambiguation)",
 		`<p><a href="https://en.wikipedia.org/wiki/URL_(disambiguation)" rel="nofollow">https://en.wikipedia.org/wiki/URL_(disambiguation)</a></p>`)
@@ -282,8 +282,8 @@ func TestRender_email(t *testing.T) {
 		"/home/gitea/mailstore/info@gitea/com",
 		`<p>/home/gitea/mailstore/info@gitea/com</p>`)
 	test(
-		"git@try.gitea.io:go-gitea/gitea.git",
-		`<p>git@try.gitea.io:go-gitea/gitea.git</p>`)
+		"git@try.gitea.io:gitjet-ru/core-scm.git",
+		`<p>git@try.gitea.io:gitjet-ru/core-scm.git</p>`)
 	test(
 		"https://foo:bar@gitea.io",
 		`<p><a href="https://foo:bar@gitea.io" rel="nofollow">https://foo:bar@gitea.io</a></p>`)
@@ -517,8 +517,8 @@ func TestPostProcess(t *testing.T) {
 
 	// But cross-referenced issue index should work.
 	test(
-		"go-gitea/gitea#12345",
-		`<a href="/go-gitea/gitea/issues/12345" class="ref-issue">go-gitea/gitea#12345</a>`)
+		"gitjet-ru/core-scm#12345",
+		`<a href="/gitjet-ru/core-scm/issues/12345" class="ref-issue">gitjet-ru/core-scm#12345</a>`)
 
 	// Test that other post-processing still works.
 	test(

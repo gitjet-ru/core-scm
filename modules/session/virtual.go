@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"sync"
 
-	"code.gitea.io/gitea/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/json"
 
 	"gitea.com/go-chi/session"
 	couchbase "gitea.com/go-chi/session/couchbase"
 	memcache "gitea.com/go-chi/session/memcache"
-	mysql "gitea.com/go-chi/session/mysql"
 	postgres "gitea.com/go-chi/session/postgres"
 )
 
@@ -41,8 +40,6 @@ func (o *VirtualSessionProvider) Init(gcLifetime int64, config string) error {
 		o.provider = &RedisProvider{}
 	case "db":
 		o.provider = &DBProvider{}
-	case "mysql":
-		o.provider = &mysql.MysqlProvider{}
 	case "postgres":
 		o.provider = &postgres.PostgresProvider{}
 	case "couchbase":

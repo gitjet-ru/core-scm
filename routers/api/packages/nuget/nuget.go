@@ -14,17 +14,17 @@ import (
 	"strconv"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	packages_model "code.gitea.io/gitea/models/packages"
-	nuget_model "code.gitea.io/gitea/models/packages/nuget"
-	"code.gitea.io/gitea/modules/optional"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	nuget_module "code.gitea.io/gitea/modules/packages/nuget"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/routers/api/packages/helper"
-	"code.gitea.io/gitea/services/context"
-	packages_service "code.gitea.io/gitea/services/packages"
+	"github.com/gitjet-ru/core-scm/models/db"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	nuget_model "github.com/gitjet-ru/core-scm/models/packages/nuget"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	nuget_module "github.com/gitjet-ru/core-scm/modules/packages/nuget"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/routers/api/packages/helper"
+	"github.com/gitjet-ru/core-scm/services/context"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 )
 
 func apiError(ctx *context.Context, status int, obj any) {

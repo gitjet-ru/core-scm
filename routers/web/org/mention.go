@@ -6,10 +6,10 @@ package org
 import (
 	"net/http"
 
-	"code.gitea.io/gitea/models/organization"
-	"code.gitea.io/gitea/modules/util"
-	shared_mention "code.gitea.io/gitea/routers/web/shared/mention"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/models/organization"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	shared_mention "github.com/gitjet-ru/core-scm/routers/web/shared/mention"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // GetMentionsInOwner returns JSON data for mention autocomplete on owner-level pages.

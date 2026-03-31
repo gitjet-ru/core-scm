@@ -12,9 +12,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/lfs"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/lfs"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/charmbracelet/git-lfs-transfer/transfer"
 )

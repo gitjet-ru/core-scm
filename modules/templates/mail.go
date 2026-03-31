@@ -12,10 +12,10 @@ import (
 	"sync"
 	texttmpl "text/template"
 
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 type MailRender struct {
@@ -26,7 +26,7 @@ type MailRender struct {
 	}
 
 	// FIXME: MAIL-TEMPLATE-SUBJECT: only "issue" related messages support using subject from templates
-	// It is an incomplete implementation from "Use templates for issue e-mail subject and body" https://github.com/go-gitea/gitea/pull/8329
+	// It is an incomplete implementation from "Use templates for issue e-mail subject and body" upstream https://github.com/go-gitea/gitea/pull/8329
 	SubjectTemplates *texttmpl.Template
 
 	tmplRenderer *tmplRender

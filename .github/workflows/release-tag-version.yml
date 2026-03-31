@@ -91,7 +91,7 @@ jobs:
         with:
           images: |-
             gitea/gitea
-            ghcr.io/go-gitea/gitea
+            ghcr.io/gitjet-ru/core-scm
           # this will generate tags in the following format:
           # latest
           # 1
@@ -108,7 +108,7 @@ jobs:
         with:
           images: |-
             gitea/gitea
-            ghcr.io/go-gitea/gitea
+            ghcr.io/gitjet-ru/core-scm
           # each tag below will have the suffix of -rootless
           flavor: |
             suffix=-rootless,onlatest=true

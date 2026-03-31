@@ -6,8 +6,8 @@ package internal
 import (
 	"strings"
 
-	"code.gitea.io/gitea/modules/indexer/internal"
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/indexer/internal"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 const filenameMatchNumberOfLines = 7 // Copied from GitHub search

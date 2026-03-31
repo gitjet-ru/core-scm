@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strings"
 
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/forms"
-	"code.gitea.io/gitea/services/repository/files"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/forms"
+	"github.com/gitjet-ru/core-scm/services/repository/files"
 )
 
 func NewDiffPatch(ctx *context.Context) {

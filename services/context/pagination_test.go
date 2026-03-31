@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"testing"
 
-	"code.gitea.io/gitea/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/container"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -10,11 +10,12 @@ import (
 	"strconv"
 	"strings"
 
-	git_module "code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/log"
-	base "code.gitea.io/gitea/modules/migration"
-	"code.gitea.io/gitea/modules/structs"
+	git_module "github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	base "github.com/gitjet-ru/core-scm/modules/migration"
+	"github.com/gitjet-ru/core-scm/modules/structs"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/codecommit"
 	"github.com/aws/aws-sdk-go-v2/service/codecommit/types"
@@ -86,7 +87,7 @@ type CodeCommitDownloader struct {
 // GetRepoInfo returns a repository information
 func (c *CodeCommitDownloader) GetRepoInfo(ctx context.Context) (*base.Repository, error) {
 	output, err := c.codeCommitClient.GetRepository(ctx, &codecommit.GetRepositoryInput{
-		RepositoryName: new(c.repoName),
+		RepositoryName: aws.String(c.repoName),
 	})
 	if err != nil {
 		return nil, err
@@ -118,7 +119,7 @@ func (c *CodeCommitDownloader) GetComments(ctx context.Context, commentable base
 	for {
 		resp, err := c.codeCommitClient.GetCommentsForPullRequest(ctx, &codecommit.GetCommentsForPullRequestInput{
 			NextToken:     nextToken,
-			PullRequestId: new(strconv.FormatInt(commentable.GetForeignIndex(), 10)),
+			PullRequestId: aws.String(strconv.FormatInt(commentable.GetForeignIndex(), 10)),
 		})
 		if err != nil {
 			return nil, false, err
@@ -160,7 +161,7 @@ func (c *CodeCommitDownloader) GetPullRequests(ctx context.Context, page, perPag
 	prs := make([]*base.PullRequest, 0, len(batch))
 	for _, id := range batch {
 		output, err := c.codeCommitClient.GetPullRequest(ctx, &codecommit.GetPullRequestInput{
-			PullRequestId: new(id),
+			PullRequestId: aws.String(id),
 		})
 		if err != nil {
 			return nil, false, err
@@ -240,7 +241,7 @@ func (c *CodeCommitDownloader) getAllPullRequestIDs(ctx context.Context) ([]stri
 
 	for {
 		output, err := c.codeCommitClient.ListPullRequests(ctx, &codecommit.ListPullRequestsInput{
-			RepositoryName: new(c.repoName),
+			RepositoryName: aws.String(c.repoName),
 			NextToken:      nextToken,
 		})
 		if err != nil {

@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.gitea.io/gitea/modules/git/gitcmd"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 // catFileBatchCommand implements the CatFileBatch interface using the "cat-file --batch-command" command

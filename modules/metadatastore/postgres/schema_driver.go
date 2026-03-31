@@ -1,20 +1,28 @@
 // Copyright 2020 The Gitea Authors. All rights reserved.
 // SPDX-License-Identifier: MIT
 
-package db
+package postgres
 
 import (
 	"database/sql"
 	"database/sql/driver"
 	"sync"
 
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/lib/pq"
 	"xorm.io/xorm/dialects"
 )
 
 var registerOnce sync.Once
+
+// EnsureSchemaDriverRegistered registers the postgresschema driver when [database] SCHEMA is set.
+func EnsureSchemaDriverRegistered() {
+	if len(setting.Database.Schema) == 0 {
+		return
+	}
+	registerPostgresSchemaDriver()
+}
 
 func registerPostgresSchemaDriver() {
 	registerOnce.Do(func() {
@@ -60,8 +68,6 @@ func (d *postgresSchemaDriver) Open(name string) (driver.Conn, error) {
 		return nil, err
 	}
 	defer stmt.Close()
-
-	// driver.String.ConvertValue will never return err for string
 
 	// golangci lint is incorrect here - there is no benefit to using stmt.ExecWithContext here
 	_, err = stmt.Exec([]driver.Value{schemaValue}) //nolint:staticcheck // see above

@@ -6,9 +6,9 @@ package oauth2
 import (
 	"html/template"
 
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/svg"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/svg"
 
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/openidConnect"

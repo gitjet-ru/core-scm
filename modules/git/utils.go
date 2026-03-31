@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 // ObjectCache provides thread-safe cache operations.

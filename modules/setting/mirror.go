@@ -6,7 +6,7 @@ package setting
 import (
 	"time"
 
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // Mirror settings

@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"slices"
 
-	auth_model "code.gitea.io/gitea/models/auth"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unit"
+	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unit"
 )
 
 // RequireRepoAdmin returns a middleware for requiring repository admin permission

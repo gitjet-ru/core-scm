@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/models/unittest"
-	issues_service "code.gitea.io/gitea/services/issue"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	issues_service "github.com/gitjet-ru/core-scm/services/issue"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

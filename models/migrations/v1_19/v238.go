@@ -4,7 +4,7 @@
 package v1_19
 
 import (
-	"code.gitea.io/gitea/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
 
 	"xorm.io/xorm"
 )
@@ -12,7 +12,7 @@ import (
 // AddUpdatedUnixToLFSMetaObject adds an updated column to the LFSMetaObject to allow for garbage collection
 func AddUpdatedUnixToLFSMetaObject(x *xorm.Engine) error {
 	// Drop the table introduced in `v211`, it's considered badly designed and doesn't look like to be used.
-	// See: https://github.com/go-gitea/gitea/issues/21086#issuecomment-1318217453
+	// See: upstream https://github.com/go-gitea/gitea/issues/21086#issuecomment-1318217453
 	// LFSMetaObject stores metadata for LFS tracked files.
 	type LFSMetaObject struct {
 		ID           int64              `xorm:"pk autoincr"`

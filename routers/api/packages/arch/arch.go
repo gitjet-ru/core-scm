@@ -12,15 +12,15 @@ import (
 	"net/http"
 	"strings"
 
-	packages_model "code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/modules/json"
-	packages_module "code.gitea.io/gitea/modules/packages"
-	arch_module "code.gitea.io/gitea/modules/packages/arch"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/routers/api/packages/helper"
-	"code.gitea.io/gitea/services/context"
-	packages_service "code.gitea.io/gitea/services/packages"
-	arch_service "code.gitea.io/gitea/services/packages/arch"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	packages_module "github.com/gitjet-ru/core-scm/modules/packages"
+	arch_module "github.com/gitjet-ru/core-scm/modules/packages/arch"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/routers/api/packages/helper"
+	"github.com/gitjet-ru/core-scm/services/context"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
+	arch_service "github.com/gitjet-ru/core-scm/services/packages/arch"
 )
 
 func apiError(ctx *context.Context, status int, obj any) {

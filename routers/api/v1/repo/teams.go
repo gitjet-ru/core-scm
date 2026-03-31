@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"code.gitea.io/gitea/models/organization"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/convert"
-	repo_service "code.gitea.io/gitea/services/repository"
+	"github.com/gitjet-ru/core-scm/models/organization"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/convert"
+	repo_service "github.com/gitjet-ru/core-scm/services/repository"
 )
 
 // ListTeams list a repository's teams

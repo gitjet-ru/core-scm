@@ -4,7 +4,7 @@
 package actions
 
 import (
-	actions_model "code.gitea.io/gitea/models/actions"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
 )
 
 const (

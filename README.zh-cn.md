@@ -1,14 +1,14 @@
 # Gitea
 
-[![](https://github.com/go-gitea/gitea/actions/workflows/release-nightly.yml/badge.svg?branch=main)](https://github.com/go-gitea/gitea/actions/workflows/release-nightly.yml?query=branch%3Amain "Release Nightly")
+[![](https://github.com/gitjet-ru/core-scm/actions/workflows/release-nightly.yml/badge.svg?branch=main)](https://github.com/gitjet-ru/core-scm/actions/workflows/release-nightly.yml?query=branch%3Amain "Release Nightly")
 [![](https://img.shields.io/discord/322538954119184384.svg?logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/Gitea "Join the Discord chat at https://discord.gg/Gitea")
-[![](https://goreportcard.com/badge/code.gitea.io/gitea)](https://goreportcard.com/report/code.gitea.io/gitea "Go Report Card")
-[![](https://pkg.go.dev/badge/code.gitea.io/gitea?status.svg)](https://pkg.go.dev/code.gitea.io/gitea "GoDoc")
-[![](https://img.shields.io/github/release/go-gitea/gitea.svg)](https://github.com/go-gitea/gitea/releases/latest "GitHub release")
-[![](https://www.codetriage.com/go-gitea/gitea/badges/users.svg)](https://www.codetriage.com/go-gitea/gitea "Help Contribute to Open Source")
+[![](https://goreportcard.com/badge/github.com/gitjet-ru/core-scm)](https://goreportcard.com/report/github.com/gitjet-ru/core-scm "Go Report Card")
+[![](https://pkg.go.dev/badge/github.com/gitjet-ru/core-scm?status.svg)](https://pkg.go.dev/github.com/gitjet-ru/core-scm "GoDoc")
+[![](https://img.shields.io/github/release/gitjet-ru/core-scm.svg)](https://github.com/gitjet-ru/core-scm/releases/latest "GitHub release")
+[![](https://www.codetriage.com/gitjet-ru/core-scm/badges/users.svg)](https://www.codetriage.com/gitjet-ru/core-scm "Help Contribute to Open Source")
 [![](https://opencollective.com/gitea/tiers/backers/badge.svg?label=backers&color=brightgreen)](https://opencollective.com/gitea "Become a backer/sponsor of gitea")
 [![](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT "License: MIT")
-[![Contribute with Gitpod](https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod&color=green)](https://gitpod.io/#https://github.com/go-gitea/gitea)
+[![Contribute with Gitpod](https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod&color=green)](https://gitpod.io/#https://github.com/gitjet-ru/core-scm)
 [![](https://badges.crowdin.net/gitea/localized.svg)](https://translate.gitea.com "Crowdin")
 
 [English](./README.md) | [繁體中文](./README.zh-tw.md)
@@ -95,7 +95,7 @@
 ## 作者
 
 - [维护者](https://github.com/orgs/go-gitea/people)
-- [贡献者](https://github.com/go-gitea/gitea/graphs/contributors)
+- [贡献者](https://github.com/gitjet-ru/core-scm/graphs/contributors)
 - [翻译者](options/locale/TRANSLATORS)
 
 ## 支持者
@@ -127,16 +127,16 @@ Gitea 的发音是 [/ɡɪ’ti:/](https://youtu.be/EM71-2uDAoY)，就像 "gi-tea
 
 **为什么这个项目没有托管在 Gitea 实例上？**
 
-我们正在 [努力](https://github.com/go-gitea/gitea/issues/1029)。
+我们正在 [努力](https://github.com/gitjet-ru/core-scm/issues/1029)。
 
 **在哪里可以找到安全补丁？**
 
-在 [发布日志](https://github.com/go-gitea/gitea/releases) 或 [变更日志](https://github.com/go-gitea/gitea/blob/main/CHANGELOG.md) 中，搜索关键词 `SECURITY` 以找到安全补丁。
+在 [发布日志](https://github.com/gitjet-ru/core-scm/releases) 或 [变更日志](https://github.com/gitjet-ru/core-scm/blob/main/CHANGELOG.md) 中，搜索关键词 `SECURITY` 以找到安全补丁。
 
 ## 许可证
 
 这个项目是根据 MIT 许可证授权的。
-请参阅 [LICENSE](https://github.com/go-gitea/gitea/blob/main/LICENSE) 文件以获取完整的许可证文本。
+请参阅 [LICENSE](https://github.com/gitjet-ru/core-scm/blob/main/LICENSE) 文件以获取完整的许可证文本。
 
 ## 进一步信息
 

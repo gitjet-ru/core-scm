@@ -11,14 +11,14 @@ import (
 	neturl "net/url"
 	"testing"
 
-	"code.gitea.io/gitea/models/packages"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unittest"
-	user_model "code.gitea.io/gitea/models/user"
-	composer_module "code.gitea.io/gitea/modules/packages/composer"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/routers/api/packages/composer"
-	"code.gitea.io/gitea/tests"
+	"github.com/gitjet-ru/core-scm/models/packages"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	composer_module "github.com/gitjet-ru/core-scm/modules/packages/composer"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/routers/api/packages/composer"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/stretchr/testify/assert"
 )

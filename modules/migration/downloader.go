@@ -7,7 +7,7 @@ package migration
 import (
 	"context"
 
-	"code.gitea.io/gitea/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/structs"
 )
 
 // Downloader downloads the site repo information

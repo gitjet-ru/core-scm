@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/modules/actions/jobparser"
-	"code.gitea.io/gitea/modules/json"
-	api "code.gitea.io/gitea/modules/structs"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/modules/actions/jobparser"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
 
 	act_model "github.com/nektos/act/pkg/model"
 	"go.yaml.in/yaml/v4"

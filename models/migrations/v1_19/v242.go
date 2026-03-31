@@ -4,7 +4,7 @@
 package v1_19
 
 import (
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"xorm.io/xorm"
 )

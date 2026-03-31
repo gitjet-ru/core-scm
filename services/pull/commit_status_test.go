@@ -7,8 +7,8 @@ package pull
 import (
 	"testing"
 
-	git_model "code.gitea.io/gitea/models/git"
-	"code.gitea.io/gitea/modules/commitstatus"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
+	"github.com/gitjet-ru/core-scm/modules/commitstatus"
 
 	"github.com/stretchr/testify/assert"
 )

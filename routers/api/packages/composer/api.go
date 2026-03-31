@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"time"
 
-	packages_model "code.gitea.io/gitea/models/packages"
-	composer_module "code.gitea.io/gitea/modules/packages/composer"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	composer_module "github.com/gitjet-ru/core-scm/modules/packages/composer"
 )
 
 // ServiceIndexResponse contains registry endpoints

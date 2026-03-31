@@ -6,7 +6,7 @@ package gitrepo
 import (
 	"context"
 
-	"code.gitea.io/gitea/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/git"
 )
 
 func GetSigningKey(ctx context.Context) (*git.SigningKey, *git.Signature) {

@@ -8,10 +8,10 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/typesniffer"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/typesniffer"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	trend "github.com/buildkite/terminal-to-html/v3"
 )

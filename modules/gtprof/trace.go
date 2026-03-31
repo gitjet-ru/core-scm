@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 type contextKey struct {

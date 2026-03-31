@@ -1,0 +1,16 @@
+# Merge with the main stack so Gitea stores bare repos on S3 via geesefs at /data/git.
+#
+# 1) cp .env.s3.example .env.s3  — заполните ключи и имя бакета
+# 2) docker compose -f docker-compose.yml -f docker-compose.s3fs-local.yml up -d --build gitea
+#
+# Requires privileged (FUSE inside the container).
+
+services:
+  gitea:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gitea-s3fs
+    privileged: true
+    env_file:
+      - .env.s3

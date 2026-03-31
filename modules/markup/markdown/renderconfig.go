@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/markup"
 
 	"github.com/yuin/goldmark/ast"
 	"gopkg.in/yaml.v3"

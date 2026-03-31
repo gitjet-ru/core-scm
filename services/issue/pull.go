@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"slices"
 
-	issues_model "code.gitea.io/gitea/models/issues"
-	org_model "code.gitea.io/gitea/models/organization"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	org_model "github.com/gitjet-ru/core-scm/models/organization"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 type ReviewRequestNotifier struct {
@@ -84,7 +84,7 @@ func PullRequestCodeOwnersReview(ctx context.Context, pr *issues_model.PullReque
 	if err != nil {
 		return nil, err
 	}
-	// https://github.com/go-gitea/gitea/issues/29763, we need to get the files changed
+	// Upstream issue https://github.com/go-gitea/gitea/issues/29763: we need to get the files changed
 	// between the merge base and the head commit but not the base branch and the head commit
 	changedFiles, err := repo.GetFilesChangedBetween(mergeBase, pr.GetGitHeadRefName())
 	if err != nil {

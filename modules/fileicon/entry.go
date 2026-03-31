@@ -3,7 +3,7 @@
 
 package fileicon
 
-import "code.gitea.io/gitea/modules/git"
+import "github.com/gitjet-ru/core-scm/modules/git"
 
 type EntryInfo struct {
 	BaseName      string

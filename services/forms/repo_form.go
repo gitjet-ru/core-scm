@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"strings"
 
-	issues_model "code.gitea.io/gitea/models/issues"
-	project_model "code.gitea.io/gitea/models/project"
-	"code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/web/middleware"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/webhook"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	project_model "github.com/gitjet-ru/core-scm/models/project"
+	"github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/web/middleware"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/webhook"
 
 	"gitea.com/go-chi/binding"
 )

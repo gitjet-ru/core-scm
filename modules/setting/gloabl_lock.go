@@ -4,8 +4,8 @@
 package setting
 
 import (
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/nosql"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/nosql"
 )
 
 // GlobalLock represents configuration of global lock

@@ -4,8 +4,8 @@
 package swagger
 
 import (
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/services/forms"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/services/forms"
 )
 
 // not actually a response, just a hack to get go-swagger to include definitions

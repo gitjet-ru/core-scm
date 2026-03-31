@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/indexer"
-	code_indexer "code.gitea.io/gitea/modules/indexer/code"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/indexer"
+	code_indexer "github.com/gitjet-ru/core-scm/modules/indexer/code"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 func indexSettingToGitGrepPathspecList() (list []string) {

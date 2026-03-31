@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	"code.gitea.io/gitea/modules/process"
-	"code.gitea.io/gitea/modules/util/rotatingfilewriter"
+	"github.com/gitjet-ru/core-scm/modules/process"
+	"github.com/gitjet-ru/core-scm/modules/util/rotatingfilewriter"
 )
 
 var projectPackagePrefix string

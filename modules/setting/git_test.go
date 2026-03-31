@@ -6,7 +6,7 @@ package setting
 import (
 	"testing"
 
-	"code.gitea.io/gitea/modules/test"
+	"github.com/gitjet-ru/core-scm/modules/test"
 
 	"github.com/stretchr/testify/assert"
 )

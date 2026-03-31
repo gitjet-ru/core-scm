@@ -8,13 +8,13 @@ import (
 	"errors"
 	"time"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/migrations"
-	system_model "code.gitea.io/gitea/models/system"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/setting/config"
-	"code.gitea.io/gitea/services/versioned_migration"
+	"github.com/gitjet-ru/core-scm/models/migrations"
+	system_model "github.com/gitjet-ru/core-scm/models/system"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/setting/config"
+	"github.com/gitjet-ru/core-scm/services/versioned_migration"
 
 	"xorm.io/xorm"
 )
@@ -29,7 +29,7 @@ func InitDBEngine(ctx context.Context) (err error) {
 		default:
 		}
 		log.Info("ORM engine initialization attempt #%d/%d...", i+1, setting.Database.DBConnectRetries)
-		if err = db.InitEngineWithMigration(ctx, migrateWithSetting); err == nil {
+		if err = metadatastore.Default().InitWithMigration(ctx, migrateWithSetting); err == nil {
 			break
 		} else if i == setting.Database.DBConnectRetries-1 {
 			return err

@@ -6,7 +6,7 @@ package v1_6
 import (
 	"fmt"
 
-	"code.gitea.io/gitea/modules/timeutil"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
 
 	"xorm.io/xorm"
 )

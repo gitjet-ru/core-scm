@@ -1,0 +1,120 @@
+# Локальный запуск: etcd + Spilo (Patroni + PostgreSQL 17) + образ core-scm.
+# Сборка: docker compose up -d --build (etcd + gitea; etcd — лёгкий образ из release tarball)
+# UI: http://localhost:3000/
+#
+# Только инфраструктура БД: docker compose up -d etcd spilo
+# Только etcd+Patroni без bootstrap/init приложения: не предусмотрено — gitea ждёт db-bootstrap.
+
+services:
+  # Patroni в Spilo ходит в etcd по API v2; в etcd 3.5+ v2 снят → 404. Держим 3.4.x.
+  # После смены версии etcd или паник bbolt сбросьте том: docker volume rm core-scm_etcd_data
+  etcd:
+    build:
+      context: ./docker/etcd
+      args:
+        ETCD_VERSION: ${ETCD_VERSION:-3.4.33}
+    image: gitjet/etcd:${ETCD_VERSION:-3.4.33}
+    restart: unless-stopped
+    command:
+      - etcd
+      - --logger=zap
+      # Patroni в Spilo использует клиент v2; в 3.4.x v2 по умолчанию выключен → 404 на /v2
+      - --enable-v2=true
+      - --name=etcd0
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd:2379
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-advertise-peer-urls=http://etcd:2380
+      - --initial-cluster=etcd0=http://etcd:2380
+      - --initial-cluster-token=gitjet-etcd
+      - --initial-cluster-state=new
+    volumes:
+      - etcd_data:/etcd-data
+    healthcheck:
+      test: ["CMD", "etcdctl", "--endpoints=http://127.0.0.1:2379", "endpoint", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Spilo: Patroni + PostgreSQL 17. Клиенты (Gitea, psql) подключаются к Postgres на :5432;
+  # Patroni и etcd только для координации, не для SQL.
+  spilo:
+    image: ${SPILO_IMAGE:-ghcr.io/zalando/spilo-17:4.0-p2}
+    restart: unless-stopped
+    depends_on:
+      etcd:
+        condition: service_healthy
+    environment:
+      ETCD_URL: http://etcd:2379
+      SCOPE: ${PATRONI_SCOPE:-gitjet-local}
+      PGVERSION: "17"
+      PGUSER_SUPERUSER: postgres
+      PGPASSWORD_SUPERUSER: ${POSTGRES_PASSWORD:-gitea}
+      ALLOW_NOSSL: "true"
+    volumes:
+      - spilo_data:/home/postgres/pgroot
+    ports:
+      - "${POSTGRES_PUBLISH_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+
+  db-bootstrap:
+    image: postgres:17-alpine
+    restart: "no"
+    depends_on:
+      spilo:
+        condition: service_healthy
+    environment:
+      PGHOST: spilo
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:-gitea}
+      APP_DB_USER: ${POSTGRES_USER:-gitea}
+      APP_DB_PASSWORD: ${POSTGRES_PASSWORD:-gitea}
+      APP_DB_NAME: ${POSTGRES_DB:-gitea}
+    volumes:
+      - ./docker/patroni/bootstrap-app-db.sh:/bootstrap.sh:ro
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+
+  gitea:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        TAGS: ""
+    restart: unless-stopped
+    depends_on:
+      spilo:
+        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      DB_TYPE: postgres
+      # Хост Spilo: тот же Postgres, которым управляет Patroni (не etcd и не REST Patroni).
+      DB_HOST: spilo:5432
+      DB_NAME: ${POSTGRES_DB:-gitea}
+      DB_USER: ${POSTGRES_USER:-gitea}
+      DB_PASSWD: ${POSTGRES_PASSWORD:-gitea}
+      GITEA__database__SSL_MODE: disable
+      DOMAIN: ${DOMAIN:-localhost}
+      SSH_DOMAIN: ${SSH_DOMAIN:-localhost}
+      HTTP_PORT: "3000"
+      ROOT_URL: ${ROOT_URL:-http://localhost:3000/}
+      DISABLE_SSH: ${DISABLE_SSH:-false}
+      SSH_PORT: ${SSH_PORT:-22}
+      SSH_LISTEN_PORT: ${SSH_LISTEN_PORT:-22}
+    ports:
+      - "${HTTP_PUBLISH_PORT:-3000}:3000"
+      - "${SSH_PUBLISH_PORT:-2222}:22"
+    volumes:
+      - gitea_data:/data
+
+volumes:
+  etcd_data:
+  spilo_data:
+  gitea_data:

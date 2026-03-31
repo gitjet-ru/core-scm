@@ -6,10 +6,10 @@ package cmd
 import (
 	"context"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/services/versioned_migration"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/services/versioned_migration"
 
 	"github.com/urfave/cli/v3"
 )
@@ -24,8 +24,14 @@ func newMigrateCommand() *cli.Command {
 }
 
 func runMigrate(ctx context.Context, c *cli.Command) error {
-	if err := initDB(ctx); err != nil {
-		return err
+	setting.MustInstalled()
+	setting.LoadDBSetting()
+	setting.InitSQLLoggersForCli(log.INFO)
+
+	if setting.Database.Type == "" {
+		log.Fatal(`Database settings are missing from the configuration file: %q.
+Ensure you are running in the correct environment or set the correct configuration file with -c.
+If this is the intended configuration file complete the [database] section.`, setting.CustomConf)
 	}
 
 	log.Info("AppPath: %s", setting.AppPath)
@@ -34,7 +40,7 @@ func runMigrate(ctx context.Context, c *cli.Command) error {
 	log.Info("Log path: %s", setting.Log.RootPath)
 	log.Info("Configuration file: %s", setting.CustomConf)
 
-	if err := db.InitEngineWithMigration(context.Background(), versioned_migration.Migrate); err != nil {
+	if err := metadatastore.Default().InitWithMigration(context.Background(), versioned_migration.Migrate); err != nil {
 		log.Fatal("Failed to initialize ORM engine: %v", err)
 		return err
 	}

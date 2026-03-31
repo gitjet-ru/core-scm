@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/modules/options"
+	"github.com/gitjet-ru/core-scm/modules/options"
 
 	"gopkg.in/yaml.v3"
 )

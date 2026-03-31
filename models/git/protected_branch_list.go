@@ -7,9 +7,9 @@ import (
 	"context"
 	"sort"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/glob"
-	"code.gitea.io/gitea/modules/optional"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/modules/glob"
+	"github.com/gitjet-ru/core-scm/modules/optional"
 )
 
 type ProtectedBranchRules []*ProtectedBranch

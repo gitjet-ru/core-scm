@@ -8,14 +8,14 @@ import (
 	"image/color"
 	"sync"
 
-	"code.gitea.io/gitea/modules/cache"
-	"code.gitea.io/gitea/modules/hcaptcha"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/mcaptcha"
-	"code.gitea.io/gitea/modules/recaptcha"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/templates"
-	"code.gitea.io/gitea/modules/turnstile"
+	"github.com/gitjet-ru/core-scm/modules/cache"
+	"github.com/gitjet-ru/core-scm/modules/hcaptcha"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/mcaptcha"
+	"github.com/gitjet-ru/core-scm/modules/recaptcha"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	"github.com/gitjet-ru/core-scm/modules/turnstile"
 
 	"gitea.com/go-chi/captcha"
 )

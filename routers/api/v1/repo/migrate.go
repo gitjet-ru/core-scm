@@ -10,26 +10,26 @@ import (
 	"net/http"
 	"strings"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/organization"
-	"code.gitea.io/gitea/models/perm"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	repo_model "code.gitea.io/gitea/models/repo"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/lfs"
-	"code.gitea.io/gitea/modules/log"
-	base "code.gitea.io/gitea/modules/migration"
-	"code.gitea.io/gitea/modules/setting"
-	api "code.gitea.io/gitea/modules/structs"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/convert"
-	"code.gitea.io/gitea/services/migrations"
-	notify_service "code.gitea.io/gitea/services/notify"
-	repo_service "code.gitea.io/gitea/services/repository"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/organization"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/lfs"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	base "github.com/gitjet-ru/core-scm/modules/migration"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/convert"
+	"github.com/gitjet-ru/core-scm/services/migrations"
+	notify_service "github.com/gitjet-ru/core-scm/services/notify"
+	repo_service "github.com/gitjet-ru/core-scm/services/repository"
 )
 
 // Migrate migrate remote git repository to gitea
@@ -210,7 +210,7 @@ func Migrate(ctx *context.APIContext) {
 	}
 
 	// use a background context, don't cancel the migration even if the client goes away
-	// HammerContext doesn't seem right (from https://github.com/go-gitea/gitea/pull/9335/files)
+	// HammerContext doesn't seem right (from upstream https://github.com/go-gitea/gitea/pull/9335/files)
 	// There are other abuses, maybe most HammerContext abuses should be fixed together in the future.
 	migratedRepo, err := doLongTimeMigrate(graceful.GetManager().HammerContext(), ctx.Doer)
 	if err != nil {

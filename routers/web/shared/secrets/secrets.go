@@ -4,14 +4,14 @@
 package secrets
 
 import (
-	"code.gitea.io/gitea/models/db"
-	secret_model "code.gitea.io/gitea/models/secret"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/forms"
-	secret_service "code.gitea.io/gitea/services/secrets"
+	"github.com/gitjet-ru/core-scm/models/db"
+	secret_model "github.com/gitjet-ru/core-scm/models/secret"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/forms"
+	secret_service "github.com/gitjet-ru/core-scm/services/secrets"
 )
 
 func SetSecretsContext(ctx *context.Context, ownerID, repoID int64) {

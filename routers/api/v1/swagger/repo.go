@@ -4,7 +4,7 @@
 package swagger
 
 import (
-	api "code.gitea.io/gitea/modules/structs"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
 )
 
 // Repository

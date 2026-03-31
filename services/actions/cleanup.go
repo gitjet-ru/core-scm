@@ -9,14 +9,14 @@ import (
 	"fmt"
 	"time"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/models/db"
-	actions_module "code.gitea.io/gitea/modules/actions"
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/modules/timeutil"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/models/db"
+	actions_module "github.com/gitjet-ru/core-scm/modules/actions"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/modules/timeutil"
 
 	"xorm.io/builder"
 )
@@ -237,7 +237,7 @@ func DeleteRun(ctx context.Context, run *actions_model.ActionRun) error {
 		//    delete affected ephemeral act_runners
 		//    I would make ephemeral runners fully delete directly before formally finishing the task
 		//
-		// See also: https://github.com/go-gitea/gitea/pull/34337#issuecomment-2862222788
+		// See also: upstream https://github.com/go-gitea/gitea/pull/34337#issuecomment-2862222788
 		if err := CleanupEphemeralRunners(ctx); err != nil {
 			return err
 		}

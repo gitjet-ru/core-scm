@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"slices"
 
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 // AccessMode specifies the users access mode

@@ -10,23 +10,23 @@ import (
 	"slices"
 	"strings"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/models/db"
-	issues_model "code.gitea.io/gitea/models/issues"
-	packages_model "code.gitea.io/gitea/models/packages"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	repo_model "code.gitea.io/gitea/models/repo"
-	unit_model "code.gitea.io/gitea/models/unit"
-	user_model "code.gitea.io/gitea/models/user"
-	actions_module "code.gitea.io/gitea/modules/actions"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/gitrepo"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	api "code.gitea.io/gitea/modules/structs"
-	webhook_module "code.gitea.io/gitea/modules/webhook"
-	"code.gitea.io/gitea/services/convert"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	unit_model "github.com/gitjet-ru/core-scm/models/unit"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	actions_module "github.com/gitjet-ru/core-scm/modules/actions"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
+	webhook_module "github.com/gitjet-ru/core-scm/modules/webhook"
+	"github.com/gitjet-ru/core-scm/services/convert"
 
 	"github.com/nektos/act/pkg/model"
 )
@@ -379,7 +379,7 @@ func notifyPackage(ctx context.Context, sender *user_model.User, pd *packages_mo
 	if pd.Repository == nil {
 		// When a package is uploaded to an organization, it could trigger an event to notify.
 		// So the repository could be nil, however, actions can't support that yet.
-		// See https://github.com/go-gitea/gitea/pull/17940
+		// See upstream https://github.com/go-gitea/gitea/pull/17940
 		return
 	}
 

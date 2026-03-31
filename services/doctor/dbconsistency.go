@@ -6,16 +6,17 @@ package doctor
 import (
 	"context"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	activities_model "code.gitea.io/gitea/models/activities"
-	"code.gitea.io/gitea/models/db"
-	issues_model "code.gitea.io/gitea/models/issues"
-	"code.gitea.io/gitea/models/migrations"
-	repo_model "code.gitea.io/gitea/models/repo"
-	secret_model "code.gitea.io/gitea/models/secret"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	issue_service "code.gitea.io/gitea/services/issue"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	"github.com/gitjet-ru/core-scm/models/db"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	"github.com/gitjet-ru/core-scm/models/migrations"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	secret_model "github.com/gitjet-ru/core-scm/models/secret"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	issue_service "github.com/gitjet-ru/core-scm/services/issue"
 )
 
 type consistencyCheck struct {
@@ -249,7 +250,7 @@ func prepareDBConsistencyChecks() []consistencyCheck {
 
 func checkDBConsistency(ctx context.Context, logger log.Logger, autofix bool) error {
 	// make sure DB version is uptodate
-	if err := db.InitEngineWithMigration(ctx, migrations.EnsureUpToDate); err != nil {
+	if err := metadatastore.Default().InitWithMigration(ctx, migrations.EnsureUpToDate); err != nil {
 		logger.Critical("Model version on the database does not match the current Gitea version. Model consistency will not be checked until the database is upgraded")
 		return err
 	}

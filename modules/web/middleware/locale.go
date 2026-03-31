@@ -6,8 +6,8 @@ package middleware
 import (
 	"net/http"
 
-	"code.gitea.io/gitea/modules/translation"
-	"code.gitea.io/gitea/modules/translation/i18n"
+	"github.com/gitjet-ru/core-scm/modules/translation"
+	"github.com/gitjet-ru/core-scm/modules/translation/i18n"
 
 	"golang.org/x/text/language"
 )

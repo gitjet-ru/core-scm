@@ -6,9 +6,9 @@ package cron
 import (
 	"context"
 
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/setting"
-	actions_service "code.gitea.io/gitea/services/actions"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	actions_service "github.com/gitjet-ru/core-scm/services/actions"
 )
 
 func initActionsTasks() {

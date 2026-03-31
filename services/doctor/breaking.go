@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
 
 	"xorm.io/builder"
 )
@@ -27,7 +27,7 @@ func iterateUserAccounts(ctx context.Context, each func(*user.User) error) error
 
 // Since 1.16.4 new restrictions has been set on email addresses. However users with invalid email
 // addresses would be currently facing a error due to their invalid email address.
-// Ref: https://github.com/go-gitea/gitea/pull/19085 & https://github.com/go-gitea/gitea/pull/17688
+// Ref: upstream https://github.com/go-gitea/gitea/pull/19085 & upstream https://github.com/go-gitea/gitea/pull/17688
 func checkUserEmail(ctx context.Context, logger log.Logger, _ bool) error {
 	// We could use quirky SQL to get all users that start without a [a-zA-Z0-9], but that would mean
 	// DB provider-specific SQL and only works _now_. So instead we iterate through all user accounts

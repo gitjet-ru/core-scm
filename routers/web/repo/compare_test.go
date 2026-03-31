@@ -8,13 +8,13 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	asymkey_model "code.gitea.io/gitea/models/asymkey"
-	git_model "code.gitea.io/gitea/models/git"
-	issues_model "code.gitea.io/gitea/models/issues"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/git"
-	git_service "code.gitea.io/gitea/services/git"
-	"code.gitea.io/gitea/services/gitdiff"
+	asymkey_model "github.com/gitjet-ru/core-scm/models/asymkey"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
+	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	git_service "github.com/gitjet-ru/core-scm/services/git"
+	"github.com/gitjet-ru/core-scm/services/gitdiff"
 
 	"github.com/stretchr/testify/assert"
 )

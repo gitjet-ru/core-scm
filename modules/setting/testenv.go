@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 var giteaTestSourceRoot *string
@@ -43,15 +43,9 @@ func SetupGiteaTestEnv() {
 	// giteaConf (GITEA_CONF) must be relative because it is used in the git hooks as "$GITEA_ROOT/$GITEA_CONF"
 	giteaConf := os.Getenv("GITEA_TEST_CONF")
 	if giteaConf == "" {
-		// By default, use sqlite.ini for testing, then IDE like GoLand can start the test process with debugger.
-		// It's easier for developers to debug bugs step by step with a debugger.
-		// Notice: when doing "ssh push", Gitea executes sub processes, debugger won't work for the sub processes.
-		giteaConf = "tests/sqlite.ini"
+		// Default integration/unit DB config: PostgreSQL (see tests/pgsql.ini.tmpl).
+		giteaConf = "tests/pgsql.ini"
 		_, _ = fmt.Fprintf(os.Stderr, "Environment variable GITEA_TEST_CONF not set - defaulting to %s\n", giteaConf)
-		if !EnableSQLite3 {
-			_, _ = fmt.Fprintf(os.Stderr, "sqlite3 requires: -tags sqlite,sqlite_unlock_notify\n")
-			os.Exit(1)
-		}
 	}
 	// CustomConf must be absolute path to make tests pass,
 	CustomConf = filepath.Join(AppWorkPath, giteaConf)

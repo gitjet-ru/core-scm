@@ -7,11 +7,11 @@ import (
 	"context"
 	"time"
 
-	packages_model "code.gitea.io/gitea/models/packages"
-	container_model "code.gitea.io/gitea/models/packages/container"
-	"code.gitea.io/gitea/modules/optional"
-	container_module "code.gitea.io/gitea/modules/packages/container"
-	packages_service "code.gitea.io/gitea/services/packages"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	container_model "github.com/gitjet-ru/core-scm/models/packages/container"
+	"github.com/gitjet-ru/core-scm/modules/optional"
+	container_module "github.com/gitjet-ru/core-scm/modules/packages/container"
+	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 
 	"github.com/opencontainers/go-digest"
 )

@@ -10,7 +10,7 @@ import (
 	"path"
 	"testing"
 
-	"code.gitea.io/gitea/tests"
+	"github.com/gitjet-ru/core-scm/tests"
 
 	"github.com/stretchr/testify/require"
 )

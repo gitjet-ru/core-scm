@@ -6,7 +6,7 @@ package v1_14
 import (
 	"testing"
 
-	"code.gitea.io/gitea/models/migrations/base"
+	"github.com/gitjet-ru/core-scm/models/migrations/base"
 
 	"github.com/stretchr/testify/assert"
 )

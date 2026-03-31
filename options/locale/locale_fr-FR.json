@@ -216,7 +216,7 @@
   "filter.string.asc": "A–Z",
   "filter.string.desc": "Z–A",
   "error.occurred": "Une erreur s’est produite",
-  "error.report_message": "Si vous pensez qu’il s’agit d’un bug Gitea, veuillez consulter notre board <a href=\"https://github.com/go-gitea/gitea/issues\" target=\"_blank\">GitHub</a> ou ouvrir un nouveau ticket si nécessaire.",
+  "error.report_message": "Si vous pensez qu’il s’agit d’un bug Gitea, veuillez consulter notre board <a href=\"https://github.com/gitjet-ru/core-scm/issues\" target=\"_blank\">GitHub</a> ou ouvrir un nouveau ticket si nécessaire.",
   "error.not_found": "La cible n'a pu être trouvée.",
   "error.network_error": "Erreur réseau",
   "startpage.app_desc": "Un service Git auto-hébergé sans prise de tête",

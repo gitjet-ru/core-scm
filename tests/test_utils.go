@@ -7,19 +7,20 @@ import (
 	"database/sql"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
-	"code.gitea.io/gitea/models/db"
-	packages_model "code.gitea.io/gitea/models/packages"
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/storage"
-	"code.gitea.io/gitea/modules/testlogger"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/routers"
+	"github.com/gitjet-ru/core-scm/models/db"
+	packages_model "github.com/gitjet-ru/core-scm/models/packages"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/storage"
+	"github.com/gitjet-ru/core-scm/modules/testlogger"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/routers"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -38,90 +39,56 @@ func InitTest() {
 		testlogger.Panicf("Init storage failed: %v\n", err)
 	}
 
-	switch {
-	case setting.Database.Type.IsMySQL():
-		connType := "tcp"
-		if len(setting.Database.Host) > 0 && setting.Database.Host[0] == '/' { // looks like a unix socket
-			connType = "unix"
-		}
+	unixSocket := len(setting.Database.Host) > 0 && setting.Database.Host[0] == '/'
 
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@%s(%s)/",
-			setting.Database.User, setting.Database.Passwd, connType, setting.Database.Host))
-		defer db.Close()
-		if err != nil {
-			log.Fatal("sql.Open: %v", err)
+	var adminDB *sql.DB
+	var err error
+	if unixSocket {
+		adminDB, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/?sslmode=%s&host=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.SSLMode, setting.Database.Host))
+	} else {
+		adminDB, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/?sslmode=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.SSLMode))
+	}
+	if err != nil {
+		log.Fatal("sql.Open: %v", err)
+	}
+	if _, err = adminDB.Exec("CREATE DATABASE " + setting.Database.Name); err != nil {
+		msg := strings.ToLower(err.Error())
+		if !strings.Contains(msg, "already exists") {
+			_ = adminDB.Close()
+			log.Fatal("db.Exec: CREATE DATABASE: %v", err)
 		}
-		if _, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + setting.Database.Name); err != nil {
-			log.Fatal("db.Exec: %v", err)
-		}
-	case setting.Database.Type.IsPostgreSQL():
-		var db *sql.DB
-		var err error
-		if setting.Database.Host[0] == '/' {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/%s?sslmode=%s&host=%s",
-				setting.Database.User, setting.Database.Passwd, setting.Database.Name, setting.Database.SSLMode, setting.Database.Host))
-		} else {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
-				setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
-		}
+	}
+	_ = adminDB.Close()
 
-		defer db.Close()
-		if err != nil {
-			log.Fatal("sql.Open: %v", err)
-		}
-		dbrows, err := db.Query(fmt.Sprintf("SELECT 1 FROM pg_database WHERE datname = '%s'", setting.Database.Name))
-		if err != nil {
-			log.Fatal("db.Query: %v", err)
-		}
-		defer dbrows.Close()
+	if len(setting.Database.Schema) == 0 {
+		return
+	}
 
-		if !dbrows.Next() {
-			if _, err = db.Exec("CREATE DATABASE " + setting.Database.Name); err != nil {
-				log.Fatal("db.Exec: CREATE DATABASE: %v", err)
-			}
-		}
-		// Check if we need to setup a specific schema
-		if len(setting.Database.Schema) == 0 {
-			break
-		}
-		db.Close()
+	var sqlDB *sql.DB
+	if unixSocket {
+		sqlDB, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/%s?sslmode=%s&host=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.Name, setting.Database.SSLMode, setting.Database.Host))
+	} else {
+		sqlDB, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
+	}
+	if err != nil {
+		log.Fatal("sql.Open: %v", err)
+	}
+	defer sqlDB.Close()
 
-		if setting.Database.Host[0] == '/' {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/%s?sslmode=%s&host=%s",
-				setting.Database.User, setting.Database.Passwd, setting.Database.Name, setting.Database.SSLMode, setting.Database.Host))
-		} else {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
-				setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
-		}
-		// This is a different db object; requires a different Close()
-		defer db.Close()
-		if err != nil {
-			log.Fatal("sql.Open: %v", err)
-		}
-		schrows, err := db.Query(fmt.Sprintf("SELECT 1 FROM information_schema.schemata WHERE schema_name = '%s'", setting.Database.Schema))
-		if err != nil {
-			log.Fatal("db.Query: %v", err)
-		}
-		defer schrows.Close()
+	schrows, err := sqlDB.Query(fmt.Sprintf("SELECT 1 FROM information_schema.schemata WHERE schema_name = '%s'", setting.Database.Schema))
+	if err != nil {
+		log.Fatal("db.Query: %v", err)
+	}
+	defer schrows.Close()
 
-		if !schrows.Next() {
-			// Create and setup a DB schema
-			if _, err = db.Exec("CREATE SCHEMA " + setting.Database.Schema); err != nil {
-				log.Fatal("db.Exec: CREATE SCHEMA: %v", err)
-			}
+	if !schrows.Next() {
+		if _, err = sqlDB.Exec("CREATE SCHEMA " + setting.Database.Schema); err != nil {
+			log.Fatal("db.Exec: CREATE SCHEMA: %v", err)
 		}
-
-	case setting.Database.Type.IsMSSQL():
-		host, port := setting.ParseMSSQLHostPort(setting.Database.Host)
-		db, err := sql.Open("mssql", fmt.Sprintf("server=%s; port=%s; database=%s; user id=%s; password=%s;",
-			host, port, "master", setting.Database.User, setting.Database.Passwd))
-		if err != nil {
-			log.Fatal("sql.Open: %v", err)
-		}
-		if _, err := db.Exec(fmt.Sprintf("If(db_id(N'%s') IS NULL) BEGIN CREATE DATABASE %s; END;", setting.Database.Name, setting.Database.Name)); err != nil {
-			log.Fatal("db.Exec: %v", err)
-		}
-		defer db.Close()
 	}
 
 	routers.InitWebInstalled(graceful.GetManager().HammerContext())

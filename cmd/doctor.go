@@ -12,13 +12,14 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/migrations"
-	migrate_base "code.gitea.io/gitea/models/migrations/base"
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/services/doctor"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/migrations"
+	migrate_base "github.com/gitjet-ru/core-scm/models/migrations/base"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/services/doctor"
 
 	"github.com/urfave/cli/v3"
 	"xorm.io/xorm"
@@ -114,7 +115,7 @@ func runRecreateTable(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	setting.Database.LogSQL = debug
-	if err := db.InitEngine(ctx); err != nil {
+	if err := metadatastore.Default().Init(ctx); err != nil {
 		fmt.Println(err)
 		fmt.Println("Check if you are using the right config file. You can use a --config directive to specify one.")
 		return nil
@@ -132,7 +133,7 @@ func runRecreateTable(ctx context.Context, cmd *cli.Command) error {
 	}
 	recreateTables := migrate_base.RecreateTables(beans...)
 
-	return db.InitEngineWithMigration(context.Background(), func(ctx context.Context, x *xorm.Engine) error {
+	return metadatastore.Default().InitWithMigration(context.Background(), func(ctx context.Context, x *xorm.Engine) error {
 		if err := migrations.EnsureUpToDate(ctx, x); err != nil {
 			return err
 		}

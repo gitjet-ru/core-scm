@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
@@ -155,8 +155,8 @@ func alterDatabaseCollation(x *xorm.Engine, collation string) error {
 	return errors.New("unsupported database type")
 }
 
-// preprocessDatabaseCollation checks database & table column collation, and alter the database collation if needed
-func preprocessDatabaseCollation(x *xorm.Engine) {
+// PreprocessDatabaseCollation checks database & table column collation, and alter the database collation if needed
+func PreprocessDatabaseCollation(x *xorm.Engine) {
 	r, err := CheckCollations(x)
 	if err != nil {
 		log.Error("Failed to check database collation: %v", err)

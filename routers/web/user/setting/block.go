@@ -6,10 +6,10 @@ package setting
 import (
 	"net/http"
 
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/templates"
-	shared_user "code.gitea.io/gitea/routers/web/shared/user"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	shared_user "github.com/gitjet-ru/core-scm/routers/web/shared/user"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 const (

@@ -6,7 +6,7 @@ package setting
 import (
 	"net/url"
 
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // Proxy settings

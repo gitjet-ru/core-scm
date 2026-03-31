@@ -204,7 +204,7 @@ func runBackport(ctx context.Context, c *cli.Command) error {
 	}
 
 	if !c.Bool("no-push") {
-		url := "https://github.com/go-gitea/gitea/compare/" + upstreamReleaseBranch + "..." + forkUser + ":" + backportBranch
+		url := "https://github.com/gitjet-ru/core-scm/compare/" + upstreamReleaseBranch + "..." + forkUser + ":" + backportBranch
 
 		if err := gitPushUp(ctx, remote, backportBranch); err != nil {
 			return err

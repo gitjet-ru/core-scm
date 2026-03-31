@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
-	"code.gitea.io/gitea/modules/auth/password/pwn"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/auth/password/pwn"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 var ErrIsPwned = errors.New("password has been pwned")

@@ -10,9 +10,9 @@ import (
 	"html/template"
 	"reflect"
 
-	"code.gitea.io/gitea/modules/container"
-	"code.gitea.io/gitea/modules/json"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/container"
+	"github.com/gitjet-ru/core-scm/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 func dictMerge(base map[string]any, arg any) bool {

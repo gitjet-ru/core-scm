@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.gitea.io/gitea/modules/highlight"
+	"github.com/gitjet-ru/core-scm/modules/highlight"
 
 	"github.com/stretchr/testify/assert"
 )

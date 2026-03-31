@@ -21,7 +21,7 @@ RUN apk --no-cache add \
     build-base \
     git
 
-WORKDIR ${GOPATH}/src/code.gitea.io/gitea
+WORKDIR ${GOPATH}/src/github.com/gitjet-ru/core-scm
 COPY go.mod go.sum ./
 RUN go mod download
 # Use COPY instead of bind mount as read-only one breaks makefile state tracking and read-write one needs binary to be moved as it's discarded.
@@ -42,7 +42,7 @@ RUN chmod 755 /tmp/local/usr/bin/entrypoint \
               /tmp/local/etc/s6/gitea/* \
               /tmp/local/etc/s6/openssh/* \
               /tmp/local/etc/s6/.s6-svscan/* \
-              /go/src/code.gitea.io/gitea/gitea
+              /go/src/github.com/gitjet-ru/core-scm/gitea
 
 FROM docker.io/library/alpine:3.23 AS gitea
 
@@ -74,7 +74,7 @@ RUN addgroup \
   echo "git:*" | chpasswd -e
 
 COPY --from=build-env /tmp/local /
-COPY --from=build-env /go/src/code.gitea.io/gitea/gitea /app/gitea/gitea
+COPY --from=build-env /go/src/github.com/gitjet-ru/core-scm/gitea /app/gitea/gitea
 
 ENV USER=git
 ENV GITEA_CUSTOM=/data/gitea
@@ -83,4 +83,32 @@ VOLUME ["/data"]
 
 # HINT: HEALTH-CHECK-ENDPOINT: don't use HEALTHCHECK, search this hint keyword for more information
 ENTRYPOINT ["/usr/bin/entrypoint"]
+CMD ["/usr/bin/s6-svscan", "/etc/s6"]
+
+# Build geesefs once (for local/dev S3 mount image)
+FROM docker.io/library/alpine:3.23 AS geesefs-build
+ARG GEESEFS_VERSION=0.43.5
+ARG TARGETARCH
+RUN apk add --no-cache curl && \
+    case "${TARGETARCH}" in \
+      amd64) ARCH=amd64 ;; \
+      arm64) ARCH=arm64 ;; \
+      *) echo "Unsupported TARGETARCH: ${TARGETARCH}" && exit 1 ;; \
+    esac && \
+    curl -fsSL "https://github.com/yandex-cloud/geesefs/releases/download/v${GEESEFS_VERSION}/geesefs-linux-${ARCH}" \
+      -o /usr/local/bin/geesefs && \
+    chmod +x /usr/local/bin/geesefs
+
+# Local / dev image: mount S3 over /data/git via geesefs before starting Gitea.
+# Build: docker build --target gitea-s3fs -t core-scm:s3fs .
+FROM gitea AS gitea-s3fs
+
+RUN apk add --no-cache fuse3 util-linux
+
+COPY --from=geesefs-build /usr/local/bin/geesefs /usr/local/bin/geesefs
+
+COPY docker/s3fs-local/entrypoint-s3fs.sh /usr/local/bin/entrypoint-s3fs.sh
+RUN chmod 755 /usr/local/bin/entrypoint-s3fs.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint-s3fs.sh"]
 CMD ["/usr/bin/s6-svscan", "/etc/s6"]

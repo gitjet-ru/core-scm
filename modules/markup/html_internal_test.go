@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"code.gitea.io/gitea/modules/setting"
-	testModule "code.gitea.io/gitea/modules/test"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	testModule "github.com/gitjet-ru/core-scm/modules/test"
+	"github.com/gitjet-ru/core-scm/modules/util"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -298,7 +298,7 @@ func TestRender_AutoLink(t *testing.T) {
 	test(tmp, "<a href=\""+tmp+"\" class=\"commit\"><code>d8a994ef24 (diff-2)</code></a>")
 
 	// render other commit URLs
-	tmp = "https://external-link.gitea.io/go-gitea/gitea/commit/d8a994ef243349f321568f9e36d5c3f444b99cae#diff-2"
+	tmp = "https://external-link.gitea.io/gitjet-ru/core-scm/commit/d8a994ef243349f321568f9e36d5c3f444b99cae#diff-2"
 	test(tmp, "<a href=\""+tmp+"\">"+tmp+"</a>")
 }
 

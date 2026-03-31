@@ -8,13 +8,13 @@ import (
 	"slices"
 	"strconv"
 
-	actions_model "code.gitea.io/gitea/models/actions"
-	"code.gitea.io/gitea/models/perm"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/modules/templates"
-	"code.gitea.io/gitea/modules/util"
-	"code.gitea.io/gitea/services/context"
+	actions_model "github.com/gitjet-ru/core-scm/models/actions"
+	"github.com/gitjet-ru/core-scm/models/perm"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/templates"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 const (
@@ -35,11 +35,11 @@ func ParseMaxTokenPermissions(ctx *context.Context) *repo_model.ActionsTokenPerm
 			return perm.AccessModeNone
 		}
 	}
-	ret := new(repo_model.MakeActionsTokenPermissions(perm.AccessModeNone))
+	ret := repo_model.MakeActionsTokenPermissions(perm.AccessModeNone)
 	for _, ut := range repo_model.ActionsTokenUnitTypes {
 		ret.UnitAccessModes[ut] = parseMaxPerm(ut)
 	}
-	return ret
+	return &ret
 }
 
 // GeneralSettings renders the actions general settings page

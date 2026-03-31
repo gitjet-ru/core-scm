@@ -7,9 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"github.com/urfave/cli/v3"
 )
@@ -18,7 +17,7 @@ func newDoctorConvertCommand() *cli.Command {
 	return &cli.Command{
 		Name:        "convert",
 		Usage:       "Convert the database",
-		Description: "A command to convert an existing MySQL database from utf8 to utf8mb4 or MSSQL database from varchar to nvarchar",
+		Description: "No-op for GitJet (PostgreSQL only); retained for CLI compatibility",
 		Action:      runDoctorConvert,
 	}
 }
@@ -34,22 +33,7 @@ func runDoctorConvert(ctx context.Context, cmd *cli.Command) error {
 	log.Info("Log path: %s", setting.Log.RootPath)
 	log.Info("Configuration file: %s", setting.CustomConf)
 
-	switch {
-	case setting.Database.Type.IsMySQL():
-		if err := db.ConvertDatabaseTable(); err != nil {
-			log.Fatal("Failed to convert database & table: %v", err)
-			return err
-		}
-		fmt.Println("Converted successfully, please confirm your database's character set is now utf8mb4")
-	case setting.Database.Type.IsMSSQL():
-		if err := db.ConvertVarcharToNVarchar(); err != nil {
-			log.Fatal("Failed to convert database from varchar to nvarchar: %v", err)
-			return err
-		}
-		fmt.Println("Converted successfully, please confirm your database's all columns character is NVARCHAR now")
-	default:
-		fmt.Println("This command can only be used with a MySQL or MSSQL database")
-	}
-
+	log.Info("GitJet uses PostgreSQL only; MySQL/MSSQL charset conversion is not applicable.")
+	fmt.Println("No conversion performed.")
 	return nil
 }

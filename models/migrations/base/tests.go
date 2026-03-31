@@ -7,18 +7,15 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"testing"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/tempdir"
-	"code.gitea.io/gitea/modules/testlogger"
-	"code.gitea.io/gitea/modules/util"
-
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/tempdir"
+	"github.com/gitjet-ru/core-scm/modules/testlogger"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
@@ -27,7 +24,7 @@ import (
 // FIXME: this file shouldn't be in a normal package, it should only be compiled for tests
 
 func newXORMEngine(t *testing.T) (*xorm.Engine, error) {
-	if err := db.InitEngine(t.Context()); err != nil {
+	if err := metadatastore.Default().Init(t.Context()); err != nil {
 		return nil, err
 	}
 	x := unittest.GetXORMEngine()
@@ -35,89 +32,43 @@ func newXORMEngine(t *testing.T) (*xorm.Engine, error) {
 }
 
 func deleteDB() error {
-	switch {
-	case setting.Database.Type.IsSQLite3():
-		if err := util.Remove(setting.Database.Path); err != nil {
-			return err
-		}
-		return os.MkdirAll(path.Dir(setting.Database.Path), os.ModePerm)
+	dbConn, err := sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/?sslmode=%s",
+		setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.SSLMode))
+	if err != nil {
+		return err
+	}
+	defer dbConn.Close()
 
-	case setting.Database.Type.IsMySQL():
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/",
-			setting.Database.User, setting.Database.Passwd, setting.Database.Host))
+	if _, err = dbConn.Exec("DROP DATABASE IF EXISTS " + setting.Database.Name); err != nil {
+		return err
+	}
+
+	if _, err = dbConn.Exec("CREATE DATABASE " + setting.Database.Name); err != nil {
+		return err
+	}
+	_ = dbConn.Close()
+
+	if len(setting.Database.Schema) != 0 {
+		dbConn, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer dbConn.Close()
 
-		if _, err = db.Exec("DROP DATABASE IF EXISTS " + setting.Database.Name); err != nil {
-			return err
-		}
-
-		if _, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + setting.Database.Name); err != nil {
-			return err
-		}
-		return nil
-	case setting.Database.Type.IsPostgreSQL():
-		db, err := sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/?sslmode=%s",
-			setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.SSLMode))
+		schrows, err := dbConn.Query(fmt.Sprintf("SELECT 1 FROM information_schema.schemata WHERE schema_name = '%s'", setting.Database.Schema))
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer schrows.Close()
 
-		if _, err = db.Exec("DROP DATABASE IF EXISTS " + setting.Database.Name); err != nil {
-			return err
-		}
-
-		if _, err = db.Exec("CREATE DATABASE " + setting.Database.Name); err != nil {
-			return err
-		}
-		db.Close()
-
-		// Check if we need to setup a specific schema
-		if len(setting.Database.Schema) != 0 {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
-				setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
-			if err != nil {
+		if !schrows.Next() {
+			if _, err = dbConn.Exec("CREATE SCHEMA " + setting.Database.Schema); err != nil {
 				return err
 			}
-			defer db.Close()
-
-			schrows, err := db.Query(fmt.Sprintf("SELECT 1 FROM information_schema.schemata WHERE schema_name = '%s'", setting.Database.Schema))
-			if err != nil {
-				return err
-			}
-			defer schrows.Close()
-
-			if !schrows.Next() {
-				// Create and setup a DB schema
-				_, err = db.Exec("CREATE SCHEMA " + setting.Database.Schema)
-				if err != nil {
-					return err
-				}
-			}
-
-			// Make the user's default search path the created schema; this will affect new connections
-			_, err = db.Exec(fmt.Sprintf(`ALTER USER "%s" SET search_path = %s`, setting.Database.User, setting.Database.Schema))
-			if err != nil {
-				return err
-			}
-			return nil
 		}
-	case setting.Database.Type.IsMSSQL():
-		host, port := setting.ParseMSSQLHostPort(setting.Database.Host)
-		db, err := sql.Open("mssql", fmt.Sprintf("server=%s; port=%s; database=%s; user id=%s; password=%s;",
-			host, port, "master", setting.Database.User, setting.Database.Passwd))
-		if err != nil {
-			return err
-		}
-		defer db.Close()
 
-		if _, err = db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS [%s]", setting.Database.Name)); err != nil {
-			return err
-		}
-		if _, err = db.Exec(fmt.Sprintf("CREATE DATABASE [%s]", setting.Database.Name)); err != nil {
+		if _, err = dbConn.Exec(fmt.Sprintf(`ALTER USER "%s" SET search_path = %s`, setting.Database.User, setting.Database.Schema)); err != nil {
 			return err
 		}
 	}

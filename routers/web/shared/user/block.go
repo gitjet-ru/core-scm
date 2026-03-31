@@ -6,11 +6,11 @@ package user
 import (
 	"errors"
 
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/web"
-	"code.gitea.io/gitea/services/context"
-	"code.gitea.io/gitea/services/forms"
-	user_service "code.gitea.io/gitea/services/user"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/web"
+	"github.com/gitjet-ru/core-scm/services/context"
+	"github.com/gitjet-ru/core-scm/services/forms"
+	user_service "github.com/gitjet-ru/core-scm/services/user"
 )
 
 func BlockedUsers(ctx *context.Context, blocker *user_model.User) {

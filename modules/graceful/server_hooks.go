@@ -6,7 +6,7 @@ package graceful
 import (
 	"os"
 
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 )
 
 // awaitShutdown waits for the shutdown signal from the Manager

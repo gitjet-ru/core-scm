@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"net/url"
 
-	activities_model "code.gitea.io/gitea/models/activities"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/services/context"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 func prepareHeatmapURL(ctx *context.Context) {

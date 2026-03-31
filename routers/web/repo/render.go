@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"path"
 
-	"code.gitea.io/gitea/models/renderhelper"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/models/renderhelper"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // RenderFile renders a file by repos path

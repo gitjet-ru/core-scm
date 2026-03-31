@@ -7,11 +7,11 @@ import (
 	"context"
 	"slices"
 
-	"code.gitea.io/gitea/models/db"
-	repo_model "code.gitea.io/gitea/models/repo"
-	"code.gitea.io/gitea/models/unit"
-	"code.gitea.io/gitea/modules/log"
-	actions_service "code.gitea.io/gitea/services/actions"
+	"github.com/gitjet-ru/core-scm/models/db"
+	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	actions_service "github.com/gitjet-ru/core-scm/services/actions"
 )
 
 // UpdateRepositoryUnits updates a repository's units

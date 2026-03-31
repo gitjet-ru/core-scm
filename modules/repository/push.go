@@ -4,7 +4,7 @@
 package repository
 
 import (
-	"code.gitea.io/gitea/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/git"
 )
 
 // PushUpdateOptions defines the push update options

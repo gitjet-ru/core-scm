@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/web/middleware"
-	"code.gitea.io/gitea/services/webtheme"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/web/middleware"
+	"github.com/gitjet-ru/core-scm/services/webtheme"
 )
 
 var _ context.Context = TemplateContext(nil)

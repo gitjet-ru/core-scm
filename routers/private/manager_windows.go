@@ -8,9 +8,9 @@ package private
 import (
 	"net/http"
 
-	"code.gitea.io/gitea/modules/graceful"
-	"code.gitea.io/gitea/modules/private"
-	"code.gitea.io/gitea/services/context"
+	"github.com/gitjet-ru/core-scm/modules/graceful"
+	"github.com/gitjet-ru/core-scm/modules/private"
+	"github.com/gitjet-ru/core-scm/services/context"
 )
 
 // Restart is not implemented for Windows based servers as they can't fork

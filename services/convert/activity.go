@@ -6,12 +6,12 @@ package convert
 import (
 	"context"
 
-	activities_model "code.gitea.io/gitea/models/activities"
-	perm_model "code.gitea.io/gitea/models/perm"
-	access_model "code.gitea.io/gitea/models/perm/access"
-	user_model "code.gitea.io/gitea/models/user"
-	"code.gitea.io/gitea/modules/log"
-	api "code.gitea.io/gitea/modules/structs"
+	activities_model "github.com/gitjet-ru/core-scm/models/activities"
+	perm_model "github.com/gitjet-ru/core-scm/models/perm"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	api "github.com/gitjet-ru/core-scm/modules/structs"
 )
 
 func ToActivity(ctx context.Context, ac *activities_model.Action, doer *user_model.User) *api.Activity {

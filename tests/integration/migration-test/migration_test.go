@@ -11,22 +11,20 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 
-	"code.gitea.io/gitea/models/db"
-	"code.gitea.io/gitea/models/migrations"
-	migrate_base "code.gitea.io/gitea/models/migrations/base"
-	"code.gitea.io/gitea/models/unittest"
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/log"
-	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/modules/testlogger"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/models/db"
+	"github.com/gitjet-ru/core-scm/models/migrations"
+	migrate_base "github.com/gitjet-ru/core-scm/models/migrations/base"
+	"github.com/gitjet-ru/core-scm/models/unittest"
+	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/metadatastore"
+	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/testlogger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
@@ -104,132 +102,66 @@ func restoreOldDB(t *testing.T, version string) {
 	require.NoError(t, err)
 	require.NotEmpty(t, data, "No data found for %s version: %s", setting.Database.Type, version)
 
-	switch {
-	case setting.Database.Type.IsSQLite3():
-		util.Remove(setting.Database.Path)
-		err := os.MkdirAll(path.Dir(setting.Database.Path), os.ModePerm)
-		assert.NoError(t, err)
+	unixSocket := len(setting.Database.Host) > 0 && setting.Database.Host[0] == '/'
 
-		db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?cache=shared&mode=rwc&_busy_timeout=%d&_txlock=immediate", setting.Database.Path, setting.Database.Timeout))
-		assert.NoError(t, err)
-		defer db.Close()
+	var dbConn *sql.DB
+	if unixSocket {
+		dbConn, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/?sslmode=%s&host=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.SSLMode, setting.Database.Host))
+	} else {
+		dbConn, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/?sslmode=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.SSLMode))
+	}
+	assert.NoError(t, err)
+	defer dbConn.Close()
 
-		_, err = db.Exec(data)
-		assert.NoError(t, err)
-		db.Close()
+	_, err = dbConn.Exec("DROP DATABASE IF EXISTS " + setting.Database.Name)
+	assert.NoError(t, err)
 
-	case setting.Database.Type.IsMySQL():
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/",
-			setting.Database.User, setting.Database.Passwd, setting.Database.Host))
-		assert.NoError(t, err)
-		defer db.Close()
+	_, err = dbConn.Exec("CREATE DATABASE " + setting.Database.Name)
+	assert.NoError(t, err)
+	dbConn.Close()
 
-		_, err = db.Exec("DROP DATABASE IF EXISTS " + setting.Database.Name)
-		assert.NoError(t, err)
-
-		_, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + setting.Database.Name)
-		assert.NoError(t, err)
-		db.Close()
-
-		db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?multiStatements=true",
-			setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name))
-		assert.NoError(t, err)
-		defer db.Close()
-
-		_, err = db.Exec(data)
-		assert.NoError(t, err)
-		db.Close()
-
-	case setting.Database.Type.IsPostgreSQL():
-		var db *sql.DB
-		var err error
-		if setting.Database.Host[0] == '/' {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/?sslmode=%s&host=%s",
-				setting.Database.User, setting.Database.Passwd, setting.Database.SSLMode, setting.Database.Host))
-			assert.NoError(t, err)
-		} else {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/?sslmode=%s",
-				setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.SSLMode))
-			assert.NoError(t, err)
-		}
-		defer db.Close()
-
-		_, err = db.Exec("DROP DATABASE IF EXISTS " + setting.Database.Name)
-		assert.NoError(t, err)
-
-		_, err = db.Exec("CREATE DATABASE " + setting.Database.Name)
-		assert.NoError(t, err)
-		db.Close()
-
-		// Check if we need to setup a specific schema
-		if len(setting.Database.Schema) != 0 {
-			if setting.Database.Host[0] == '/' {
-				db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/%s?sslmode=%s&host=%s",
-					setting.Database.User, setting.Database.Passwd, setting.Database.Name, setting.Database.SSLMode, setting.Database.Host))
-			} else {
-				db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
-					setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
-			}
-			require.NoError(t, err)
-			defer db.Close()
-
-			schrows, err := db.Query(fmt.Sprintf("SELECT 1 FROM information_schema.schemata WHERE schema_name = '%s'", setting.Database.Schema))
-			require.NoError(t, err)
-			require.NotEmpty(t, schrows)
-
-			if !schrows.Next() {
-				// Create and setup a DB schema
-				_, err = db.Exec("CREATE SCHEMA " + setting.Database.Schema)
-				assert.NoError(t, err)
-			}
-			schrows.Close()
-
-			// Make the user's default search path the created schema; this will affect new connections
-			_, err = db.Exec(fmt.Sprintf(`ALTER USER "%s" SET search_path = %s`, setting.Database.User, setting.Database.Schema))
-			assert.NoError(t, err)
-
-			db.Close()
-		}
-
-		if setting.Database.Host[0] == '/' {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/%s?sslmode=%s&host=%s",
+	if len(setting.Database.Schema) != 0 {
+		if unixSocket {
+			dbConn, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/%s?sslmode=%s&host=%s",
 				setting.Database.User, setting.Database.Passwd, setting.Database.Name, setting.Database.SSLMode, setting.Database.Host))
 		} else {
-			db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
+			dbConn, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
 				setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
 		}
-		assert.NoError(t, err)
-		defer db.Close()
+		require.NoError(t, err)
+		defer dbConn.Close()
 
-		_, err = db.Exec(data)
-		assert.NoError(t, err)
-		db.Close()
+		schrows, err := dbConn.Query(fmt.Sprintf("SELECT 1 FROM information_schema.schemata WHERE schema_name = '%s'", setting.Database.Schema))
+		require.NoError(t, err)
+		require.NotEmpty(t, schrows)
 
-	case setting.Database.Type.IsMSSQL():
-		host, port := setting.ParseMSSQLHostPort(setting.Database.Host)
-		db, err := sql.Open("mssql", fmt.Sprintf("server=%s; port=%s; database=%s; user id=%s; password=%s;",
-			host, port, "master", setting.Database.User, setting.Database.Passwd))
-		assert.NoError(t, err)
-		defer db.Close()
-
-		_, err = db.Exec("DROP DATABASE IF EXISTS [gitea]")
-		assert.NoError(t, err)
-
-		statements := strings.Split(data, "\nGO\n")
-		for _, statement := range statements {
-			if len(statement) > 5 && statement[:5] == "USE [" {
-				dbname := statement[5 : len(statement)-1]
-				db.Close()
-				db, err = sql.Open("mssql", fmt.Sprintf("server=%s; port=%s; database=%s; user id=%s; password=%s;",
-					host, port, dbname, setting.Database.User, setting.Database.Passwd))
-				assert.NoError(t, err)
-				defer db.Close()
-			}
-			_, err = db.Exec(statement)
-			assert.NoError(t, err, "Failure whilst running: %s\nError: %v", statement, err)
+		if !schrows.Next() {
+			_, err = dbConn.Exec("CREATE SCHEMA " + setting.Database.Schema)
+			assert.NoError(t, err)
 		}
-		db.Close()
+		schrows.Close()
+
+		_, err = dbConn.Exec(fmt.Sprintf(`ALTER USER "%s" SET search_path = %s`, setting.Database.User, setting.Database.Schema))
+		assert.NoError(t, err)
+
+		dbConn.Close()
 	}
+
+	if unixSocket {
+		dbConn, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@/%s?sslmode=%s&host=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.Name, setting.Database.SSLMode, setting.Database.Host))
+	} else {
+		dbConn, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
+			setting.Database.User, setting.Database.Passwd, setting.Database.Host, setting.Database.Name, setting.Database.SSLMode))
+	}
+	assert.NoError(t, err)
+	defer dbConn.Close()
+
+	_, err = dbConn.Exec(data)
+	assert.NoError(t, err)
+	dbConn.Close()
 }
 
 func wrappedMigrate(ctx context.Context, x *xorm.Engine) error {
@@ -243,13 +175,13 @@ func doMigrationTest(t *testing.T, version string) {
 
 	setting.InitSQLLoggersForCli(log.INFO)
 
-	err := db.InitEngineWithMigration(t.Context(), wrappedMigrate)
+	err := metadatastore.Default().InitWithMigration(t.Context(), wrappedMigrate)
 	assert.NoError(t, err)
 	currentEngine.Close()
 
 	beans, _ := db.NamesToBean()
 
-	err = db.InitEngineWithMigration(t.Context(), func(ctx context.Context, x *xorm.Engine) error {
+	err = metadatastore.Default().InitWithMigration(t.Context(), func(ctx context.Context, x *xorm.Engine) error {
 		currentEngine = x
 		return migrate_base.RecreateTables(beans...)(x)
 	})
@@ -257,7 +189,7 @@ func doMigrationTest(t *testing.T, version string) {
 	currentEngine.Close()
 
 	// We do this a second time to ensure that there is not a problem with retained indices
-	err = db.InitEngineWithMigration(t.Context(), func(ctx context.Context, x *xorm.Engine) error {
+	err = metadatastore.Default().InitWithMigration(t.Context(), func(ctx context.Context, x *xorm.Engine) error {
 		currentEngine = x
 		return migrate_base.RecreateTables(beans...)(x)
 	})

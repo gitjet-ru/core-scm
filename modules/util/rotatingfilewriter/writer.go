@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"code.gitea.io/gitea/modules/graceful/releasereopen"
-	"code.gitea.io/gitea/modules/util"
+	"github.com/gitjet-ru/core-scm/modules/graceful/releasereopen"
+	"github.com/gitjet-ru/core-scm/modules/util"
 )
 
 type Options struct {

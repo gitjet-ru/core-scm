@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"code.gitea.io/gitea/modules/log"
+	"github.com/gitjet-ru/core-scm/modules/log"
 
 	"github.com/kballard/go-shellquote"
 )

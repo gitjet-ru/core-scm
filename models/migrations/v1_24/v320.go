@@ -4,7 +4,7 @@
 package v1_24
 
 import (
-	"code.gitea.io/gitea/modules/json"
+	"github.com/gitjet-ru/core-scm/modules/json"
 
 	"xorm.io/xorm"
 )

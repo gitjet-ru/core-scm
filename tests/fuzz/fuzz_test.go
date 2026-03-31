@@ -8,13 +8,13 @@ import (
 	"io"
 	"testing"
 
-	"code.gitea.io/gitea/modules/markup"
-	"code.gitea.io/gitea/modules/markup/markdown"
-	"code.gitea.io/gitea/modules/setting"
+	"github.com/gitjet-ru/core-scm/modules/markup"
+	"github.com/gitjet-ru/core-scm/modules/markup/markdown"
+	"github.com/gitjet-ru/core-scm/modules/setting"
 )
 
 func newFuzzRenderContext() *markup.RenderContext {
-	return markup.NewTestRenderContext("https://example.com/go-gitea/gitea", map[string]string{"user": "go-gitea", "repo": "gitea"})
+	return markup.NewTestRenderContext("https://example.com/gitjet-ru/core-scm", map[string]string{"user": "go-gitea", "repo": "gitea"})
 }
 
 func FuzzMarkdownRenderRaw(f *testing.F) {
