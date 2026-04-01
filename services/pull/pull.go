@@ -349,22 +349,7 @@ func ChangeTargetBranch(ctx context.Context, pr *issues_model.PullRequest, doer 
 }
 
 func checkForInvalidation(ctx context.Context, requests issues_model.PullRequestList, repoID int64, doer *user_model.User, branch string) error {
-	repo, err := repo_model.GetRepositoryByID(ctx, repoID)
-	if err != nil {
-		return fmt.Errorf("GetRepositoryByIDCtx: %w", err)
-	}
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		return fmt.Errorf("gitrepo.OpenRepository: %w", err)
-	}
-	go func() {
-		// FIXME: graceful: We need to tell the manager we're doing something...
-		err := InvalidateCodeComments(ctx, requests, doer, repo, gitRepo, branch)
-		if err != nil {
-			log.Error("PullRequestList.InvalidateCodeComments: %v", err)
-		}
-		gitRepo.Close()
-	}()
+	// Mirrorless hard-cut: disable local mirror invalidation pass.
 	return nil
 }
 
@@ -933,32 +918,15 @@ func GetIssuesAllCommitStatus(ctx context.Context, issues issues_model.IssueList
 	}
 
 	var (
-		gitRepos = make(map[int64]*git.Repository)
-		res      = make(map[int64][]*git_model.CommitStatus)
-		lastRes  = make(map[int64]*git_model.CommitStatus)
-		err      error
+		res     = make(map[int64][]*git_model.CommitStatus)
+		lastRes = make(map[int64]*git_model.CommitStatus)
 	)
-	defer func() {
-		for _, gitRepo := range gitRepos {
-			gitRepo.Close()
-		}
-	}()
 
 	for _, issue := range issues {
 		if !issue.IsPull {
 			continue
 		}
-		gitRepo, ok := gitRepos[issue.RepoID]
-		if !ok {
-			gitRepo, err = gitrepo.OpenRepository(ctx, issue.Repo)
-			if err != nil {
-				log.Error("Cannot open git repository %-v for issue #%d[%d]. Error: %v", issue.Repo, issue.Index, issue.ID, err)
-				continue
-			}
-			gitRepos[issue.RepoID] = gitRepo
-		}
-
-		statuses, lastStatus, err := getAllCommitStatus(ctx, gitRepo, issue.PullRequest)
+		statuses, lastStatus, err := getAllCommitStatus(ctx, issue.Repo, issue.PullRequest)
 		if err != nil {
 			log.Error("getAllCommitStatus: cant get commit statuses of pull [%d]: %v", issue.PullRequest.ID, err)
 			continue
@@ -970,8 +938,8 @@ func GetIssuesAllCommitStatus(ctx context.Context, issues issues_model.IssueList
 }
 
 // getAllCommitStatus get pr's commit statuses.
-func getAllCommitStatus(ctx context.Context, gitRepo *git.Repository, pr *issues_model.PullRequest) (statuses []*git_model.CommitStatus, lastStatus *git_model.CommitStatus, err error) {
-	sha, shaErr := gitRepo.GetRefCommitID(pr.GetGitHeadRefName())
+func getAllCommitStatus(ctx context.Context, repo *repo_model.Repository, pr *issues_model.PullRequest) (statuses []*git_model.CommitStatus, lastStatus *git_model.CommitStatus, err error) {
+	sha, shaErr := gitrepo.GetFullCommitID(ctx, repo, pr.GetGitHeadRefName())
 	if shaErr != nil {
 		return nil, nil, shaErr
 	}

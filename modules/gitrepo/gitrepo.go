@@ -38,7 +38,7 @@ func OpenRepository(ctx context.Context, repo Repository) (*git.Repository, erro
 	if isRemoteBackendEnabled() {
 		localPath, err := ensureRemoteMirror(ctx, repo)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("ensureRemoteMirror[%s]: %w", repo.RelativePath(), err)
 		}
 		return git.OpenRepository(ctx, localPath)
 	}
@@ -69,7 +69,7 @@ func RepositoryFromRequestContextOrOpen(ctx reqctx.RequestContext, repo Reposito
 	if isRemoteBackendEnabled() {
 		localPath, err := ensureRemoteMirror(ctx, repo)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("ensureRemoteMirror[%s]: %w", repo.RelativePath(), err)
 		}
 		openPath = localPath
 	}

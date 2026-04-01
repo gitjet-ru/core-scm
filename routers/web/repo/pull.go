@@ -403,12 +403,13 @@ func prepareViewPullInfo(ctx *context.Context, issue *issues_model.Issue) *git_s
 	if pull.BaseRepoID == ctx.Repo.Repository.ID && ctx.Repo.GitRepo != nil {
 		baseGitRepo = ctx.Repo.GitRepo
 	} else {
-		baseGitRepo, err := gitrepo.OpenRepository(ctx, pull.BaseRepo)
-		if err != nil {
-			ctx.ServerError("OpenRepository", err)
+		// In mirrorless flow this route should operate on the already assigned repository context.
+		// If it's missing, fail fast instead of opening a separate local repo mirror.
+		if ctx.Repo.GitRepo == nil {
+			ctx.ServerError("GitRepo not open", fmt.Errorf("no open base git repo for '%s'", pull.BaseRepo.FullName()))
 			return nil
 		}
-		defer baseGitRepo.Close()
+		baseGitRepo = ctx.Repo.GitRepo
 	}
 
 	statusCheckData := &pullCommitStatusCheckData{}

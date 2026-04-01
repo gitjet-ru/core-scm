@@ -1094,24 +1094,6 @@ func parseCompareInfo(ctx *context.APIContext, compareParam string) (result *git
 
 	isSameRepo := baseRepo.ID == headRepo.ID
 
-	var headGitRepo *git.Repository
-	if isSameRepo {
-		headGitRepo = ctx.Repo.GitRepo
-		closer = func() {} // no need to close the head repo because it shares the base repo
-	} else {
-		headGitRepo, err = gitrepo.OpenRepository(ctx, headRepo)
-		if err != nil {
-			ctx.APIErrorInternal(err)
-			return nil, nil
-		}
-		closer = func() { _ = headGitRepo.Close() }
-	}
-	defer func() {
-		if result == nil && !isSameRepo {
-			_ = headGitRepo.Close()
-		}
-	}()
-
 	// user should have permission to read baseRepo's codes and pulls, NOT headRepo's
 	permBase, err := access_model.GetUserRepoPermission(ctx, baseRepo, ctx.Doer)
 	if err != nil {
@@ -1138,26 +1120,53 @@ func parseCompareInfo(ctx *context.APIContext, compareParam string) (result *git
 		return nil, nil
 	}
 
-	baseRef := ctx.Repo.GitRepo.UnstableGuessRefByShortName(util.IfZero(compareReq.BaseOriRef, baseRepo.GetPullRequestTargetBranch(ctx)))
-	headRef := headGitRepo.UnstableGuessRefByShortName(util.IfZero(compareReq.HeadOriRef, headRepo.DefaultBranch))
-
-	log.Trace("Repo path: %q, base ref: %q->%q, head ref: %q->%q", ctx.Repo.Repository.RelativePath(), compareReq.BaseOriRef, baseRef, compareReq.HeadOriRef, headRef)
-
-	baseRefValid := baseRef.IsBranch() || baseRef.IsTag() || git.IsStringLikelyCommitID(git.ObjectFormatFromName(ctx.Repo.Repository.ObjectFormatName), baseRef.ShortName())
-	headRefValid := headRef.IsBranch() || headRef.IsTag() || git.IsStringLikelyCommitID(git.ObjectFormatFromName(headRepo.ObjectFormatName), headRef.ShortName())
-	// Check if base&head ref are valid.
-	if !baseRefValid || !headRefValid {
+	baseBranch := util.IfZero(compareReq.BaseOriRef, baseRepo.GetPullRequestTargetBranch(ctx))
+	headBranch := util.IfZero(compareReq.HeadOriRef, headRepo.DefaultBranch)
+	if strings.TrimSpace(baseBranch) == "" || strings.TrimSpace(headBranch) == "" {
+		ctx.APIErrorNotFound()
+		return nil, nil
+	}
+	if !gitrepo.IsBranchExist(ctx, baseRepo, baseBranch) || !gitrepo.IsBranchExist(ctx, headRepo, headBranch) {
 		ctx.APIErrorNotFound()
 		return nil, nil
 	}
 
-	compareInfo, err := git_service.GetCompareInfo(ctx, baseRepo, headRepo, headGitRepo, baseRef, headRef, compareReq.DirectComparison(), false)
+	compareInfo := &git_service.CompareInfo{
+		BaseRepo:         baseRepo,
+		BaseRef:          git.RefNameFromBranch(baseBranch),
+		HeadRepo:         headRepo,
+		HeadRef:          git.RefNameFromBranch(headBranch),
+		CompareSeparator: util.Iif(compareReq.DirectComparison(), "..", "..."),
+		Commits:          []*git.Commit{},
+	}
+	compareInfo.BaseCommitID, err = gitrepo.GetFullCommitID(ctx, baseRepo, compareInfo.BaseRef.String())
+	if err != nil {
+		ctx.APIErrorInternal(err)
+		return nil, nil
+	}
+	compareInfo.HeadCommitID, err = gitrepo.GetFullCommitID(ctx, headRepo, compareInfo.HeadRef.String())
 	if err != nil {
 		ctx.APIErrorInternal(err)
 		return nil, nil
 	}
 
-	return compareInfo, closer
+	if !compareReq.DirectComparison() {
+		if !isSameRepo {
+			if err := gitrepo.FetchRemoteCommit(ctx, headRepo, baseRepo, compareInfo.BaseCommitID); err != nil {
+				ctx.APIErrorInternal(err)
+				return nil, nil
+			}
+		}
+		compareInfo.MergeBase, err = gitrepo.MergeBase(ctx, headRepo, compareInfo.BaseCommitID, compareInfo.HeadCommitID)
+		if err != nil {
+			ctx.APIErrorInternal(err)
+			return nil, nil
+		}
+	} else {
+		compareInfo.MergeBase = compareInfo.BaseCommitID
+	}
+
+	return compareInfo, func() {}
 }
 
 // UpdatePullRequest merge PR's baseBranch into headBranch

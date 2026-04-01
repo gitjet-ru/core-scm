@@ -52,34 +52,7 @@ func SyncRepositoryHooks(ctx context.Context) error {
 
 // GenerateGitHooks generates git hooks from a template repository
 func GenerateGitHooks(ctx context.Context, templateRepo, generateRepo *repo_model.Repository) error {
-	generateGitRepo, err := gitrepo.OpenRepository(ctx, generateRepo)
-	if err != nil {
-		return err
-	}
-	defer generateGitRepo.Close()
-
-	templateGitRepo, err := gitrepo.OpenRepository(ctx, templateRepo)
-	if err != nil {
-		return err
-	}
-	defer templateGitRepo.Close()
-
-	templateHooks, err := templateGitRepo.Hooks()
-	if err != nil {
-		return err
-	}
-
-	for _, templateHook := range templateHooks {
-		generateHook, err := generateGitRepo.GetHook(templateHook.Name())
-		if err != nil {
-			return err
-		}
-
-		generateHook.Content = templateHook.Content
-		if err := generateHook.Update(); err != nil {
-			return err
-		}
-	}
+	log.Warn("skip GenerateGitHooks in mirrorless hard-cut for %s", generateRepo.RelativePath())
 	return nil
 }
 

@@ -10,7 +10,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	actions_model "github.com/gitjet-ru/core-scm/models/actions"
 	"github.com/gitjet-ru/core-scm/models/db"
@@ -22,7 +21,6 @@ import (
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	actions_module "github.com/gitjet-ru/core-scm/modules/actions"
 	"github.com/gitjet-ru/core-scm/modules/git"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/json"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/setting"
@@ -120,9 +118,8 @@ func (input *notifyInput) Notify(ctx context.Context) {
 func notify(ctx context.Context, input *notifyInput) error {
 	isRemoteBackend := strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
 		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow")
-	if isRemoteBackend && input.Event == webhook_module.HookEventRepository {
-		// Repository create/update events don't require workflow evaluation and can
-		// significantly delay create flow while waiting for local mirror bootstrap.
+	if isRemoteBackend {
+		log.Warn("skip actions notify in mirrorless hard-cut for %s", input.Repo.RelativePath())
 		return nil
 	}
 
@@ -156,112 +153,8 @@ func notify(ctx context.Context, input *notifyInput) error {
 	} else if !input.Repo.UnitEnabled(ctx, unit_model.TypeActions) {
 		return nil
 	}
+	return nil
 
-	openRepoCtx := context.Background()
-	if isRemoteBackend {
-		// Do not block request lifecycle for long mirror bootstrap attempts.
-		var cancel context.CancelFunc
-		openRepoCtx, cancel = context.WithTimeout(openRepoCtx, 2*time.Second)
-		defer cancel()
-	}
-	gitRepo, err := gitrepo.OpenRepository(openRepoCtx, input.Repo)
-	if err != nil {
-		if isRemoteBackend &&
-			(strings.Contains(err.Error(), "repository does not exist") || strings.Contains(err.Error(), "no such file or directory")) {
-			log.Warn("skip actions notify due to unavailable remote mirror for %s: %v", input.Repo.RelativePath(), err)
-			return nil
-		}
-		return fmt.Errorf("git.OpenRepository: %w", err)
-	}
-	defer gitRepo.Close()
-
-	ref := input.Ref
-	if ref.BranchName() != input.Repo.DefaultBranch && actions_module.IsDefaultBranchWorkflow(input.Event) {
-		if ref != "" {
-			log.Warn("Event %q should only trigger workflows on the default branch, but its ref is %q. Will fall back to the default branch",
-				input.Event, ref)
-		}
-		ref = git.RefNameFromBranch(input.Repo.DefaultBranch)
-	}
-	if ref == "" {
-		log.Warn("Ref of event %q is empty, will fall back to the default branch", input.Event)
-		ref = git.RefNameFromBranch(input.Repo.DefaultBranch)
-	}
-
-	commitID, err := gitRepo.GetRefCommitID(ref.String())
-	if err != nil {
-		return fmt.Errorf("gitRepo.GetRefCommitID: %w", err)
-	}
-
-	// Get the commit object for the ref
-	commit, err := gitRepo.GetCommit(commitID)
-	if err != nil {
-		return fmt.Errorf("gitRepo.GetCommit: %w", err)
-	}
-
-	if skipWorkflows(ctx, input, commit) {
-		return nil
-	}
-
-	var detectedWorkflows []*actions_module.DetectedWorkflow
-	actionsConfig := input.Repo.MustGetUnit(ctx, unit_model.TypeActions).ActionsConfig()
-	workflows, schedules, err := actions_module.DetectWorkflows(gitRepo, commit,
-		input.Event,
-		input.Payload,
-		shouldDetectSchedules,
-	)
-	if err != nil {
-		return fmt.Errorf("DetectWorkflows: %w", err)
-	}
-
-	log.Trace("repo %s with commit %s event %s find %d workflows and %d schedules",
-		input.Repo.RelativePath(),
-		commit.ID,
-		input.Event,
-		len(workflows),
-		len(schedules),
-	)
-
-	for _, wf := range workflows {
-		if actionsConfig.IsWorkflowDisabled(wf.EntryName) {
-			log.Trace("repo %s has disable workflows %s", input.Repo.RelativePath(), wf.EntryName)
-			continue
-		}
-
-		if wf.TriggerEvent.Name != actions_module.GithubEventPullRequestTarget {
-			detectedWorkflows = append(detectedWorkflows, wf)
-		}
-	}
-
-	if input.PullRequest != nil {
-		// detect pull_request_target workflows
-		baseRef := git.BranchPrefix + input.PullRequest.BaseBranch
-		baseCommit, err := gitRepo.GetCommit(baseRef)
-		if err != nil {
-			return fmt.Errorf("gitRepo.GetCommit: %w", err)
-		}
-		baseWorkflows, _, err := actions_module.DetectWorkflows(gitRepo, baseCommit, input.Event, input.Payload, false)
-		if err != nil {
-			return fmt.Errorf("DetectWorkflows: %w", err)
-		}
-		if len(baseWorkflows) == 0 {
-			log.Trace("repo %s with commit %s couldn't find pull_request_target workflows", input.Repo.RelativePath(), baseCommit.ID)
-		} else {
-			for _, wf := range baseWorkflows {
-				if wf.TriggerEvent.Name == actions_module.GithubEventPullRequestTarget {
-					detectedWorkflows = append(detectedWorkflows, wf)
-				}
-			}
-		}
-	}
-
-	if shouldDetectSchedules {
-		if err := handleSchedules(ctx, schedules, commit, input, ref); err != nil {
-			return err
-		}
-	}
-
-	return handleWorkflows(ctx, detectedWorkflows, commit, input, ref)
 }
 
 func skipWorkflows(ctx context.Context, input *notifyInput, commit *git.Commit) bool {
@@ -528,33 +421,6 @@ func handleSchedules(
 
 // DetectAndHandleSchedules detects the schedule workflows on the default branch and create schedule tasks
 func DetectAndHandleSchedules(ctx context.Context, repo *repo_model.Repository) error {
-	if repo.IsEmpty || repo.IsArchived {
-		return nil
-	}
-
-	gitRepo, err := gitrepo.OpenRepository(context.Background(), repo)
-	if err != nil {
-		return fmt.Errorf("git.OpenRepository: %w", err)
-	}
-	defer gitRepo.Close()
-
-	// Only detect schedule workflows on the default branch
-	commit, err := gitRepo.GetCommit(repo.DefaultBranch)
-	if err != nil {
-		return fmt.Errorf("gitRepo.GetCommit: %w", err)
-	}
-	scheduleWorkflows, err := actions_module.DetectScheduledWorkflows(gitRepo, commit)
-	if err != nil {
-		return fmt.Errorf("detect schedule workflows: %w", err)
-	}
-	if len(scheduleWorkflows) == 0 {
-		return nil
-	}
-
-	// We need a notifyInput to call handleSchedules
-	// if repo is a mirror, commit author maybe an external user,
-	// so we use action user as the Doer of the notifyInput
-	notifyInput := newNotifyInputForSchedules(repo)
-
-	return handleSchedules(ctx, scheduleWorkflows, commit, notifyInput, git.RefNameFromBranch(repo.DefaultBranch))
+	log.Warn("skip schedule detection in mirrorless hard-cut for %s", repo.RelativePath())
+	return nil
 }

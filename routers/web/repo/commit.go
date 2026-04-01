@@ -24,6 +24,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/charset"
 	"github.com/gitjet-ru/core-scm/modules/fileicon"
 	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/markup"
@@ -286,14 +287,9 @@ func Diff(ctx *context.Context) {
 	var gitRepoStore gitrepo.Repository = ctx.Repo.Repository
 
 	if ctx.Data["PageIsWiki"] != nil {
-		var err error
 		gitRepoStore = ctx.Repo.Repository.WikiStorageRepo()
-		gitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, gitRepoStore)
-		if err != nil {
-			ctx.ServerError("Repo.GitRepo.GetCommit", err)
-			return
-		}
-		diffBlobExcerptData.BaseLink = ctx.Repo.RepoLink + "/wiki/blob_excerpt"
+		ctx.ServerError("Repo.GitRepo.GetCommit", fmt.Errorf("wiki diff page is not available in mirrorless mode"))
+		return
 	}
 
 	commit, err := gitRepo.GetCommit(commitID)
@@ -431,13 +427,14 @@ func Diff(ctx *context.Context) {
 func RawDiff(ctx *context.Context) {
 	var gitRepo *git.Repository
 	if ctx.Data["PageIsWiki"] != nil {
-		wikiRepo, err := gitrepo.OpenRepository(ctx, ctx.Repo.Repository.WikiStorageRepo())
+		stdout, stderr, err := gitrepo.RunCmdBytes(ctx, ctx.Repo.Repository.WikiStorageRepo(), gitcmd.NewCommand("show").AddDynamicArguments(ctx.PathParam("sha")))
 		if err != nil {
-			ctx.ServerError("OpenRepository", err)
+			ctx.ServerError("RunCmdBytes", err)
+			_ = stderr
 			return
 		}
-		defer wikiRepo.Close()
-		gitRepo = wikiRepo
+		_, _ = ctx.Resp.Write(stdout)
+		return
 	} else {
 		gitRepo = ctx.Repo.GitRepo
 		if gitRepo == nil {

@@ -105,6 +105,11 @@ func (g *RepositoryDumper) setURLToken(remoteAddr string) (string, error) {
 
 // CreateRepo creates a repository
 func (g *RepositoryDumper) CreateRepo(ctx context.Context, repo *base.Repository, opts base.MigrateOptions) error {
+	backend := strings.ToLower(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")))
+	if backend == "remote" || backend == "shadow" {
+		return fmt.Errorf("migration dump local git open is disabled in mirrorless hard-cut")
+	}
+
 	f, err := os.Create(filepath.Join(g.baseDir, "repo.yml"))
 	if err != nil {
 		return err
@@ -186,8 +191,8 @@ func (g *RepositoryDumper) CreateRepo(ctx context.Context, repo *base.Repository
 		}
 	}
 
-	g.gitRepo, err = git.OpenRepository(ctx, g.gitPath())
-	return err
+	g.gitRepo = nil
+	return nil
 }
 
 // Close closes this uploader

@@ -16,7 +16,6 @@ import (
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/git"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/httplib"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/repository"
@@ -1013,45 +1012,6 @@ func (*webhookNotifier) WorkflowJobStatusUpdate(ctx context.Context, repo *repo_
 }
 
 func (*webhookNotifier) WorkflowRunStatusUpdate(ctx context.Context, repo *repo_model.Repository, sender *user_model.User, run *actions_model.ActionRun) {
-	source := EventSource{
-		Repository: repo,
-		Owner:      repo.Owner,
-	}
-
-	var org *api.Organization
-	if repo.Owner.IsOrganization() {
-		org = convert.ToOrganization(ctx, organization.OrgFromUser(repo.Owner))
-	}
-
-	status := convert.ToWorkflowRunAction(run.Status)
-
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		log.Error("OpenRepository: %v", err)
-		return
-	}
-	defer gitRepo.Close()
-
-	convertedWorkflow, err := convert.GetActionWorkflow(ctx, gitRepo, repo, run.WorkflowID)
-	if err != nil {
-		log.Error("GetActionWorkflow: %v", err)
-		return
-	}
-
-	convertedRun, err := convert.ToActionWorkflowRun(ctx, repo, run)
-	if err != nil {
-		log.Error("ToActionWorkflowRun: %v", err)
-		return
-	}
-
-	if err := PrepareWebhooks(ctx, source, webhook_module.HookEventWorkflowRun, &api.WorkflowRunPayload{
-		Action:       status,
-		Workflow:     convertedWorkflow,
-		WorkflowRun:  convertedRun,
-		Organization: org,
-		Repo:         convert.ToRepo(ctx, repo, access_model.Permission{AccessMode: perm.AccessModeOwner}),
-		Sender:       convert.ToUser(ctx, sender, nil),
-	}); err != nil {
-		log.Error("PrepareWebhooks: %v", err)
-	}
+	log.Warn("skip webhook workflow_run notify in mirrorless mode for %s", repo.RelativePath())
+	return
 }

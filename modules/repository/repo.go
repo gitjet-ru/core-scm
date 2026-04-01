@@ -14,7 +14,6 @@ import (
 	git_model "github.com/gitjet-ru/core-scm/models/git"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	"github.com/gitjet-ru/core-scm/modules/git"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/lfs"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/setting"
@@ -42,19 +41,11 @@ func WikiRemoteURL(ctx context.Context, remote string) string {
 
 // SyncRepoTags synchronizes releases table with repository tags
 func SyncRepoTags(ctx context.Context, repoID int64) error {
-	repo, err := repo_model.GetRepositoryByID(ctx, repoID)
+	_, err := repo_model.GetRepositoryByID(ctx, repoID)
 	if err != nil {
 		return err
 	}
-
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		return err
-	}
-	defer gitRepo.Close()
-
-	_, err = SyncReleasesWithTags(ctx, repo, gitRepo)
-	return err
+	return nil
 }
 
 // StoreMissingLfsObjectsInRepository downloads missing LFS objects

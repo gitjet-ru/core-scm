@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -91,6 +92,11 @@ func (g *GiteaLocalUploader) MaxBatchInsertSize(tp string) int {
 
 // CreateRepo creates a repository
 func (g *GiteaLocalUploader) CreateRepo(ctx context.Context, repo *base.Repository, opts base.MigrateOptions) error {
+	backend := strings.ToLower(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")))
+	if backend == "remote" || backend == "shadow" {
+		return fmt.Errorf("migration local uploader git open is disabled in mirrorless hard-cut")
+	}
+
 	owner, err := user_model.GetUserByName(ctx, g.repoOwner)
 	if err != nil {
 		return err
@@ -136,18 +142,7 @@ func (g *GiteaLocalUploader) CreateRepo(ctx context.Context, repo *base.Reposito
 	if err != nil {
 		return err
 	}
-	g.gitRepo, err = gitrepo.OpenRepository(ctx, g.repo)
-	if err != nil {
-		return err
-	}
-
-	// detect object format from git repository and update to database
-	objectFormat, err := g.gitRepo.GetObjectFormat()
-	if err != nil {
-		return err
-	}
-	g.repo.ObjectFormatName = objectFormat.Name()
-	return repo_model.UpdateRepositoryColsNoAutoTime(ctx, g.repo, "object_format_name")
+	return nil
 }
 
 // Close closes this uploader

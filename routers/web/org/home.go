@@ -12,7 +12,6 @@ import (
 	"github.com/gitjet-ru/core-scm/models/organization"
 	"github.com/gitjet-ru/core-scm/models/renderhelper"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
-	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/markup/markdown"
 	"github.com/gitjet-ru/core-scm/modules/setting"
@@ -113,7 +112,7 @@ func home(ctx *context.Context, viewRepositories bool) {
 	isViewOverview := !viewRepositories && prepareOrgProfileReadme(ctx, prepareResult)
 	ctx.Data["PageIsViewRepositories"] = !isViewOverview
 	ctx.Data["PageIsViewOverview"] = isViewOverview
-	ctx.Data["ShowOrgProfileReadmeSelector"] = isViewOverview && prepareResult.ProfilePublicReadmeBlob != nil && prepareResult.ProfilePrivateReadmeBlob != nil
+	ctx.Data["ShowOrgProfileReadmeSelector"] = isViewOverview && len(prepareResult.ProfilePublicReadmeBytes) > 0 && len(prepareResult.ProfilePrivateReadmeBytes) > 0
 
 	repos, count, err := repo_model.SearchRepository(ctx, repo_model.SearchRepoOptions{
 		ListOptions: db.ListOptions{
@@ -153,40 +152,35 @@ func prepareOrgProfileReadme(ctx *context.Context, prepareResult *shared_user.Pr
 	viewAsMember := viewAs == "member"
 
 	var profileRepo *repo_model.Repository
-	var readmeBlob *git.Blob
+	var readmeBytes []byte
 	if viewAsMember {
-		if prepareResult.ProfilePrivateReadmeBlob != nil {
-			profileRepo, readmeBlob = prepareResult.ProfilePrivateRepo, prepareResult.ProfilePrivateReadmeBlob
+		if len(prepareResult.ProfilePrivateReadmeBytes) > 0 {
+			profileRepo, readmeBytes = prepareResult.ProfilePrivateRepo, prepareResult.ProfilePrivateReadmeBytes
 		} else {
-			profileRepo, readmeBlob = prepareResult.ProfilePublicRepo, prepareResult.ProfilePublicReadmeBlob
+			profileRepo, readmeBytes = prepareResult.ProfilePublicRepo, prepareResult.ProfilePublicReadmeBytes
 			viewAsMember = false
 		}
 	} else {
-		if prepareResult.ProfilePublicReadmeBlob != nil {
-			profileRepo, readmeBlob = prepareResult.ProfilePublicRepo, prepareResult.ProfilePublicReadmeBlob
+		if len(prepareResult.ProfilePublicReadmeBytes) > 0 {
+			profileRepo, readmeBytes = prepareResult.ProfilePublicRepo, prepareResult.ProfilePublicReadmeBytes
 		} else {
-			profileRepo, readmeBlob = prepareResult.ProfilePrivateRepo, prepareResult.ProfilePrivateReadmeBlob
+			profileRepo, readmeBytes = prepareResult.ProfilePrivateRepo, prepareResult.ProfilePrivateReadmeBytes
 			viewAsMember = true
 		}
 	}
-	if readmeBlob == nil {
-		return false
-	}
-
-	readmeBytes, err := readmeBlob.GetBlobContent(setting.UI.MaxDisplayFileSize)
-	if err != nil {
-		log.Error("failed to GetBlobContent for profile %q (view as %q) readme: %v", profileRepo.FullName(), viewAs, err)
+	if len(readmeBytes) == 0 {
 		return false
 	}
 
 	rctx := renderhelper.NewRenderContextRepoFile(ctx, profileRepo, renderhelper.RepoFileOptions{
 		CurrentRefPath: path.Join("branch", util.PathEscapeSegments(profileRepo.DefaultBranch)),
 	})
-	ctx.Data["ProfileReadmeContent"], err = markdown.RenderString(rctx, readmeBytes)
+	rendered, err := markdown.RenderString(rctx, string(readmeBytes))
 	if err != nil {
 		log.Error("failed to GetBlobContent for profile %q (view as %q) readme: %v", profileRepo.FullName(), viewAs, err)
 		return false
 	}
+	ctx.Data["ProfileReadmeContent"] = rendered
 	ctx.Data["IsViewingOrgAsMember"] = viewAsMember
 	return true
 }

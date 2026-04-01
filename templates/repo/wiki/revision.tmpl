@@ -27,8 +27,18 @@
 					</div>
 				</div>
 			</h4>
-			{{if and .Commits (gt .CommitCount 0)}}
-				{{template "repo/commits_list" .}}
+			{{if and .WikiCommits (gt .CommitCount 0)}}
+				<div class="ui attached segment">
+					{{range .WikiCommits}}
+						<div class="commit-item tw-py-2 tw-border-b tw-border-secondary">
+							<div class="tw-flex tw-justify-between tw-gap-2">
+								<a href="{{$.RepoLink}}/commit/{{.ID}}" class="monospace">{{ShortSha .ID}}</a>
+								<span class="text light-2">{{.Author.Date}}</span>
+							</div>
+							<div class="tw-text-sm">{{.Message}}</div>
+						</div>
+					{{end}}
+				</div>
 			{{end}}
 			{{template "base/paginate" .}}
 		</div>

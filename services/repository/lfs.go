@@ -5,18 +5,12 @@ package repository
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"time"
 
 	git_model "github.com/gitjet-ru/core-scm/models/git"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
-	"github.com/gitjet-ru/core-scm/modules/git"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
-	"github.com/gitjet-ru/core-scm/modules/lfs"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/setting"
-	"github.com/gitjet-ru/core-scm/modules/timeutil"
 )
 
 // GarbageCollectLFSMetaObjectsOptions provides options for GarbageCollectLFSMetaObjects function
@@ -59,79 +53,6 @@ func GarbageCollectLFSMetaObjects(ctx context.Context, opts GarbageCollectLFSMet
 // GarbageCollectLFSMetaObjectsForRepo garbage collects LFS objects for a specific repository
 func GarbageCollectLFSMetaObjectsForRepo(ctx context.Context, repo *repo_model.Repository, opts GarbageCollectLFSMetaObjectsOptions) error {
 	opts.LogDetail("Checking %-v", repo)
-	total, orphaned, collected, deleted := int64(0), 0, 0, 0
-	defer func() {
-		if orphaned == 0 {
-			opts.LogDetail("Found %d total LFSMetaObjects in %-v", total, repo)
-		} else if !opts.AutoFix {
-			opts.LogDetail("Found %d/%d orphaned LFSMetaObjects in %-v", orphaned, total, repo)
-		} else {
-			opts.LogDetail("Collected %d/%d orphaned/%d total LFSMetaObjects in %-v. %d removed from storage.", collected, orphaned, total, repo, deleted)
-		}
-	}()
-
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		log.Error("Unable to open git repository %-v: %v", repo, err)
-		return err
-	}
-	defer gitRepo.Close()
-
-	store := lfs.NewContentStore()
-	errStop := errors.New("STOPERR")
-	objectFormat := git.ObjectFormatFromName(repo.ObjectFormatName)
-
-	err = git_model.IterateLFSMetaObjectsForRepo(ctx, repo.ID, func(ctx context.Context, metaObject *git_model.LFSMetaObject, count int64) error {
-		if opts.NumberToCheckPerRepo > 0 && total > opts.NumberToCheckPerRepo {
-			return errStop
-		}
-		total++
-		pointerSha := git.ComputeBlobHash(objectFormat, []byte(metaObject.Pointer.StringContent()))
-
-		if gitRepo.IsObjectExist(pointerSha.String()) {
-			return git_model.MarkLFSMetaObject(ctx, metaObject.ID)
-		}
-		orphaned++
-
-		if !opts.AutoFix {
-			return nil
-		}
-		// Non-existent pointer file
-		_, err = git_model.RemoveLFSMetaObjectByOidFn(ctx, repo.ID, metaObject.Oid, func(count int64) error {
-			if count > 0 {
-				return nil
-			}
-
-			if err := store.Delete(metaObject.RelativePath()); err != nil {
-				log.Error("Unable to remove lfs metaobject %s from store: %v", metaObject.Oid, err)
-			}
-			deleted++
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("unable to remove meta-object %s in %s: %w", metaObject.Oid, repo.FullName(), err)
-		}
-		collected++
-
-		return nil
-	}, &git_model.IterateLFSMetaObjectsForRepoOptions{
-		// Only attempt to garbage collect lfs meta objects older than a week as the order of git lfs upload
-		// and git object upload is not necessarily guaranteed. It's possible to imagine a situation whereby
-		// an LFS object is uploaded but the git branch is not uploaded immediately, or there are some rapid
-		// changes in new branches that might lead to lfs objects becoming temporarily unassociated with git
-		// objects.
-		//
-		// It is likely that a week is potentially excessive but it should definitely be enough that any
-		// unassociated LFS object is genuinely unassociated.
-		OlderThan:               timeutil.TimeStamp(opts.OlderThan.Unix()),
-		UpdatedLessRecentlyThan: timeutil.TimeStamp(opts.UpdatedLessRecentlyThan.Unix()),
-	})
-
-	if err == errStop {
-		opts.LogDetail("Processing stopped at %d total LFSMetaObjects in %-v", total, repo)
-		return nil
-	} else if err != nil {
-		return err
-	}
+	opts.LogDetail("Skipping LFS GC in mirrorless hard-cut for %-v", repo)
 	return nil
 }

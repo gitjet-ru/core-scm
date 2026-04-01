@@ -218,11 +218,9 @@ func ensureExecutable(filename string) error {
 // CheckDelegateHooks checks the hooks scripts for the repo
 func CheckDelegateHooks(ctx context.Context, repo Repository) ([]string, error) {
 	if isRemoteBackendEnabled() {
-		localPath, err := ensureRemoteMirror(ctx, repo)
-		if err != nil {
-			return nil, err
-		}
-		return checkDelegateHooks(filepath.Join(localPath, "hooks"))
+		// In remote backend hooks are created and validated through git-storage API.
+		// Local filesystem checks are not authoritative and should not force mirror bootstrap.
+		return nil, nil
 	}
 	return checkDelegateHooks(filepath.Join(repoPath(repo), "hooks"))
 }

@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gitjet-ru/core-scm/models/db"
@@ -23,7 +25,6 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/setting"
 	"github.com/gitjet-ru/core-scm/modules/timeutil"
 	"github.com/gitjet-ru/core-scm/modules/util"
-	"github.com/gitjet-ru/core-scm/services/migrations"
 	repo_service "github.com/gitjet-ru/core-scm/services/repository"
 )
 
@@ -121,6 +122,11 @@ func SyncPushMirror(ctx context.Context, mirrorID int64) bool {
 }
 
 func runPushSync(ctx context.Context, m *repo_model.PushMirror) error {
+	backend := strings.ToLower(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")))
+	if backend == "remote" || backend == "shadow" {
+		log.Warn("skip mirror push sync in mirrorless hard-cut for %s", m.Repo.FullName())
+		return nil
+	}
 	timeout := time.Duration(setting.Git.Timeout.Mirror) * time.Second
 
 	performPush := func(repo *repo_model.Repository, isWiki bool) error {
@@ -136,19 +142,7 @@ func runPushSync(ctx context.Context, m *repo_model.PushMirror) error {
 
 		if setting.LFS.StartServer {
 			log.Trace("SyncMirrors [repo: %-v]: syncing LFS objects...", m.Repo)
-
-			gitRepo, err := gitrepo.OpenRepository(ctx, storageRepo)
-			if err != nil {
-				log.Error("OpenRepository: %v", err)
-				return errors.New("Unexpected error")
-			}
-			defer gitRepo.Close()
-
-			endpoint := lfs.DetermineEndpoint(remoteURL.String(), "")
-			lfsClient := lfs.NewClient(endpoint, migrations.NewMigrationHTTPTransport())
-			if err := pushAllLFSObjects(ctx, gitRepo, lfsClient); err != nil {
-				return util.SanitizeErrorCredentialURLs(err)
-			}
+			log.Warn("skip push mirror local LFS stage in mirrorless hard-cut for %s", storageRepo.RelativePath())
 		}
 
 		log.Trace("Pushing %s mirror[%d] remote %s", storageRepo.RelativePath(), m.ID, m.RemoteName)

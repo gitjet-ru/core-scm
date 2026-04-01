@@ -141,19 +141,7 @@ func adoptRepository(ctx context.Context, repo *repo_model.Repository, defaultBr
 	}
 
 	// Don't bother looking this repo in the context it won't be there
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		return fmt.Errorf("openRepository: %w", err)
-	}
-	defer gitRepo.Close()
-
-	if _, _, err = repo_module.SyncRepoBranchesWithRepo(ctx, repo, gitRepo, 0); err != nil {
-		return fmt.Errorf("SyncRepoBranchesWithRepo: %w", err)
-	}
-
-	if _, err = repo_module.SyncReleasesWithTags(ctx, repo, gitRepo); err != nil {
-		return fmt.Errorf("SyncReleasesWithTags: %w", err)
-	}
+	// Mirrorless hard-cut: no local mirror branch/tag/release sync on adopt.
 
 	branches, _ := git_model.FindBranchNames(ctx, git_model.FindBranchOptions{
 		RepoID:          repo.ID,

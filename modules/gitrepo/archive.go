@@ -41,16 +41,26 @@ func CreateArchive(ctx context.Context, repo Repository, format string, target i
 
 // CreateBundle create bundle content to the target path
 func CreateBundle(ctx context.Context, repo Repository, commit string, out io.Writer) error {
+	if isRemoteBackendEnabled() {
+		stdout, stderr, err := RunCmdBytes(ctx, repo, gitcmd.NewCommand("bundle", "create", "-").AddDynamicArguments(commit))
+		if err != nil {
+			return fmt.Errorf("create bundle via remote: %w", err)
+		}
+		if len(stderr) > 0 {
+			// Keep behavior predictable when git emits warning/error text.
+			return fmt.Errorf("create bundle via remote stderr: %s", string(stderr))
+		}
+		_, copyErr := out.Write(stdout)
+		return copyErr
+	}
+
 	tmp, cleanup, err := setting.AppDataTempDir("git-repo-content").MkdirTempRandom("gitea-bundle")
 	if err != nil {
 		return err
 	}
 	defer cleanup()
 
-	execRepoPath, err := localExecRepoPath(ctx, repo)
-	if err != nil {
-		return err
-	}
+	execRepoPath := repoPath(repo)
 	env := append(os.Environ(), "GIT_OBJECT_DIRECTORY="+filepath.Join(execRepoPath, "objects"))
 	_, _, err = gitcmd.NewCommand("init", "--bare").WithDir(tmp).WithEnv(env).RunStdString(ctx)
 	if err != nil {

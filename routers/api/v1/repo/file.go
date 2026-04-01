@@ -11,11 +11,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
+	gitstoragev1 "github.com/gitjet-ru/git-storage/gen/go/gitstorage/v1"
 	git_model "github.com/gitjet-ru/core-scm/models/git"
 	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/httpcache"
 	"github.com/gitjet-ru/core-scm/modules/httplib"
 	"github.com/gitjet-ru/core-scm/modules/json"
@@ -75,6 +78,21 @@ func GetRawFile(ctx *context.APIContext) {
 		return
 	}
 
+	if gitrepo.UseRemoteReadBackendForAPI() {
+		blobResp, lastModified, err := getBlobForEntryRemote(ctx, 0)
+		if err != nil {
+			ctx.APIErrorNotFound()
+			return
+		}
+		if httpcache.HandleGenericETagPrivateCache(ctx.Req, ctx.Resp, `"`+blobResp.GetObjectId()+`"`, lastModified) {
+			return
+		}
+		ctx.RespHeader().Set(giteaObjectTypeHeader, "file")
+		ctx.RespHeader().Set("Content-Type", "application/octet-stream")
+		_, _ = ctx.Resp.Write(blobResp.GetContent())
+		return
+	}
+
 	blob, entry, lastModified := getBlobForEntry(ctx)
 	if ctx.Written() {
 		return
@@ -125,6 +143,74 @@ func GetRawFileOrLFS(ctx *context.APIContext) {
 
 	if ctx.Repo.Repository.IsEmpty {
 		ctx.APIErrorNotFound()
+		return
+	}
+
+	if gitrepo.UseRemoteReadBackendForAPI() {
+		const lfsProbeBytes = lfs.MetaFileMaxSize
+		blobResp, lastModified, err := getBlobForEntryRemote(ctx, lfsProbeBytes)
+		if err != nil {
+			ctx.APIErrorNotFound()
+			return
+		}
+
+		ctx.RespHeader().Set(giteaObjectTypeHeader, "file")
+
+		// LFS Pointer files are at most 1024 bytes - so any blob greater than 1024 bytes cannot be an LFS file
+		if blobResp.GetSize() > lfs.MetaFileMaxSize {
+			fullBlobResp, fullLastModified, fullErr := getBlobForEntryRemote(ctx, 0)
+			if fullErr != nil {
+				ctx.APIErrorInternal(fullErr)
+				return
+			}
+			if httpcache.HandleGenericETagPrivateCache(ctx.Req, ctx.Resp, `"`+fullBlobResp.GetObjectId()+`"`, fullLastModified) {
+				return
+			}
+			ctx.RespHeader().Set("Content-Type", "application/octet-stream")
+			_, _ = ctx.Resp.Write(fullBlobResp.GetContent())
+			return
+		}
+
+		lfsPointerBuf := blobResp.GetContent()
+		pointer, _ := lfs.ReadPointerFromBuffer(lfsPointerBuf)
+
+		// if it's not a pointer, just serve the data directly
+		if !pointer.IsValid() {
+			if httpcache.HandleGenericETagPrivateCache(ctx.Req, ctx.Resp, `"`+blobResp.GetObjectId()+`"`, lastModified) {
+				return
+			}
+			_, _ = ctx.Resp.Write(lfsPointerBuf)
+			return
+		}
+
+		meta, err := git_model.GetLFSMetaObjectByOid(ctx, ctx.Repo.Repository.ID, pointer.Oid)
+		if errors.Is(err, git_model.ErrLFSObjectNotExist) {
+			_, _ = ctx.Resp.Write(lfsPointerBuf)
+			return
+		} else if err != nil {
+			ctx.APIErrorInternal(err)
+			return
+		}
+
+		if httpcache.HandleGenericETagPrivateCache(ctx.Req, ctx.Resp, `"`+pointer.Oid+`"`, meta.UpdatedUnix.AsTimePtr()) {
+			return
+		}
+
+		if setting.LFS.Storage.ServeDirect() {
+			u, err := storage.LFS.ServeDirectURL(pointer.RelativePath(), path.Base(ctx.Repo.TreePath), ctx.Req.Method, nil)
+			if u != nil && err == nil {
+				ctx.Redirect(u.String())
+				return
+			}
+		}
+
+		lfsDataFile, err := lfs.ReadMetaObject(meta.Pointer)
+		if err != nil {
+			ctx.APIErrorInternal(err)
+			return
+		}
+		defer lfsDataFile.Close()
+		httplib.ServeUserContentByFile(ctx.Base.Req, ctx.Base.Resp, lfsDataFile, httplib.ServeHeaderOptions{Filename: ctx.Repo.TreePath})
 		return
 	}
 
@@ -225,6 +311,24 @@ func getBlobForEntry(ctx *context.APIContext) (blob *git.Blob, entry *git.TreeEn
 	when := &latestCommit.Committer.When
 
 	return entry.Blob(), entry, when
+}
+
+func getBlobForEntryRemote(ctx *context.APIContext, maxBytes int32) (blobResp *gitstoragev1.GetBlobResponse, lastModified *time.Time, err error) {
+	ref := strings.TrimSpace(ctx.FormTrim("ref"))
+	if ref == "" {
+		ref = ctx.Repo.Repository.DefaultBranch
+	}
+	treePath := strings.Trim(strings.TrimSpace(ctx.Repo.TreePath), "/")
+	blobResp, err = gitrepo.RemoteGetBlobForAPI(ctx, ctx.Repo.Repository, ref, treePath, maxBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+	commitInfo, commitErr := gitrepo.RemoteGetCommitForAPI(ctx, ctx.Repo.Repository, ref)
+	if commitErr == nil && commitInfo.GetCommitterUnix() > 0 {
+		t := time.Unix(commitInfo.GetCommitterUnix(), 0)
+		lastModified = &t
+	}
+	return blobResp, lastModified, nil
 }
 
 // GetArchive get archive of a repository
@@ -822,6 +926,14 @@ func GetContents(ctx *context.APIContext) {
 }
 
 func getRepoContents(ctx *context.APIContext, opts files_service.GetContentsOrListOptions) *api.ContentsExtResponse {
+	if gitrepo.UseRemoteReadBackendForAPI() {
+		ret, err := getRepoContentsRemote(ctx, opts)
+		if err != nil {
+			ctx.APIErrorInternal(err)
+			return nil
+		}
+		return ret
+	}
 	refCommit := resolveRefCommit(ctx, ctx.FormTrim("ref"))
 	if ctx.Written() {
 		return nil
@@ -835,6 +947,68 @@ func getRepoContents(ctx *context.APIContext, opts files_service.GetContentsOrLi
 		ctx.APIErrorInternal(err)
 	}
 	return &ret
+}
+
+func getRepoContentsRemote(ctx *context.APIContext, opts files_service.GetContentsOrListOptions) (*api.ContentsExtResponse, error) {
+	ref := strings.TrimSpace(ctx.FormTrim("ref"))
+	if ref == "" {
+		ref = ctx.Repo.Repository.DefaultBranch
+	}
+	treePath := strings.Trim(strings.TrimSpace(opts.TreePath), "/")
+	if treePath == "." {
+		treePath = ""
+	}
+
+	if treePath != "" {
+		blobResp, blobErr := gitrepo.RemoteGetBlobForAPI(ctx, ctx.Repo.Repository, ref, treePath, 2*1024*1024)
+		if blobErr == nil {
+			resp := &api.ContentsResponse{
+				Name: path.Base(treePath),
+				Path: treePath,
+				SHA:  blobResp.GetObjectId(),
+				Type: "file",
+				Size: blobResp.GetSize(),
+			}
+			if opts.IncludeSingleFileContent {
+				enc := "base64"
+				resp.Encoding = &enc
+				content := base64.StdEncoding.EncodeToString(blobResp.GetContent())
+				resp.Content = &content
+			}
+			return &api.ContentsExtResponse{FileContents: resp}, nil
+		}
+	}
+
+	entries, _, err := gitrepo.RemoteGetTreeForAPI(ctx, ctx.Repo.Repository, ref, treePath, false, 2000)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*api.ContentsResponse, 0, len(entries))
+	for _, e := range entries {
+		entryPath := e.GetPath()
+		if treePath != "" {
+			entryPath = path.Join(treePath, e.GetPath())
+		}
+		items = append(items, &api.ContentsResponse{
+			Name: path.Base(entryPath),
+			Path: entryPath,
+			SHA:  e.GetObjectId(),
+			Type: gitObjectTypeToAPIType(e.GetObjectType()),
+			Size: e.GetSize(),
+		})
+	}
+	return &api.ContentsExtResponse{DirContents: items}, nil
+}
+
+func gitObjectTypeToAPIType(t string) string {
+	switch strings.ToLower(strings.TrimSpace(t)) {
+	case "tree":
+		return "dir"
+	case "blob":
+		return "file"
+	default:
+		return "file"
+	}
 }
 
 func GetContentsList(ctx *context.APIContext) {

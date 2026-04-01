@@ -23,10 +23,6 @@ type RefCommit struct {
 
 // ResolveRefCommit resolve ref to a commit if exist
 func ResolveRefCommit(ctx reqctx.RequestContext, repo *repo_model.Repository, inputRef string, minCommitIDLen ...int) (_ *RefCommit, err error) {
-	gitRepo, err := gitrepo.RepositoryFromRequestContextOrOpen(ctx, repo)
-	if err != nil {
-		return nil, err
-	}
 	refCommit := RefCommit{InputRef: inputRef}
 	if exist, _ := git_model.IsBranchExist(ctx, repo.ID, inputRef); exist {
 		refCommit.RefName = git.RefNameFromBranch(inputRef)
@@ -38,10 +34,13 @@ func ResolveRefCommit(ctx reqctx.RequestContext, repo *repo_model.Repository, in
 	if refCommit.RefName == "" {
 		return nil, git.ErrNotExist{ID: inputRef}
 	}
-	if refCommit.Commit, err = gitRepo.GetCommit(refCommit.RefName.String()); err != nil {
+	refCommit.CommitID, err = gitrepo.GetFullCommitID(ctx, repo, refCommit.RefName.String())
+	if err != nil {
 		return nil, err
 	}
-	refCommit.CommitID = refCommit.Commit.ID.String()
+	if apiCtx, ok := ctx.(*context.APIContext); ok && apiCtx.Repo != nil && apiCtx.Repo.GitRepo != nil {
+		refCommit.Commit, _ = apiCtx.Repo.GitRepo.GetCommit(refCommit.RefName.String())
+	}
 	return &refCommit, nil
 }
 

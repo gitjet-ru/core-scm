@@ -21,6 +21,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/process"
 	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/services/localgit"
 )
 
 // DownloadDiffOrPatch will write the patch for the pr to the writer
@@ -65,6 +66,11 @@ func checkPullRequestBranchMergeable(ctx context.Context, pr *issues_model.PullR
 }
 
 func checkPullRequestMergeableByTmpRepo(ctx context.Context, pr *issues_model.PullRequest) error {
+	if strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow") {
+		return fmt.Errorf("mergeability check via temporary local repo is disabled in mirrorless hard-cut for %s", pr.BaseRepo.FullName())
+	}
+
 	prCtx, cancel, err := createTemporaryRepoForPR(ctx, pr)
 	if err != nil {
 		if !git_model.IsErrBranchNotExist(err) {
@@ -74,7 +80,7 @@ func checkPullRequestMergeableByTmpRepo(ctx context.Context, pr *issues_model.Pu
 	}
 	defer cancel()
 
-	gitRepo, err := git.OpenRepository(ctx, prCtx.tmpBasePath)
+	gitRepo, err := localgit.OpenRepository(ctx, prCtx.tmpBasePath)
 	if err != nil {
 		return fmt.Errorf("OpenRepository: %w", err)
 	}
@@ -437,7 +443,11 @@ func checkPullFilesProtection(ctx context.Context, pr *issues_model.PullRequest,
 		return nil
 	}
 
-	pr.ChangedProtectedFiles, err = CheckFileProtection(gitRepo, pr.HeadBranch, pr.MergeBase, headRef, pb.GetProtectedFilePatterns(), 10, os.Environ())
+	if gitRepo != nil {
+		pr.ChangedProtectedFiles, err = CheckFileProtection(gitRepo, pr.HeadBranch, pr.MergeBase, headRef, pb.GetProtectedFilePatterns(), 10, os.Environ())
+	} else {
+		pr.ChangedProtectedFiles, err = checkPullFilesProtectionRemote(ctx, pr, pr.MergeBase, headRef, pb.GetProtectedFilePatterns(), 10)
+	}
 	if err != nil && !IsErrFilePathProtected(err) {
 		return err
 	}
@@ -445,4 +455,31 @@ func checkPullFilesProtection(ctx context.Context, pr *issues_model.PullRequest,
 		log.Trace("Found %d protected files changed in PR %s#%d", len(pr.ChangedProtectedFiles), pr.BaseRepo.FullName(), pr.Index)
 	}
 	return nil
+}
+
+func checkPullFilesProtectionRemote(ctx context.Context, pr *issues_model.PullRequest, oldCommitID, newCommitID string, patterns []glob.Glob, limit int) ([]string, error) {
+	if len(patterns) == 0 {
+		return nil, nil
+	}
+	stdout, _, err := gitrepo.RunCmdString(ctx, pr.BaseRepo, gitcmd.NewCommand("diff", "--name-only").AddDynamicArguments(oldCommitID, newCommitID).WithEnv(os.Environ()))
+	if err != nil {
+		return nil, err
+	}
+	changedProtectedFiles := make([]string, 0, limit)
+	for _, affectedFile := range strings.Fields(strings.TrimSpace(stdout)) {
+		lpath := strings.ToLower(affectedFile)
+		for _, pat := range patterns {
+			if pat.Match(lpath) {
+				changedProtectedFiles = append(changedProtectedFiles, lpath)
+				break
+			}
+		}
+		if len(changedProtectedFiles) >= limit {
+			break
+		}
+	}
+	if len(changedProtectedFiles) > 0 {
+		return changedProtectedFiles, ErrFilePathProtected{Path: changedProtectedFiles[0]}
+	}
+	return changedProtectedFiles, nil
 }

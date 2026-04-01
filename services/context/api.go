@@ -269,6 +269,25 @@ func (ctx *APIContext) APIErrorNotFound(objs ...any) {
 // you can optional skip the IsEmpty check
 func ReferencesGitRepo(allowEmpty ...bool) func(ctx *APIContext) {
 	return func(ctx *APIContext) {
+		// In remote read mode, /contents endpoints should not depend on local mirror.
+		if gitrepo.UseRemoteReadBackendForAPI() &&
+			(strings.Contains(ctx.Req.URL.Path, "/contents") ||
+				strings.Contains(ctx.Req.URL.Path, "/contents-ext") ||
+				strings.Contains(ctx.Req.URL.Path, "/git/refs") ||
+				strings.Contains(ctx.Req.URL.Path, "/git/commits") ||
+				strings.Contains(ctx.Req.URL.Path, "/commits") ||
+				strings.Contains(ctx.Req.URL.Path, "/branches") ||
+				strings.Contains(ctx.Req.URL.Path, "/src/") ||
+				strings.Contains(ctx.Req.URL.Path, "/wiki") ||
+				strings.Contains(ctx.Req.URL.Path, "/raw/") ||
+				strings.Contains(ctx.Req.URL.Path, "/media/") ||
+				strings.Contains(ctx.Req.URL.Path, "/archive/") ||
+				strings.Contains(ctx.Req.URL.Path, "/tarball/") ||
+				strings.Contains(ctx.Req.URL.Path, "/zipball/") ||
+				strings.Contains(ctx.Req.URL.Path, "/compare/")) {
+			return
+		}
+
 		// Empty repository does not have reference information.
 		if ctx.Repo.Repository.IsEmpty && !(len(allowEmpty) != 0 && allowEmpty[0]) {
 			return
@@ -276,12 +295,7 @@ func ReferencesGitRepo(allowEmpty ...bool) func(ctx *APIContext) {
 
 		// For API calls.
 		if ctx.Repo.GitRepo == nil {
-			var err error
-			ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
-			if err != nil {
-				ctx.APIErrorInternal(err)
-				return
-			}
+			return
 		}
 	}
 }

@@ -727,15 +727,6 @@ func updateBasicProperties(ctx *context.APIContext, opts api.EditRepoOption) err
 		repo.IsTemplate = *opts.Template
 	}
 
-	if ctx.Repo.GitRepo == nil && !repo.IsEmpty {
-		var err error
-		ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, repo)
-		if err != nil {
-			ctx.APIErrorInternal(err)
-			return err
-		}
-	}
-
 	// Default branch only updated if changed and exist or the repository is empty
 	updateRepoLicense := false
 	if opts.DefaultBranch != nil && repo.DefaultBranch != *opts.DefaultBranch && (repo.IsEmpty || gitrepo.IsBranchExist(ctx, ctx.Repo.Repository, *opts.DefaultBranch)) {

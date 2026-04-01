@@ -17,7 +17,6 @@ import (
 	unit_model "github.com/gitjet-ru/core-scm/models/unit"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/git"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/htmlutil"
 	"github.com/gitjet-ru/core-scm/modules/httplib"
 	"github.com/gitjet-ru/core-scm/modules/log"
@@ -214,10 +213,6 @@ func updateContextRepoEmptyAndStatus(ctx *context.Context, empty bool, status re
 
 func handleRepoEmptyOrBroken(ctx *context.Context) {
 	showEmpty := true
-	if ctx.Repo.GitRepo == nil {
-		// in case the repo really exists and works, but the status was incorrectly marked as "broken", we need to open and check it again
-		ctx.Repo.GitRepo, _ = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
-	}
 	if ctx.Repo.GitRepo != nil {
 		reallyEmpty, err := ctx.Repo.GitRepo.IsEmpty()
 		if err != nil {

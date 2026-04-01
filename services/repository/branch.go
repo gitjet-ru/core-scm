@@ -19,6 +19,7 @@ import (
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/cache"
 	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/graceful"
 	"github.com/gitjet-ru/core-scm/modules/json"
@@ -96,12 +97,9 @@ func LoadBranches(ctx context.Context, repo *repo_model.Repository, gitRepo *git
 	repoIDToRepo := map[int64]*repo_model.Repository{}
 	repoIDToRepo[repo.ID] = repo
 
-	repoIDToGitRepo := map[int64]*git.Repository{}
-	repoIDToGitRepo[repo.ID] = gitRepo
-
 	branches := make([]*Branch, 0, len(dbBranches))
 	for i := range dbBranches {
-		branch, err := loadOneBranch(ctx, repo, dbBranches[i], &rules, repoIDToRepo, repoIDToGitRepo)
+		branch, err := loadOneBranch(ctx, repo, dbBranches[i], &rules, repoIDToRepo)
 		if err != nil {
 			return nil, nil, 0, fmt.Errorf("loadOneBranch: %v", err)
 		}
@@ -110,7 +108,7 @@ func LoadBranches(ctx context.Context, repo *repo_model.Repository, gitRepo *git
 
 	// Always add the default branch
 	log.Debug("loadOneBranch: load default: '%s'", defaultDBBranch.Name)
-	defaultBranch, err := loadOneBranch(ctx, repo, defaultDBBranch, &rules, repoIDToRepo, repoIDToGitRepo)
+	defaultBranch, err := loadOneBranch(ctx, repo, defaultDBBranch, &rules, repoIDToRepo)
 	if err != nil {
 		return nil, nil, 0, fmt.Errorf("loadOneBranch: %v", err)
 	}
@@ -169,7 +167,6 @@ func DelRepoDivergenceFromCache(ctx context.Context, repoID int64) error {
 
 func loadOneBranch(ctx context.Context, repo *repo_model.Repository, dbBranch *git_model.Branch, protectedBranches *git_model.ProtectedBranchRules,
 	repoIDToRepo map[int64]*repo_model.Repository,
-	repoIDToGitRepo map[int64]*git.Repository,
 ) (*Branch, error) {
 	log.Trace("loadOneBranch: '%s'", dbBranch.Name)
 
@@ -223,16 +220,7 @@ func loadOneBranch(ctx context.Context, repo *repo_model.Repository, dbBranch *g
 		pr.Issue.Repo = pr.BaseRepo
 
 		if pr.HasMerged {
-			baseGitRepo, ok := repoIDToGitRepo[pr.BaseRepoID]
-			if !ok {
-				baseGitRepo, err = gitrepo.OpenRepository(ctx, pr.BaseRepo)
-				if err != nil {
-					return nil, fmt.Errorf("OpenRepository: %v", err)
-				}
-				defer baseGitRepo.Close()
-				repoIDToGitRepo[pr.BaseRepoID] = baseGitRepo
-			}
-			pullCommit, err := baseGitRepo.GetRefCommitID(pr.GetGitHeadRefName())
+			pullCommit, err := gitrepo.GetFullCommitID(ctx, pr.BaseRepo, pr.GetGitHeadRefName())
 			if err != nil && !git.IsErrNotExist(err) {
 				return nil, fmt.Errorf("GetBranchCommitID: %v", err)
 			}
@@ -797,21 +785,17 @@ func GetBranchDivergingInfo(ctx reqctx.RequestContext, baseRepo *repo_model.Repo
 		if headRepo.IsFork && info.BaseHasNewCommits {
 			return info, nil
 		}
-		// if the base's update time is before the fork, check whether the base's head is in the fork
-		headGitRepo, err := gitrepo.RepositoryFromRequestContextOrOpen(ctx, headRepo)
-		if err != nil {
+		// if the base's update time is before the fork, check whether base head is ancestor of head branch
+		err = gitrepo.RunCmdWithStderr(ctx, headRepo, gitcmd.NewCommand("merge-base", "--is-ancestor").
+			AddDynamicArguments(baseGitBranch.CommitID, headGitBranch.CommitID))
+		switch {
+		case err == nil:
+			info.BaseHasNewCommits = false
+		case gitcmd.IsErrorExitCode(err, 1):
+			info.BaseHasNewCommits = true
+		default:
 			return nil, err
 		}
-		headCommit, err := headGitRepo.GetCommit(headGitBranch.CommitID)
-		if err != nil {
-			return nil, err
-		}
-		baseCommitID, err := git.NewIDFromString(baseGitBranch.CommitID)
-		if err != nil {
-			return nil, err
-		}
-		hasPreviousCommit, _ := headCommit.HasPreviousCommit(baseCommitID)
-		info.BaseHasNewCommits = !hasPreviousCommit
 		return info, nil
 	}
 

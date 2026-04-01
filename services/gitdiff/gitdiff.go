@@ -1452,6 +1452,17 @@ func GetDiffShortStat(ctx context.Context, repoStorage gitrepo.Repository, gitRe
 	return diff, nil
 }
 
+// GetDiffShortStatByIDs computes shortstat for explicit commit IDs without opening local repo state.
+func GetDiffShortStatByIDs(ctx context.Context, repoStorage gitrepo.Repository, beforeCommitID, afterCommitID string) (*DiffShortStat, error) {
+	diff := &DiffShortStat{}
+	var err error
+	diff.NumFiles, diff.TotalAddition, diff.TotalDeletion, err = gitrepo.GetDiffShortStatByCmdArgs(ctx, repoStorage, nil, beforeCommitID, afterCommitID)
+	if err != nil {
+		return nil, err
+	}
+	return diff, nil
+}
+
 // SyncUserSpecificDiff inserts user-specific data such as which files the user has already viewed on the given diff
 // Additionally, the database is updated asynchronously if files have changed since the last review
 func SyncUserSpecificDiff(ctx context.Context, userID int64, pull *issues_model.PullRequest, gitRepo *git.Repository, diff *Diff, opts *DiffOptions) (*pull_model.ReviewState, error) {

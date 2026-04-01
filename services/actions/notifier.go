@@ -8,14 +8,12 @@ import (
 
 	actions_model "github.com/gitjet-ru/core-scm/models/actions"
 	issues_model "github.com/gitjet-ru/core-scm/models/issues"
-	"github.com/gitjet-ru/core-scm/models/organization"
 	packages_model "github.com/gitjet-ru/core-scm/models/packages"
 	perm_model "github.com/gitjet-ru/core-scm/models/perm"
 	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/git"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/repository"
 	"github.com/gitjet-ru/core-scm/modules/setting"
@@ -790,38 +788,6 @@ func (n *actionsNotifier) MigrateRepository(ctx context.Context, doer, u *user_m
 
 func (n *actionsNotifier) WorkflowRunStatusUpdate(ctx context.Context, repo *repo_model.Repository, sender *user_model.User, run *actions_model.ActionRun) {
 	ctx = withMethod(ctx, "WorkflowRunStatusUpdate")
-
-	var org *api.Organization
-	if repo.Owner.IsOrganization() {
-		org = convert.ToOrganization(ctx, organization.OrgFromUser(repo.Owner))
-	}
-
-	status := convert.ToWorkflowRunAction(run.Status)
-
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		log.Error("OpenRepository: %v", err)
-		return
-	}
-	defer gitRepo.Close()
-
-	convertedWorkflow, err := convert.GetActionWorkflow(ctx, gitRepo, repo, run.WorkflowID)
-	if err != nil {
-		log.Error("GetActionWorkflow: %v", err)
-		return
-	}
-	convertedRun, err := convert.ToActionWorkflowRun(ctx, repo, run)
-	if err != nil {
-		log.Error("ToActionWorkflowRun: %v", err)
-		return
-	}
-
-	newNotifyInput(repo, sender, webhook_module.HookEventWorkflowRun).WithPayload(&api.WorkflowRunPayload{
-		Action:       status,
-		Workflow:     convertedWorkflow,
-		WorkflowRun:  convertedRun,
-		Organization: org,
-		Repo:         convert.ToRepo(ctx, repo, access_model.Permission{AccessMode: perm_model.AccessModeOwner}),
-		Sender:       convert.ToUser(ctx, sender, nil),
-	}).Notify(ctx)
+	log.Warn("skip actions workflow_run notify in mirrorless mode for %s", repo.RelativePath())
+	return
 }

@@ -4,6 +4,7 @@
 package repo
 
 import (
+	"bytes"
 	gocontext "context"
 	"encoding/csv"
 	"errors"
@@ -257,12 +258,10 @@ func ParseCompareInfo(ctx *context.Context) *git_service.CompareInfo {
 	if isSameRepo {
 		headGitRepo = ctx.Repo.GitRepo
 	} else {
-		headGitRepo, err = gitrepo.OpenRepository(ctx, headRepo)
-		if err != nil {
-			ctx.ServerError("OpenRepository", err)
-			return nil
-		}
-		defer headGitRepo.Close()
+		// Mirrorless mode: avoid opening a separate local head repository mirror.
+		// Cross-repo compare requires remote-native diff path and is rejected here until fully migrated.
+		ctx.NotFound(nil)
+		return nil
 	}
 	headRef := headGitRepo.UnstableGuessRefByShortName(headRefName)
 	if headRef == "" {
@@ -769,13 +768,23 @@ func ExcerptBlob(ctx *context.Context) {
 	}
 
 	if ctx.Data["PageIsWiki"] == true {
-		var err error
-		gitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository.WikiStorageRepo())
-		if err != nil {
-			ctx.ServerError("OpenRepository", err)
+		diffBlobExcerptData.BaseLink = ctx.Repo.RepoLink + "/wiki/blob_excerpt"
+		stdout, stderr, runErr := gitrepo.RunCmdBytes(ctx, ctx.Repo.Repository.WikiStorageRepo(), gitcmd.NewCommand("show").AddDynamicArguments(commitID + ":" + filePath))
+		if runErr != nil {
+			ctx.ServerError("RunCmdBytes", runErr)
+			_ = stderr
 			return
 		}
-		diffBlobExcerptData.BaseLink = ctx.Repo.RepoLink + "/wiki/blob_excerpt"
+		section, err := gitdiff.BuildBlobExcerptDiffSection(filePath, bytes.NewReader(stdout), opts)
+		if err != nil {
+			ctx.ServerError("BuildBlobExcerptDiffSection", err)
+			return
+		}
+		ctx.Data["section"] = section
+		ctx.Data["FileNameHash"] = git.HashFilePathForWebUI(filePath)
+		ctx.Data["DiffBlobExcerptData"] = diffBlobExcerptData
+		ctx.HTML(http.StatusOK, tplBlobExcerpt)
+		return
 	}
 
 	commit, err := gitRepo.GetCommit(commitID)

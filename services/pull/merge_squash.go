@@ -5,6 +5,8 @@ package pull
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
@@ -13,10 +15,16 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/setting"
+	"github.com/gitjet-ru/core-scm/services/localgit"
 )
 
 // doMergeStyleSquash gets a commit author signature for squash commits
 func getAuthorSignatureSquash(ctx *mergeContext) (*git.Signature, error) {
+	if strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow") {
+		return nil, fmt.Errorf("squash merge via temporary local repo is disabled in mirrorless hard-cut for %s", ctx.pr.BaseRepo.FullName())
+	}
+
 	if err := ctx.pr.Issue.LoadPoster(ctx); err != nil {
 		log.Error("%-v Issue[%d].LoadPoster: %v", ctx.pr, ctx.pr.Issue.ID, err)
 		return nil, err
@@ -25,7 +33,7 @@ func getAuthorSignatureSquash(ctx *mergeContext) (*git.Signature, error) {
 	// Try to get an signature from the same user in one of the commits, as the
 	// poster email might be private or commits might have a different signature
 	// than the primary email address of the poster.
-	gitRepo, err := git.OpenRepository(ctx, ctx.tmpBasePath)
+	gitRepo, err := localgit.OpenRepository(ctx, ctx.tmpBasePath)
 	if err != nil {
 		log.Error("%-v Unable to open base repository: %v", ctx.pr, err)
 		return nil, err

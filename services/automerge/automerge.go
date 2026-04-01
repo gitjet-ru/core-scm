@@ -104,20 +104,12 @@ func StartPRCheckAndAutoMergeBySHA(ctx context.Context, sha string, repo *repo_m
 }
 
 func getPullRequestsByHeadSHA(ctx context.Context, sha string, repo *repo_model.Repository, filter func(*issues_model.PullRequest) bool) (map[int64]*issues_model.PullRequest, error) {
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		return nil, err
-	}
-	defer gitRepo.Close()
-
-	refs, err := gitRepo.GetRefsBySha(sha, "")
-	if err != nil {
-		return nil, err
-	}
-
 	pulls := make(map[int64]*issues_model.PullRequest)
 
-	for _, ref := range refs {
+	_, err := gitrepo.WalkReferences(ctx, repo, func(sha1, ref string) error {
+		if sha1 != sha {
+			return nil
+		}
 		// Each pull branch starts with refs/pull/ we then go from there to find the index of the pr and then
 		// use that to get the pr.
 		if strings.HasPrefix(ref, git.PullPrefix) {
@@ -126,28 +118,32 @@ func getPullRequestsByHeadSHA(ctx context.Context, sha string, repo *repo_model.
 			// e.g. 'refs/pull/1/head' would be []string{"1", "head"}
 			if len(parts) != 2 {
 				log.Error("getPullRequestsByHeadSHA found broken pull ref [%s] on repo [%-v]", ref, repo)
-				continue
+				return nil
 			}
 
 			prIndex, err := strconv.ParseInt(parts[0], 10, 64)
 			if err != nil {
 				log.Error("getPullRequestsByHeadSHA found broken pull ref [%s] on repo [%-v]", ref, repo)
-				continue
+				return nil
 			}
 
 			p, err := issues_model.GetPullRequestByIndex(ctx, repo.ID, prIndex)
 			if err != nil {
 				// If there is no pull request for this branch, we don't try to merge it.
 				if issues_model.IsErrPullRequestNotExist(err) {
-					continue
+					return nil
 				}
-				return nil, err
+				return err
 			}
 
 			if filter(p) {
 				pulls[p.ID] = p
 			}
 		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return pulls, nil
@@ -181,14 +177,7 @@ func handlePullRequestAutoMerge(pullID int64, sha string) {
 	}
 
 	// check the sha is the same as pull request head commit id
-	baseGitRepo, err := gitrepo.OpenRepository(ctx, pr.BaseRepo)
-	if err != nil {
-		log.Error("OpenRepository: %v", err)
-		return
-	}
-	defer baseGitRepo.Close()
-
-	headCommitID, err := baseGitRepo.GetRefCommitID(pr.GetGitHeadRefName())
+	headCommitID, err := gitrepo.GetFullCommitID(ctx, pr.BaseRepo, pr.GetGitHeadRefName())
 	if err != nil {
 		log.Error("GetRefCommitID: %v", err)
 		return

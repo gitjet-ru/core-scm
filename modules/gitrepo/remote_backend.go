@@ -2,6 +2,8 @@ package gitrepo
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"os"
 	"strings"
@@ -10,6 +12,7 @@ import (
 
 	gitstoragev1 "github.com/gitjet-ru/git-storage/gen/go/gitstorage/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -31,7 +34,12 @@ func getRemoteClient() (gitstoragev1.GitStorageClient, error) {
 			remoteClientErr = errors.New("GIT_STORAGE_ENDPOINT is not set")
 			return
 		}
-		conn, err := grpc.NewClient(endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		transportCreds, err := gitStorageTransportCredentials()
+		if err != nil {
+			remoteClientErr = err
+			return
+		}
+		conn, err := grpc.NewClient(endpoint, grpc.WithTransportCredentials(transportCreds))
 		if err != nil {
 			remoteClientErr = err
 			return
@@ -39,6 +47,43 @@ func getRemoteClient() (gitstoragev1.GitStorageClient, error) {
 		remoteClient = gitstoragev1.NewGitStorageClient(conn)
 	})
 	return remoteClient, remoteClientErr
+}
+
+func gitStorageTransportCredentials() (credentials.TransportCredentials, error) {
+	caFile := strings.TrimSpace(os.Getenv("GIT_STORAGE_TLS_CA_FILE"))
+	certFile := strings.TrimSpace(os.Getenv("GIT_STORAGE_TLS_CERT_FILE"))
+	keyFile := strings.TrimSpace(os.Getenv("GIT_STORAGE_TLS_KEY_FILE"))
+	serverName := strings.TrimSpace(os.Getenv("GIT_STORAGE_TLS_SERVER_NAME"))
+	if caFile == "" && certFile == "" && keyFile == "" {
+		return insecure.NewCredentials(), nil
+	}
+
+	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+	if serverName != "" {
+		tlsConfig.ServerName = serverName
+	}
+	if caFile != "" {
+		caBytes, err := os.ReadFile(caFile)
+		if err != nil {
+			return nil, err
+		}
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM(caBytes) {
+			return nil, errors.New("failed to parse GIT_STORAGE_TLS_CA_FILE")
+		}
+		tlsConfig.RootCAs = pool
+	}
+	if certFile != "" || keyFile != "" {
+		if certFile == "" || keyFile == "" {
+			return nil, errors.New("both GIT_STORAGE_TLS_CERT_FILE and GIT_STORAGE_TLS_KEY_FILE are required")
+		}
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			return nil, err
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+	return credentials.NewTLS(tlsConfig), nil
 }
 
 func callRemoteWithTimeout(ctx context.Context, fn func(context.Context) error) error {

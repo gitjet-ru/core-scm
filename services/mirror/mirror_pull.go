@@ -6,6 +6,7 @@ package mirror
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -29,6 +30,11 @@ import (
 	notify_service "github.com/gitjet-ru/core-scm/services/notify"
 	repo_service "github.com/gitjet-ru/core-scm/services/repository"
 )
+
+func isMirrorlessBackend() bool {
+	backend := strings.ToLower(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")))
+	return backend == "remote" || backend == "shadow"
+}
 
 // UpdateAddress writes new address to Git repository and database
 func UpdateAddress(ctx context.Context, m *repo_model.Mirror, addr string) error {
@@ -107,6 +113,10 @@ func checkRecoverableSyncError(stderrMessage string) bool {
 
 // runSync returns true if sync finished without error.
 func runSync(ctx context.Context, m *repo_model.Mirror) ([]*repo_module.SyncResult, bool) {
+	if isMirrorlessBackend() {
+		log.Warn("skip mirror pull sync in mirrorless hard-cut for %s", m.Repo.FullName())
+		return nil, false
+	}
 	log.Trace("SyncMirrors [repo: %-v]: running git remote update...", m.Repo)
 
 	remoteURL, remoteErr := gitrepo.GitRemoteGetURL(ctx, m.Repo, m.GetRemoteName())
@@ -164,11 +174,12 @@ func runSync(ctx context.Context, m *repo_model.Mirror) ([]*repo_module.SyncResu
 		log.Error("SyncMirrors [repo: %-v]: %v", m.Repo, err)
 	}
 
-	gitRepo, err := gitrepo.OpenRepository(ctx, m.Repo)
+	gitRepo, closer, err := gitrepo.RepositoryFromContextOrOpen(ctx, m.Repo)
 	if err != nil {
-		log.Error("SyncMirrors [repo: %-v]: failed to OpenRepository: %v", m.Repo, err)
+		log.Error("SyncMirrors [repo: %-v]: failed to open repository context: %v", m.Repo, err)
 		return nil, false
 	}
+	defer closer.Close()
 
 	if m.LFS && setting.LFS.StartServer {
 		log.Trace("SyncMirrors [repo: %-v]: syncing LFS objects...", m.Repo)
@@ -310,20 +321,12 @@ func SyncPullMirror(ctx context.Context, repoID int64) bool {
 		return false
 	}
 
-	gitRepo, err := gitrepo.OpenRepository(ctx, m.Repo)
+	gitRepo, closer, err := gitrepo.RepositoryFromContextOrOpen(ctx, m.Repo)
 	if err != nil {
-		log.Error("SyncMirrors [repo: %-v]: unable to OpenRepository: %v", m.Repo, err)
+		log.Error("SyncMirrors [repo: %-v]: unable to open repository context: %v", m.Repo, err)
 		return false
 	}
-	defer gitRepo.Close()
-
-	log.Trace("SyncMirrors [repo: %-v]: %d branches updated", m.Repo, len(results))
-	if len(results) > 0 {
-		if ok := checkAndUpdateEmptyRepository(ctx, m, results); !ok {
-			log.Error("SyncMirrors [repo: %-v]: checkAndUpdateEmptyRepository: %v", m.Repo, err)
-			return false
-		}
-	}
+	defer closer.Close()
 
 	for _, result := range results {
 		// Discard GitHub pull requests, i.e. refs/pull/*

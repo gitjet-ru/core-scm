@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	asymkey_model "github.com/gitjet-ru/core-scm/models/asymkey"
 	git_model "github.com/gitjet-ru/core-scm/models/git"
@@ -19,6 +20,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/glob"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/private"
 	"github.com/gitjet-ru/core-scm/modules/util"
@@ -27,6 +29,59 @@ import (
 	gitea_context "github.com/gitjet-ru/core-scm/services/context"
 	pull_service "github.com/gitjet-ru/core-scm/services/pull"
 )
+
+func checkFileProtectionRemote(ctx *preReceiveContext, repo gitrepo.Repository, branchName, oldCommitID, newCommitID string, patterns []glob.Glob, limit int) ([]string, error) {
+	if len(patterns) == 0 {
+		return nil, nil
+	}
+	stdout, _, err := gitrepo.RunCmdString(ctx, repo, gitcmd.NewCommand("diff", "--name-only").AddDynamicArguments(oldCommitID, newCommitID).WithEnv(ctx.env))
+	if err != nil {
+		return nil, err
+	}
+	changedProtectedFiles := make([]string, 0, limit)
+	for _, affectedFile := range strings.Fields(strings.TrimSpace(stdout)) {
+		lpath := strings.ToLower(affectedFile)
+		for _, pat := range patterns {
+			if pat.Match(lpath) {
+				changedProtectedFiles = append(changedProtectedFiles, lpath)
+				break
+			}
+		}
+		if len(changedProtectedFiles) >= limit {
+			break
+		}
+	}
+	if len(changedProtectedFiles) > 0 {
+		return changedProtectedFiles, pull_service.ErrFilePathProtected{Path: changedProtectedFiles[0]}
+	}
+	_ = branchName
+	return changedProtectedFiles, nil
+}
+
+func checkUnprotectedFilesRemote(ctx *preReceiveContext, repo gitrepo.Repository, branchName, oldCommitID, newCommitID string, patterns []glob.Glob) (bool, error) {
+	if len(patterns) == 0 {
+		return false, nil
+	}
+	stdout, _, err := gitrepo.RunCmdString(ctx, repo, gitcmd.NewCommand("diff", "--name-only").AddDynamicArguments(oldCommitID, newCommitID).WithEnv(ctx.env))
+	if err != nil {
+		return false, err
+	}
+	for _, affectedFile := range strings.Fields(strings.TrimSpace(stdout)) {
+		lpath := strings.ToLower(affectedFile)
+		unprotected := false
+		for _, pat := range patterns {
+			if pat.Match(lpath) {
+				unprotected = true
+				break
+			}
+		}
+		if !unprotected {
+			_ = branchName
+			return false, nil
+		}
+	}
+	return true, nil
+}
 
 type preReceiveContext struct {
 	*gitea_context.PrivateContext
@@ -222,6 +277,17 @@ func preReceiveBranch(ctx *preReceiveContext, oldCommitID, newCommitID string, r
 
 	// 3. Enforce require signed commits
 	if protectBranch.RequireSignedCommits {
+		if gitRepo == nil {
+			gitRepo, err = gitea_context.OpenPrivateGitRepo(ctx.PrivateContext, repo)
+			if err != nil {
+				log.Error("Unable to open repository for signed commit verification in %-v: %v", repo, err)
+				ctx.JSON(http.StatusInternalServerError, private.Response{
+					Err: fmt.Sprintf("Unable to open repository for signed commit verification: %v", err),
+				})
+				return
+			}
+			ctx.Repo.GitRepo = gitRepo
+		}
 		err := verifyCommits(oldCommitID, newCommitID, gitRepo, ctx.env)
 		if err != nil {
 			if !isErrUnverifiedCommit(err) {
@@ -248,7 +314,7 @@ func preReceiveBranch(ctx *preReceiveContext, oldCommitID, newCommitID string, r
 
 	globs := protectBranch.GetProtectedFilePatterns()
 	if len(globs) > 0 {
-		_, err := pull_service.CheckFileProtection(gitRepo, branchName, oldCommitID, newCommitID, globs, 1, ctx.env)
+		_, err := checkFileProtectionRemote(ctx, repo, branchName, oldCommitID, newCommitID, globs, 1)
 		if err != nil {
 			if !pull_service.IsErrFilePathProtected(err) {
 				log.Error("Unable to check file protection for commits from %s to %s in %-v: %v", oldCommitID, newCommitID, repo, err)
@@ -306,7 +372,7 @@ func preReceiveBranch(ctx *preReceiveContext, oldCommitID, newCommitID string, r
 			// Allow commits that only touch unprotected files
 			globs := protectBranch.GetUnprotectedFilePatterns()
 			if len(globs) > 0 {
-				unprotectedFilesOnly, err := pull_service.CheckUnprotectedFiles(gitRepo, branchName, oldCommitID, newCommitID, globs, ctx.env)
+				unprotectedFilesOnly, err := checkUnprotectedFilesRemote(ctx, repo, branchName, oldCommitID, newCommitID, globs)
 				if err != nil {
 					log.Error("Unable to check file protection for commits from %s to %s in %-v: %v", oldCommitID, newCommitID, repo, err)
 					ctx.JSON(http.StatusInternalServerError, private.Response{

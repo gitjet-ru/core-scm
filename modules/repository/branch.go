@@ -36,19 +36,7 @@ func SyncRepoBranches(ctx context.Context, repoID, doerID int64) (int64, error) 
 	}
 
 	log.Debug("SyncRepoBranches: in Repo[%d:%s]", repo.ID, repo.FullName())
-	if isRemoteGitStorageBackend() {
-		return syncRepoBranchesRemote(ctx, repo, doerID)
-	}
-
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		log.Error("OpenRepository[%s]: %w", repo.FullName(), err)
-		return 0, err
-	}
-	defer gitRepo.Close()
-
-	count, _, err := SyncRepoBranchesWithRepo(ctx, repo, gitRepo, doerID)
-	return count, err
+	return syncRepoBranchesRemote(ctx, repo, doerID)
 }
 
 type remoteBranchMeta struct {

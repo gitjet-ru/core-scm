@@ -8,13 +8,18 @@ import (
 	"net/http"
 
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/util"
 	"github.com/gitjet-ru/core-scm/services/context"
 	archiver_service "github.com/gitjet-ru/core-scm/services/repository/archiver"
 )
 
 func serveRepoArchive(ctx *context.APIContext, reqFileName string, paths []string) {
-	aReq, err := archiver_service.NewRequest(ctx.Repo.Repository, ctx.Repo.GitRepo, reqFileName, paths)
+	gitRepo := ctx.Repo.GitRepo
+	if gitrepo.UseRemoteReadBackendForAPI() {
+		gitRepo = nil
+	}
+	aReq, err := archiver_service.NewRequest(ctx.Repo.Repository, gitRepo, reqFileName, paths)
 	if err != nil {
 		if errors.Is(err, util.ErrInvalidArgument) {
 			ctx.APIError(http.StatusBadRequest, err)

@@ -16,7 +16,6 @@ import (
 	"github.com/gitjet-ru/core-scm/models/renderhelper"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
-	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/markup/markdown"
 	"github.com/gitjet-ru/core-scm/modules/optional"
@@ -78,7 +77,7 @@ func userProfile(ctx *context.Context) {
 	ctx.HTML(http.StatusOK, tplProfile)
 }
 
-func prepareUserProfileTabData(ctx *context.Context, profileDbRepo *repo_model.Repository, profileReadme *git.Blob) {
+func prepareUserProfileTabData(ctx *context.Context, profileDbRepo *repo_model.Repository, profileReadme []byte) {
 	// if there is a profile readme, default to "overview" page, otherwise, default to "repositories" page
 	// if there is not a profile readme, the overview tab should be treated as the repositories tab
 	tab := ctx.FormString("tab")
@@ -247,17 +246,13 @@ func prepareUserProfileTabData(ctx *context.Context, profileDbRepo *repo_model.R
 
 		total = count
 	case "overview":
-		if bytes, err := profileReadme.GetBlobContent(setting.UI.MaxDisplayFileSize); err != nil {
-			log.Error("failed to GetBlobContent: %v", err)
+		rctx := renderhelper.NewRenderContextRepoFile(ctx, profileDbRepo, renderhelper.RepoFileOptions{
+			CurrentRefPath: path.Join("branch", util.PathEscapeSegments(profileDbRepo.DefaultBranch)),
+		})
+		if profileContent, err := markdown.RenderString(rctx, string(profileReadme)); err != nil {
+			log.Error("failed to RenderString: %v", err)
 		} else {
-			rctx := renderhelper.NewRenderContextRepoFile(ctx, profileDbRepo, renderhelper.RepoFileOptions{
-				CurrentRefPath: path.Join("branch", util.PathEscapeSegments(profileDbRepo.DefaultBranch)),
-			})
-			if profileContent, err := markdown.RenderString(rctx, bytes); err != nil {
-				log.Error("failed to RenderString: %v", err)
-			} else {
-				ctx.Data["ProfileReadmeContent"] = profileContent
-			}
+			ctx.Data["ProfileReadmeContent"] = profileContent
 		}
 	case "organizations":
 		orgs, count, err := db.FindAndCount[organization.Organization](ctx, organization.FindOrgOptions{

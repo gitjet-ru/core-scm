@@ -29,9 +29,6 @@ import (
 // Optional - Merger
 func ToAPIPullRequest(ctx context.Context, pr *issues_model.PullRequest, doer *user_model.User) *api.PullRequest {
 	var (
-		baseBranch string
-		headBranch string
-		baseCommit *git.Commit
 		err        error
 	)
 
@@ -144,13 +141,6 @@ func ToAPIPullRequest(ctx context.Context, pr *issues_model.PullRequest, doer *u
 		apiPullRequest.Closed = pr.Issue.ClosedUnix.AsTimePtr()
 	}
 
-	gitRepo, err := gitrepo.OpenRepository(ctx, pr.BaseRepo)
-	if err != nil {
-		log.Error("OpenRepository[%s]: %v", pr.BaseRepo.RelativePath(), err)
-		return nil
-	}
-	defer gitRepo.Close()
-
 	exist, err := git_model.IsBranchExist(ctx, pr.BaseRepoID, pr.BaseBranch)
 	if err != nil {
 		log.Error("GetBranch[%s]: %v", pr.BaseBranch, err)
@@ -158,19 +148,18 @@ func ToAPIPullRequest(ctx context.Context, pr *issues_model.PullRequest, doer *u
 	}
 
 	if exist {
-		baseCommit, err = gitRepo.GetBranchCommit(pr.BaseBranch)
-		if err != nil && !git.IsErrNotExist(err) {
-			log.Error("GetCommit[%s]: %v", baseBranch, err)
+		baseBranchModel, branchErr := git_model.GetBranch(ctx, pr.BaseRepoID, pr.BaseBranch)
+		if branchErr != nil && !git_model.IsErrBranchNotExist(branchErr) {
+			log.Error("GetBranch[%s]: %v", pr.BaseBranch, branchErr)
 			return nil
 		}
-
-		if err == nil {
-			apiPullRequest.Base.Sha = baseCommit.ID.String()
+		if branchErr == nil {
+			apiPullRequest.Base.Sha = baseBranchModel.CommitID
 		}
 	}
 
 	if pr.Flow == issues_model.PullRequestFlowAGit {
-		apiPullRequest.Head.Sha, err = gitRepo.GetRefCommitID(pr.GetGitHeadRefName())
+		apiPullRequest.Head.Sha, err = gitrepo.GetFullCommitID(ctx, pr.BaseRepo, pr.GetGitHeadRefName())
 		if err != nil {
 			log.Error("GetRefCommitID[%s]: %v", pr.GetGitHeadRefName(), err)
 			return nil
@@ -190,13 +179,6 @@ func ToAPIPullRequest(ctx context.Context, pr *issues_model.PullRequest, doer *u
 		apiPullRequest.Head.RepoID = pr.HeadRepo.ID
 		apiPullRequest.Head.Repository = ToRepo(ctx, pr.HeadRepo, p)
 
-		headGitRepo, err := gitrepo.OpenRepository(ctx, pr.HeadRepo)
-		if err != nil {
-			log.Error("OpenRepository[%s]: %v", pr.HeadRepo.RelativePath(), err)
-			return nil
-		}
-		defer headGitRepo.Close()
-
 		exist, err = git_model.IsBranchExist(ctx, pr.HeadRepoID, pr.HeadBranch)
 		if err != nil {
 			log.Error("GetBranch[%s]: %v", pr.HeadBranch, err)
@@ -210,7 +192,7 @@ func ToAPIPullRequest(ctx context.Context, pr *issues_model.PullRequest, doer *u
 		)
 
 		if !exist {
-			headCommitID, err := headGitRepo.GetRefCommitID(apiPullRequest.Head.Ref)
+			headCommitID, err := gitrepo.GetFullCommitID(ctx, pr.HeadRepo, apiPullRequest.Head.Ref)
 			if err != nil && !git.IsErrNotExist(err) {
 				log.Error("GetCommit[%s]: %v", pr.HeadBranch, err)
 				return nil
@@ -220,22 +202,21 @@ func ToAPIPullRequest(ctx context.Context, pr *issues_model.PullRequest, doer *u
 				endCommitID = headCommitID
 			}
 		} else {
-			commit, err := headGitRepo.GetBranchCommit(pr.HeadBranch)
+			headCommitID, err := gitrepo.GetFullCommitID(ctx, pr.HeadRepo, pr.HeadBranch)
 			if err != nil && !git.IsErrNotExist(err) {
-				log.Error("GetCommit[%s]: %v", headBranch, err)
+				log.Error("GetCommit[%s]: %v", pr.HeadBranch, err)
 				return nil
 			}
 			if err == nil {
 				apiPullRequest.Head.Ref = pr.HeadBranch
-				apiPullRequest.Head.Sha = commit.ID.String()
-				endCommitID = commit.ID.String()
+				apiPullRequest.Head.Sha = headCommitID
+				endCommitID = headCommitID
 			}
 		}
 
 		// Calculate diff
 		startCommitID = pr.MergeBase
-
-		diffShortStats, err := gitdiff.GetDiffShortStat(ctx, pr.BaseRepo, gitRepo, startCommitID, endCommitID)
+		diffShortStats, err := gitdiff.GetDiffShortStatByIDs(ctx, pr.BaseRepo, startCommitID, endCommitID)
 		if err != nil {
 			log.Error("GetDiffShortStat: %v", err)
 		} else {
@@ -246,20 +227,13 @@ func ToAPIPullRequest(ctx context.Context, pr *issues_model.PullRequest, doer *u
 	}
 
 	if len(apiPullRequest.Head.Sha) == 0 && len(apiPullRequest.Head.Ref) != 0 {
-		baseGitRepo, err := gitrepo.OpenRepository(ctx, pr.BaseRepo)
-		if err != nil {
-			log.Error("OpenRepository[%s]: %v", pr.BaseRepo.RelativePath(), err)
+		headSHA, err := gitrepo.GetFullCommitID(ctx, pr.BaseRepo, apiPullRequest.Head.Ref)
+		if err != nil && !git.IsErrNotExist(err) {
+			log.Error("GetRefCommitID[%s]: %v", apiPullRequest.Head.Ref, err)
 			return nil
 		}
-		defer baseGitRepo.Close()
-		refs, err := baseGitRepo.GetRefsFiltered(apiPullRequest.Head.Ref)
-		if err != nil {
-			log.Error("GetRefsFiltered[%s]: %v", apiPullRequest.Head.Ref, err)
-			return nil
-		} else if len(refs) == 0 {
-			log.Error("unable to resolve PR head ref")
-		} else {
-			apiPullRequest.Head.Sha = refs[0].Object.String()
+		if err == nil {
+			apiPullRequest.Head.Sha = headSHA
 		}
 	}
 
@@ -327,12 +301,6 @@ func ToAPIPullRequests(ctx context.Context, baseRepo *repo_model.Repository, prs
 	if err != nil {
 		return nil, err
 	}
-
-	gitRepo, err := gitrepo.OpenRepository(ctx, baseRepo)
-	if err != nil {
-		return nil, err
-	}
-	defer gitRepo.Close()
 
 	baseRepoPerm, err := access_model.GetUserRepoPermission(ctx, baseRepo, doer)
 	if err != nil {
@@ -450,20 +418,19 @@ func ToAPIPullRequests(ctx context.Context, baseRepo *repo_model.Repository, prs
 		if pr.Flow == issues_model.PullRequestFlowAGit {
 			apiPullRequest.Head.Name = ""
 		}
-		apiPullRequest.Head.Sha, err = gitRepo.GetRefCommitID(pr.GetGitHeadRefName())
+		apiPullRequest.Head.Sha, err = gitrepo.GetFullCommitID(ctx, baseRepo, pr.GetGitHeadRefName())
 		if err != nil {
 			log.Error("GetRefCommitID[%s]: %v", pr.GetGitHeadRefName(), err)
 		}
 
 		if len(apiPullRequest.Head.Sha) == 0 && len(apiPullRequest.Head.Ref) != 0 {
-			refs, err := gitRepo.GetRefsFiltered(apiPullRequest.Head.Ref)
-			if err != nil {
-				log.Error("GetRefsFiltered[%s]: %v", apiPullRequest.Head.Ref, err)
+			headSHA, err := gitrepo.GetFullCommitID(ctx, baseRepo, apiPullRequest.Head.Ref)
+			if err != nil && !git.IsErrNotExist(err) {
+				log.Error("GetRefCommitID[%s]: %v", apiPullRequest.Head.Ref, err)
 				return nil, err
-			} else if len(refs) == 0 {
-				log.Error("unable to resolve PR head ref")
-			} else {
-				apiPullRequest.Head.Sha = refs[0].Object.String()
+			}
+			if err == nil {
+				apiPullRequest.Head.Sha = headSHA
 			}
 		}
 

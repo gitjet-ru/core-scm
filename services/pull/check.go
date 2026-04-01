@@ -277,9 +277,14 @@ func markPullRequestAsMergeable(ctx context.Context, pr *issues_model.PullReques
 	automergequeue.StartPRCheckAndAutoMerge(ctx, pr)
 }
 
-// getMergeCommit checks if a pull request has been merged
-// Returns the git.Commit of the pull request if merged
-func getMergeCommit(ctx context.Context, pr *issues_model.PullRequest) (*git.Commit, error) {
+type mergeCommitInfo struct {
+	ID         string
+	AuthorUnix int64
+}
+
+// getMergeCommit checks if a pull request has been merged.
+// Returns commit metadata of the pull request if merged.
+func getMergeCommit(ctx context.Context, pr *issues_model.PullRequest) (*mergeCommitInfo, error) {
 	if err := pr.LoadBaseRepo(ctx); err != nil {
 		return nil, fmt.Errorf("unable to load base repo for %s: %w", pr, err)
 	}
@@ -305,12 +310,6 @@ func getMergeCommit(ctx context.Context, pr *issues_model.PullRequest) (*git.Com
 		return nil, fmt.Errorf("GetFullCommitID(%s) in %s: %w", prHeadRef, pr.BaseRepo.FullName(), err)
 	}
 
-	gitRepo, err := gitrepo.OpenRepository(ctx, pr.BaseRepo)
-	if err != nil {
-		return nil, fmt.Errorf("%-v OpenRepository: %w", pr.BaseRepo, err)
-	}
-	defer gitRepo.Close()
-
 	objectFormat := git.ObjectFormatFromName(pr.BaseRepo.ObjectFormatName)
 
 	// Get the commit from BaseBranch where the pull request got merged
@@ -325,12 +324,15 @@ func getMergeCommit(ctx context.Context, pr *issues_model.PullRequest) (*git.Com
 	}
 	mergeCommit = strings.TrimSpace(mergeCommit)
 
-	commit, err := gitRepo.GetCommit(mergeCommit)
+	commit, err := gitrepo.RemoteGetCommitForAPI(ctx, pr.BaseRepo, mergeCommit)
 	if err != nil {
 		return nil, fmt.Errorf("GetMergeCommit[%s]: %w", mergeCommit, err)
 	}
 
-	return commit, nil
+	return &mergeCommitInfo{
+		ID:         commit.GetId(),
+		AuthorUnix: commit.GetAuthorUnix(),
+	}, nil
 }
 
 func getMergerForManuallyMergedPullRequest(ctx context.Context, pr *issues_model.PullRequest) (*user_model.User, error) {
@@ -390,7 +392,7 @@ func manuallyMerged(ctx context.Context, pr *issues_model.PullRequest) bool {
 		return false
 	}
 
-	if merged, err := SetMerged(ctx, pr, commit.ID.String(), timeutil.TimeStamp(commit.Author.When.Unix()), merger, issues_model.PullRequestStatusManuallyMerged); err != nil {
+	if merged, err := SetMerged(ctx, pr, commit.ID, timeutil.TimeStamp(commit.AuthorUnix), merger, issues_model.PullRequestStatusManuallyMerged); err != nil {
 		log.Error("%-v setMerged : %v", pr, err)
 		return false
 	} else if !merged {
@@ -399,7 +401,7 @@ func manuallyMerged(ctx context.Context, pr *issues_model.PullRequest) bool {
 
 	notify_service.MergePullRequest(ctx, merger, pr)
 
-	log.Info("manuallyMerged[%-v]: Marked as manually merged into %s/%s by commit id: %s", pr, pr.BaseRepo.Name, pr.BaseBranch, commit.ID.String())
+	log.Info("manuallyMerged[%-v]: Marked as manually merged into %s/%s by commit id: %s", pr, pr.BaseRepo.Name, pr.BaseBranch, commit.ID)
 	return true
 }
 

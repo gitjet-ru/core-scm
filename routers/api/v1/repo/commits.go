@@ -8,9 +8,11 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	issues_model "github.com/gitjet-ru/core-scm/models/issues"
+	gitstoragev1 "github.com/gitjet-ru/git-storage/gen/go/gitstorage/v1"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
@@ -67,6 +69,15 @@ func GetSingleCommit(ctx *context.APIContext) {
 	sha := ctx.PathParam("sha")
 	if !git.IsValidRefPattern(sha) {
 		ctx.APIError(http.StatusUnprocessableEntity, "no valid ref or sha: "+sha)
+		return
+	}
+	if gitrepo.UseRemoteReadBackendForAPI() {
+		commitInfo, err := gitrepo.RemoteGetCommitForAPI(ctx, ctx.Repo.Repository, sha)
+		if err != nil {
+			ctx.APIErrorInternal(err)
+			return
+		}
+		ctx.JSON(http.StatusOK, commitInfoToAPICommit(ctx, commitInfo))
 		return
 	}
 
@@ -198,6 +209,28 @@ func GetAllCommits(ctx *context.APIContext) {
 	path := ctx.FormString("path")
 	not := ctx.FormString("not")
 
+	if gitrepo.UseRemoteReadBackendForAPI() {
+		limit := int32(listOptions.PageSize)
+		skip := int32((listOptions.Page - 1) * listOptions.PageSize)
+		if strings.TrimSpace(sha) == "" {
+			sha = ctx.Repo.Repository.DefaultBranch
+		}
+		commits, err := gitrepo.RemoteListCommitsForAPI(ctx, ctx.Repo.Repository, sha, limit, skip, path, since, until, not)
+		if err != nil {
+			ctx.APIErrorInternal(err)
+			return
+		}
+		apiCommits := make([]*api.Commit, 0, len(commits))
+		for _, c := range commits {
+			apiCommits = append(apiCommits, commitInfoToAPICommit(ctx, c))
+		}
+		commitsCountTotal := int64(len(apiCommits))
+		ctx.SetLinkHeader(commitsCountTotal, listOptions.PageSize)
+		ctx.SetTotalCountHeader(commitsCountTotal)
+		ctx.JSON(http.StatusOK, &apiCommits)
+		return
+	}
+
 	var (
 		commitsCountTotal int64
 		commits           []*git.Commit
@@ -302,6 +335,50 @@ func GetAllCommits(ctx *context.APIContext) {
 	ctx.AppendAccessControlExposeHeaders("X-Page", "X-PerPage", "X-Total", "X-PageCount", "X-HasMore")
 
 	ctx.JSON(http.StatusOK, &apiCommits)
+}
+
+func commitInfoToAPICommit(ctx *context.APIContext, c *gitstoragev1.CommitInfo) *api.Commit {
+	authorDate := time.Unix(c.GetAuthorUnix(), 0).UTC().Format(time.RFC3339)
+	committerDate := time.Unix(c.GetCommitterUnix(), 0).UTC().Format(time.RFC3339)
+	created := time.Unix(c.GetCommitterUnix(), 0).UTC()
+	commitURL := ctx.Repo.Repository.APIURL() + "/git/commits/" + c.GetId()
+	htmlURL := ctx.Repo.Repository.HTMLURL() + "/commit/" + c.GetId()
+
+	parents := make([]*api.CommitMeta, 0, len(c.GetParentIds()))
+	for _, p := range c.GetParentIds() {
+		parents = append(parents, &api.CommitMeta{
+			URL:     ctx.Repo.Repository.APIURL() + "/git/commits/" + p,
+			SHA:     p,
+			Created: created,
+		})
+	}
+
+	return &api.Commit{
+		CommitMeta: &api.CommitMeta{
+			URL:     commitURL,
+			SHA:     c.GetId(),
+			Created: created,
+		},
+		HTMLURL: htmlURL,
+		RepoCommit: &api.RepoCommit{
+			URL: commitURL,
+			Author: &api.CommitUser{
+				Identity: api.Identity{Name: c.GetAuthorName(), Email: c.GetAuthorEmail()},
+				Date:     authorDate,
+			},
+			Committer: &api.CommitUser{
+				Identity: api.Identity{Name: c.GetCommitterName(), Email: c.GetCommitterEmail()},
+				Date:     committerDate,
+			},
+			Message: strings.TrimSpace(c.GetSubject() + "\n\n" + c.GetBody()),
+			Tree: &api.CommitMeta{
+				URL:     ctx.Repo.Repository.APIURL() + "/git/trees/" + c.GetTreeId(),
+				SHA:     c.GetTreeId(),
+				Created: created,
+			},
+		},
+		Parents: parents,
+	}
 }
 
 // DownloadCommitDiffOrPatch render a commit's raw diff or patch

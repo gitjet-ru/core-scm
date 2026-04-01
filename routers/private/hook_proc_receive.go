@@ -25,7 +25,7 @@ func HookProcReceive(ctx *gitea_context.PrivateContext) {
 		return
 	}
 
-	results, err := agit.ProcReceive(ctx, ctx.Repo.Repository, ctx.Repo.GitRepo, opts)
+	results, err := agit.ProcReceive(ctx, ctx.Repo.Repository, opts)
 	if err != nil {
 		if errors.Is(err, issues_model.ErrMustCollaborator) {
 			ctx.JSON(http.StatusUnauthorized, private.Response{

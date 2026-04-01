@@ -11,7 +11,6 @@ import (
 	"html"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"strings"
 
@@ -460,6 +459,26 @@ func InitRepoPullRequestCtx(ctx *Context, base, head *repo_model.Repository) {
 	ctx.Data["PullRequestCtx"] = ctx.Repo.PullRequestCtx
 }
 
+func shouldSkipLocalMirrorOpen(ctx *Context) bool {
+	if !gitrepo.UseRemoteReadBackendForAPI() {
+		return false
+	}
+	if ctx.Req.Method != http.MethodGet && ctx.Req.Method != http.MethodHead {
+		return false
+	}
+	p := ctx.Req.URL.Path
+	return strings.Contains(p, "/raw/") ||
+		strings.Contains(p, "/media/") ||
+		strings.Contains(p, "/archive/") ||
+		strings.Contains(p, "/tarball/") ||
+		strings.Contains(p, "/zipball/") ||
+		strings.Contains(p, "/compare/") ||
+		strings.Contains(p, "/wiki") ||
+		strings.Contains(p, "/src/") ||
+		strings.Contains(p, "/commits/") ||
+		strings.Contains(p, "/branches")
+}
+
 // RepoAssignment returns a middleware to handle repository assignment
 func RepoAssignment(ctx *Context) {
 	if ctx.Data["Repository"] != nil {
@@ -666,26 +685,17 @@ func RepoAssignment(ctx *Context) {
 		ctx.Repo.GitRepo = nil
 	}
 
-	ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, repo)
+	// Even in remote backend mode, web handlers still rely on ctx.Repo.GitRepo/ctx.Repo.Commit.
+	// Open the read mirror snapshot here so Home/src routes don't fall back to empty quickstart UI.
+	ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
 	if err != nil {
-		if strings.Contains(err.Error(), "repository does not exist") || strings.Contains(err.Error(), "no such file or directory") {
-			if strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
-				strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow") {
-				log.Warn("Repository %-v is not available as local mirror yet in remote backend: %s (err: %v)", ctx.Repo.Repository, ctx.Repo.Repository.RelativePath(), err)
-				if !isHomeOrSettings {
-					ctx.Redirect(ctx.Repo.RepoLink)
-				}
-				return
-			}
-			log.Error("Repository %-v has a broken repository on the file system: %s Error: %v", ctx.Repo.Repository, ctx.Repo.Repository.RelativePath(), err)
-			ctx.Repo.Repository.MarkAsBrokenEmpty()
-			// Only allow access to base of repo or settings
-			if !isHomeOrSettings {
-				ctx.Redirect(ctx.Repo.RepoLink)
-			}
+		if isHomeOrSettings {
+			// Keep previous behavior of staying on repo home/settings for unavailable repositories.
+			log.Warn("Repository %s is not available yet in remote backend: %v", ctx.Repo.Repository.RelativePath(), err)
+			ctx.Redirect(ctx.Repo.RepoLink)
 			return
 		}
-		ctx.ServerError("RepoAssignment Invalid repo "+repo.FullName(), err)
+		ctx.ServerError("RepositoryFromRequestContextOrOpen", err)
 		return
 	}
 

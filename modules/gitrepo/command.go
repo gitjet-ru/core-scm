@@ -6,6 +6,7 @@ package gitrepo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
@@ -57,13 +58,9 @@ func RunCmdBytes(ctx context.Context, repo Repository, cmd *gitcmd.Command) ([]b
 
 func RunCmdWithStderr(ctx context.Context, repo Repository, cmd *gitcmd.Command) gitcmd.RunStdError {
 	if isRemoteBackendEnabled() {
-		execPath, err := localExecRepoPath(ctx, repo)
-		if err != nil {
-			return &remoteRunStdErr{err: err}
-		}
-		spec := cmd.WithDir(execPath).WithParentCallerInfo().ExportRemoteSpec()
+		spec := cmd.WithParentCallerInfo().ExportRemoteSpec()
 		if spec.HasCustomIO || spec.HasPipeline || spec.HasPreErrors {
-			return cmd.WithDir(execPath).WithParentCallerInfo().RunWithStderr(ctx)
+			return &remoteRunStdErr{err: fmt.Errorf("remote backend does not support custom IO/pipeline git command: %v", spec.Args)}
 		}
 		_, stderr, execErr, transportErr := runRemoteCommand(ctx, repo, cmd)
 		if transportErr != nil {
@@ -98,21 +95,9 @@ func runRemoteCommand(ctx context.Context, repo Repository, cmd *gitcmd.Command)
 }
 
 func runRemoteCommandBytes(ctx context.Context, repo Repository, cmd *gitcmd.Command) ([]byte, []byte, string, error) {
-	execPath, err := localExecRepoPath(ctx, repo)
-	if err != nil {
-		return nil, nil, "", err
-	}
-	spec := cmd.WithDir(execPath).WithParentCallerInfo().ExportRemoteSpec()
+	spec := cmd.WithParentCallerInfo().ExportRemoteSpec()
 	if spec.HasCustomIO || spec.HasPipeline || spec.HasPreErrors {
-		stdout, stderr, runErr := cmd.WithDir(execPath).WithParentCallerInfo().RunStdBytes(ctx)
-		execErr := ""
-		if runErr != nil {
-			execErr = runErr.Error()
-		}
-		if execErr == "" && isMutatingGitArgs(spec.Args) {
-			invalidateRemoteMirror(repo.RelativePath())
-		}
-		return stdout, stderr, execErr, nil
+		return nil, nil, "", fmt.Errorf("remote backend does not support custom IO/pipeline git command: %v", spec.Args)
 	}
 	client, err := getRemoteClient()
 	if err != nil {
@@ -136,13 +121,6 @@ func runRemoteCommandBytes(ctx context.Context, repo Repository, cmd *gitcmd.Com
 		invalidateRemoteMirror(repo.RelativePath())
 	}
 	return resp.GetStdout(), resp.GetStderr(), resp.GetExecError(), nil
-}
-
-func localExecRepoPath(ctx context.Context, repo Repository) (string, error) {
-	if isRemoteBackendEnabled() {
-		return ensureRemoteMirror(ctx, repo)
-	}
-	return repoPath(repo), nil
 }
 
 func isMutatingGitArgs(args []string) bool {

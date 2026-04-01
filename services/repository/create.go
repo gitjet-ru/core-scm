@@ -54,6 +54,20 @@ type CreateRepoOptions struct {
 	ObjectFormatName string
 }
 
+func normalizeLicenseName(name string) string {
+	trimmed := strings.TrimSpace(name)
+	if trimmed == "" {
+		return ""
+	}
+
+	for _, known := range repo_module.Licenses {
+		if strings.EqualFold(known, trimmed) {
+			return known
+		}
+	}
+	return trimmed
+}
+
 func prepareRepoCommit(ctx context.Context, repo *repo_model.Repository, tmpDir string, opts CreateRepoOptions) error {
 	commitTimeStr := time.Now().Format(time.RFC3339)
 	authorSig := repo.Owner.NewGitSig()
@@ -234,6 +248,7 @@ func CreateRepositoryDirectly(ctx context.Context, doer, owner *user_model.User,
 	if len(opts.DefaultBranch) == 0 {
 		opts.DefaultBranch = setting.Repository.DefaultBranch
 	}
+	opts.License = normalizeLicenseName(opts.License)
 
 	// Check if label template exist
 	if len(opts.IssueLabels) > 0 {

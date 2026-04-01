@@ -7,11 +7,13 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	issues_model "github.com/gitjet-ru/core-scm/models/issues"
 	org_model "github.com/gitjet-ru/core-scm/models/organization"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/setting"
@@ -50,24 +52,16 @@ func PullRequestCodeOwnersReview(ctx context.Context, pr *issues_model.PullReque
 		return nil, nil
 	}
 
-	repo, err := gitrepo.OpenRepository(ctx, pr.BaseRepo)
-	if err != nil {
-		return nil, err
-	}
-	defer repo.Close()
-
-	commit, err := repo.GetBranchCommit(pr.BaseRepo.DefaultBranch)
-	if err != nil {
-		return nil, err
-	}
-
 	var data string
+	maxBlobSize := int32(setting.UI.MaxDisplayFileSize)
+	if setting.UI.MaxDisplayFileSize > int64(^uint32(0)>>1) {
+		maxBlobSize = int32(^uint32(0) >> 1)
+	}
 	for _, file := range codeOwnerFiles {
-		if blob, err := commit.GetBlobByPath(file); err == nil {
-			data, err = blob.GetBlobContent(setting.UI.MaxDisplayFileSize)
-			if err == nil {
-				break
-			}
+		blob, err := gitrepo.RemoteGetBlobForAPI(ctx, pr.BaseRepo, pr.BaseRepo.DefaultBranch, file, maxBlobSize)
+		if err == nil && !blob.GetTruncated() {
+			data = string(blob.GetContent())
+			break
 		}
 	}
 	if data == "" {
@@ -86,10 +80,12 @@ func PullRequestCodeOwnersReview(ctx context.Context, pr *issues_model.PullReque
 	}
 	// Upstream issue https://github.com/go-gitea/gitea/issues/29763: we need to get the files changed
 	// between the merge base and the head commit but not the base branch and the head commit
-	changedFiles, err := repo.GetFilesChangedBetween(mergeBase, pr.GetGitHeadRefName())
+	stdout, _, err := gitrepo.RunCmdString(ctx, pr.BaseRepo,
+		gitcmd.NewCommand("diff", "--name-only").AddDynamicArguments(mergeBase, pr.GetGitHeadRefName()))
 	if err != nil {
 		return nil, err
 	}
+	changedFiles := strings.Fields(strings.TrimSpace(stdout))
 
 	uniqUsers := make(map[int64]*user_model.User)
 	uniqTeams := make(map[string]*org_model.Team)

@@ -14,7 +14,6 @@ import (
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/git"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/optional"
 	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
 	api "github.com/gitjet-ru/core-scm/modules/structs"
@@ -1100,14 +1099,6 @@ func EditBranchProtection(ctx *context.APIContext) {
 		}
 	} else {
 		if !isPlainRule {
-			if ctx.Repo.GitRepo == nil {
-				ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
-				if err != nil {
-					ctx.APIErrorInternal(err)
-					return
-				}
-			}
-
 			// FIXME: since we only need to recheck files protected rules, we could improve this
 			matchedBranches, err := git_model.FindAllMatchedBranches(ctx, ctx.Repo.Repository.ID, protectBranch.RuleName)
 			if err != nil {

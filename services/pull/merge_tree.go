@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	issues_model "github.com/gitjet-ru/core-scm/models/issues"
-	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/log"
@@ -55,33 +54,17 @@ func checkPullRequestMergeableByMergeTree(ctx context.Context, pr *issues_model.
 	if err := pr.LoadHeadRepo(ctx); err != nil {
 		return err
 	}
-	headGitRepo, err := gitrepo.OpenRepository(ctx, pr.HeadRepo)
-	if err != nil {
-		return fmt.Errorf("OpenRepository: %w", err)
-	}
-	defer headGitRepo.Close()
 
-	// 2. Get/open base repository
-	var baseGitRepo *git.Repository
-	if pr.IsSameRepo() {
-		baseGitRepo = headGitRepo
-	} else {
-		baseGitRepo, err = gitrepo.OpenRepository(ctx, pr.BaseRepo)
-		if err != nil {
-			return fmt.Errorf("OpenRepository: %w", err)
-		}
-		defer baseGitRepo.Close()
-	}
-
-	// 3. Get head commit id
+	// 2. Get head commit id
+	var err error
 	if pr.Flow == issues_model.PullRequestFlowGithub {
-		pr.HeadCommitID, err = headGitRepo.GetRefCommitID(git.BranchPrefix + pr.HeadBranch)
+		pr.HeadCommitID, err = gitrepo.GetFullCommitID(ctx, pr.HeadRepo, pr.HeadBranch)
 		if err != nil {
 			return fmt.Errorf("GetBranchCommitID: can't find commit ID for head: %w", err)
 		}
 	} else {
 		if pr.ID > 0 {
-			pr.HeadCommitID, err = baseGitRepo.GetRefCommitID(pr.GetGitHeadRefName())
+			pr.HeadCommitID, err = gitrepo.GetFullCommitID(ctx, pr.BaseRepo, pr.GetGitHeadRefName())
 			if err != nil {
 				return fmt.Errorf("GetRefCommitID: can't find commit ID for head: %w", err)
 			}
@@ -90,18 +73,18 @@ func checkPullRequestMergeableByMergeTree(ctx context.Context, pr *issues_model.
 		}
 	}
 
-	// 4. fetch head commit id into the current repository
+	// 3. fetch head commit id into the current repository
 	// it will be checked in 2 weeks by default from git if the pull request created failure.
 	if !pr.IsSameRepo() {
-		if !baseGitRepo.IsReferenceExist(pr.HeadCommitID) {
+		if !gitrepo.IsReferenceExist(ctx, pr.BaseRepo, pr.HeadCommitID) {
 			if err := gitrepo.FetchRemoteCommit(ctx, pr.BaseRepo, pr.HeadRepo, pr.HeadCommitID); err != nil {
 				return fmt.Errorf("FetchRemoteCommit: %w", err)
 			}
 		}
 	}
 
-	// 5. update merge base
-	baseCommitID, err := baseGitRepo.GetRefCommitID(git.BranchPrefix + pr.BaseBranch)
+	// 4. update merge base
+	baseCommitID, err := gitrepo.GetFullCommitID(ctx, pr.BaseRepo, pr.BaseBranch)
 	if err != nil {
 		return fmt.Errorf("GetBranchCommitID: can't find commit ID for base: %w", err)
 	}
@@ -119,13 +102,13 @@ func checkPullRequestMergeableByMergeTree(ctx context.Context, pr *issues_model.
 	pr.ConflictedFiles = nil
 	pr.ChangedProtectedFiles = nil
 
-	// 6. if base == head, then it's an ancestor
+	// 5. if base == head, then it's an ancestor
 	if pr.HeadCommitID == pr.MergeBase {
 		pr.Status = issues_model.PullRequestStatusAncestor
 		return nil
 	}
 
-	// 7. Check for conflicts
+	// 6. Check for conflicts
 	conflicted, err := checkConflictsMergeTree(ctx, pr, baseCommitID)
 	if err != nil {
 		log.Error("checkConflictsMergeTree: %v", err)
@@ -136,8 +119,8 @@ func checkPullRequestMergeableByMergeTree(ctx context.Context, pr *issues_model.
 		return nil
 	}
 
-	// 8. Check for protected files changes
-	if err = checkPullFilesProtection(ctx, pr, baseGitRepo, pr.HeadCommitID); err != nil {
+	// 7. Check for protected files changes
+	if err = checkPullFilesProtection(ctx, pr, nil, pr.HeadCommitID); err != nil {
 		return fmt.Errorf("checkPullFilesProtection: %w", err)
 	}
 	return nil

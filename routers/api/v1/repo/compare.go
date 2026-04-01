@@ -4,13 +4,18 @@
 package repo
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
-	user_model "github.com/gitjet-ru/core-scm/models/user"
+	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
+	"github.com/gitjet-ru/core-scm/models/unit"
+	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	api "github.com/gitjet-ru/core-scm/modules/structs"
+	"github.com/gitjet-ru/core-scm/modules/util"
+	"github.com/gitjet-ru/core-scm/routers/common"
 	"github.com/gitjet-ru/core-scm/services/context"
-	"github.com/gitjet-ru/core-scm/services/convert"
 )
 
 // CompareDiff compare two branches or commits
@@ -42,42 +47,94 @@ func CompareDiff(ctx *context.APIContext) {
 	//   "404":
 	//     "$ref": "#/responses/notFound"
 
-	if ctx.Repo.GitRepo == nil {
-		var err error
-		ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
+	_ = compareDiffRemote(ctx, ctx.PathParam("*"))
+}
+
+func compareDiffRemote(ctx *context.APIContext, compareParam string) bool {
+	baseRepo := ctx.Repo.Repository
+	compareReq := common.ParseCompareRouterParam(compareParam)
+	if compareReq.BaseOriRefSuffix != "" {
+		ctx.APIError(http.StatusBadRequest, "Unsupported comparison syntax: ref with suffix")
+		return true
+	}
+
+	_, headRepo, err := common.GetHeadOwnerAndRepo(ctx, baseRepo, compareReq)
+	switch {
+	case errors.Is(err, util.ErrInvalidArgument):
+		ctx.APIError(http.StatusBadRequest, err.Error())
+		return true
+	case errors.Is(err, util.ErrNotExist):
+		ctx.APIErrorNotFound()
+		return true
+	case err != nil:
+		ctx.APIErrorInternal(err)
+		return true
+	}
+
+	permBase, err := access_model.GetUserRepoPermission(ctx, baseRepo, ctx.Doer)
+	if err != nil {
+		ctx.APIErrorInternal(err)
+		return true
+	}
+	if !permBase.CanRead(unit.TypeCode) {
+		ctx.APIErrorNotFound("can't read baseRepo UnitTypeCode")
+		return true
+	}
+
+	baseRef := util.IfZero(compareReq.BaseOriRef, baseRepo.GetPullRequestTargetBranch(ctx))
+	headRef := util.IfZero(compareReq.HeadOriRef, headRepo.DefaultBranch)
+	if strings.TrimSpace(baseRef) == "" || strings.TrimSpace(headRef) == "" {
+		ctx.APIErrorNotFound()
+		return true
+	}
+
+	baseCommitID, err := gitrepo.GetFullCommitID(ctx, baseRepo, baseRef)
+	if err != nil {
+		if git.IsErrNotExist(err) {
+			ctx.APIErrorNotFound()
+		} else {
+			ctx.APIErrorInternal(err)
+		}
+		return true
+	}
+	headCommitID, err := gitrepo.GetFullCommitID(ctx, headRepo, headRef)
+	if err != nil {
+		if git.IsErrNotExist(err) {
+			ctx.APIErrorNotFound()
+		} else {
+			ctx.APIErrorInternal(err)
+		}
+		return true
+	}
+
+	mergeBase := baseCommitID
+	if !compareReq.DirectComparison() {
+		if baseRepo.ID != headRepo.ID {
+			if err := gitrepo.FetchRemoteCommit(ctx, headRepo, baseRepo, baseCommitID); err != nil {
+				ctx.APIErrorInternal(err)
+				return true
+			}
+		}
+		mergeBase, err = gitrepo.MergeBase(ctx, headRepo, baseCommitID, headCommitID)
 		if err != nil {
 			ctx.APIErrorInternal(err)
-			return
+			return true
 		}
 	}
 
-	compareInfo, closer := parseCompareInfo(ctx, ctx.PathParam("*"))
-	if ctx.Written() {
-		return
+	commitsInfo, err := gitrepo.RemoteListCommitsForAPI(ctx, headRepo, headCommitID, 0, 0, "", "", "", mergeBase)
+	if err != nil {
+		ctx.APIErrorInternal(err)
+		return true
 	}
-	defer closer()
-
-	verification := ctx.FormString("verification") == "" || ctx.FormBool("verification")
-	files := ctx.FormString("files") == "" || ctx.FormBool("files")
-
-	apiCommits := make([]*api.Commit, 0, len(compareInfo.Commits))
-	userCache := make(map[string]*user_model.User)
-	for i := 0; i < len(compareInfo.Commits); i++ {
-		apiCommit, err := convert.ToCommit(ctx, ctx.Repo.Repository, ctx.Repo.GitRepo, compareInfo.Commits[i], userCache,
-			convert.ToCommitOptions{
-				Stat:         true,
-				Verification: verification,
-				Files:        files,
-			})
-		if err != nil {
-			ctx.APIErrorInternal(err)
-			return
-		}
-		apiCommits = append(apiCommits, apiCommit)
+	apiCommits := make([]*api.Commit, 0, len(commitsInfo))
+	for _, c := range commitsInfo {
+		apiCommits = append(apiCommits, commitInfoToAPICommit(ctx, c))
 	}
 
 	ctx.JSON(http.StatusOK, &api.Compare{
-		TotalCommits: len(compareInfo.Commits),
+		TotalCommits: len(apiCommits),
 		Commits:      apiCommits,
 	})
+	return true
 }

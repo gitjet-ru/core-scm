@@ -5,13 +5,14 @@ package pull
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/log"
+	"github.com/gitjet-ru/core-scm/services/localgit"
 )
 
 // getRebaseAmendMessage composes the message to amend commits in rebase merge of a pull request.
@@ -38,6 +39,11 @@ func getRebaseAmendMessage(ctx *mergeContext, baseGitRepo *git.Repository) (mess
 
 // Perform rebase merge without merge commit.
 func doMergeRebaseFastForward(ctx *mergeContext) error {
+	if strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow") {
+		return fmt.Errorf("rebase merge via temporary local repo is disabled in mirrorless hard-cut for %s", ctx.pr.BaseRepo.FullName())
+	}
+
 	baseHeadSHA, err := git.GetFullCommitID(ctx, ctx.tmpBasePath, "HEAD")
 	if err != nil {
 		return fmt.Errorf("Failed to get full commit id for HEAD: %w", err)
@@ -58,8 +64,8 @@ func doMergeRebaseFastForward(ctx *mergeContext) error {
 		return nil
 	}
 
-	// Original repo to read template from.
-	baseGitRepo, err := gitrepo.OpenRepository(ctx, ctx.pr.BaseRepo)
+	// Read template and commits from prepared temporary merge repo.
+	baseGitRepo, err := localgit.OpenRepository(ctx, ctx.tmpBasePath)
 	if err != nil {
 		log.Error("Unable to get Git repo for rebase: %v", err)
 		return err

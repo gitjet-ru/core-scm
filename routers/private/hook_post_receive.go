@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	git_model "github.com/gitjet-ru/core-scm/models/git"
 	issues_model "github.com/gitjet-ru/core-scm/models/issues"
@@ -44,10 +45,8 @@ func HookPostReceive(ctx *gitea_context.PrivateContext) {
 
 	// defer getting the repository at this point - as we should only retrieve it if we're going to call update
 	var (
-		repo    *repo_model.Repository
-		gitRepo *git.Repository
+		repo *repo_model.Repository
 	)
-	defer gitRepo.Close() // it's safe to call Close on a nil pointer
 
 	updates := make([]*repo_module.PushUpdateOptions, 0, len(opts.OldCommitIDs))
 	wasEmpty := false
@@ -121,16 +120,6 @@ func HookPostReceive(ctx *gitea_context.PrivateContext) {
 			}
 		}
 		if len(branchesToSync) > 0 {
-			var err error
-			gitRepo, err = gitrepo.OpenRepository(ctx, repo)
-			if err != nil {
-				log.Error("Failed to open repository: %s/%s Error: %v", ownerName, repoName, err)
-				ctx.JSON(http.StatusInternalServerError, private.HookPostReceiveResult{
-					Err: fmt.Sprintf("Failed to open repository: %s/%s Error: %v", ownerName, repoName, err),
-				})
-				return
-			}
-
 			var (
 				branchNames = make([]string, 0, len(branchesToSync))
 				commitIDs   = make([]string, 0, len(branchesToSync))
@@ -140,7 +129,28 @@ func HookPostReceive(ctx *gitea_context.PrivateContext) {
 				commitIDs = append(commitIDs, update.NewCommitID)
 			}
 
-			if err := repo_service.SyncBranchesToDB(ctx, repo.ID, opts.UserID, branchNames, commitIDs, gitRepo.GetCommit); err != nil {
+			getCommit := func(commitID string) (*git.Commit, error) {
+				c, err := gitrepo.RemoteGetCommitForAPI(ctx, repo, commitID)
+				if err != nil {
+					return nil, err
+				}
+				return &git.Commit{
+					ID: git.MustIDFromString(c.GetId()),
+					Author: &git.Signature{
+						Name:  c.GetAuthorName(),
+						Email: c.GetAuthorEmail(),
+						When:  timeutil.TimeStamp(c.GetAuthorUnix()).AsTime(),
+					},
+					Committer: &git.Signature{
+						Name:  c.GetCommitterName(),
+						Email: c.GetCommitterEmail(),
+						When:  timeutil.TimeStamp(c.GetCommitterUnix()).AsTime(),
+					},
+					CommitMessage: strings.TrimSpace(c.GetSubject() + "\n\n" + c.GetBody()),
+				}, nil
+			}
+
+			if err := repo_service.SyncBranchesToDB(ctx, repo.ID, opts.UserID, branchNames, commitIDs, getCommit); err != nil {
 				ctx.JSON(http.StatusInternalServerError, private.HookPostReceiveResult{
 					Err: fmt.Sprintf("Failed to sync branch to DB in repository: %s/%s Error: %v", ownerName, repoName, err),
 				})

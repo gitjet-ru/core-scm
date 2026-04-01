@@ -25,6 +25,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/util"
 	asymkey_service "github.com/gitjet-ru/core-scm/services/asymkey"
 	"github.com/gitjet-ru/core-scm/services/gitdiff"
+	"github.com/gitjet-ru/core-scm/services/localgit"
 )
 
 // TemporaryUploadRepository is a type to wrap our upload repositories as a shallow clone
@@ -35,8 +36,16 @@ type TemporaryUploadRepository struct {
 	cleanup  func()
 }
 
+func isMirrorlessBackend() bool {
+	backend := strings.ToLower(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")))
+	return backend == "remote" || backend == "shadow"
+}
+
 // NewTemporaryUploadRepository creates a new temporary upload repository
 func NewTemporaryUploadRepository(repo *repo_model.Repository) (*TemporaryUploadRepository, error) {
+	if isMirrorlessBackend() {
+		return nil, fmt.Errorf("temporary local upload repository is disabled in mirrorless hard-cut for %s", repo.FullName())
+	}
 	basePath, cleanup, err := repo_module.CreateTemporaryPath("upload")
 	if err != nil {
 		return nil, err
@@ -75,7 +84,7 @@ func (t *TemporaryUploadRepository) Clone(ctx context.Context, branch string, ba
 		}
 		return fmt.Errorf("Clone: %w %s", err, stderr)
 	}
-	gitRepo, err := git.OpenRepository(ctx, t.basePath)
+	gitRepo, err := localgit.OpenRepository(ctx, t.basePath)
 	if err != nil {
 		return err
 	}
@@ -88,7 +97,7 @@ func (t *TemporaryUploadRepository) Init(ctx context.Context, objectFormatName s
 	if err := git.InitRepository(ctx, t.basePath, false, objectFormatName); err != nil {
 		return err
 	}
-	gitRepo, err := git.OpenRepository(ctx, t.basePath)
+	gitRepo, err := localgit.OpenRepository(ctx, t.basePath)
 	if err != nil {
 		return err
 	}
@@ -259,7 +268,8 @@ func (t *TemporaryUploadRepository) CommitTree(ctx context.Context, opts *Commit
 	authorDate := opts.AuthorTime
 	committerDate := opts.CommitterTime
 	if authorDate == nil && committerDate == nil {
-		authorDate = new(time.Now())
+		now := time.Now()
+		authorDate = &now
 		committerDate = authorDate
 	} else if authorDate == nil {
 		authorDate = committerDate

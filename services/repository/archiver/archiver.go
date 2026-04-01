@@ -56,13 +56,26 @@ func NewRequest(repo *repo_model.Repository, gitRepo *git.Repository, archiveRef
 	}
 
 	// Get corresponding commit.
-	commitID, err := gitRepo.ConvertToGitID(archiveRefShortName)
-	if err != nil {
-		return nil, util.NewNotExistErrorf("unrecognized repository reference: %s", archiveRefShortName)
+	commitID := ""
+	if gitRepo != nil {
+		convertedID, err := gitRepo.ConvertToGitID(archiveRefShortName)
+		if err != nil {
+			return nil, util.NewNotExistErrorf("unrecognized repository reference: %s", archiveRefShortName)
+		}
+		commitID = convertedID.String()
+	} else {
+		stdout, _, err := gitrepo.RunCmdString(context.Background(), repo, gitcmd.NewCommand("rev-parse", "--verify").AddDynamicArguments(archiveRefShortName+"^{commit}"))
+		if err != nil {
+			return nil, util.NewNotExistErrorf("unrecognized repository reference: %s", archiveRefShortName)
+		}
+		commitID = strings.TrimSpace(stdout)
+		if commitID == "" {
+			return nil, util.NewNotExistErrorf("unrecognized repository reference: %s", archiveRefShortName)
+		}
 	}
 
 	r := &ArchiveRequest{Repo: repo, archiveRefShortName: archiveRefShortName, Type: archiveType, Paths: paths}
-	r.CommitID = commitID.String()
+	r.CommitID = commitID
 	return r, nil
 }
 

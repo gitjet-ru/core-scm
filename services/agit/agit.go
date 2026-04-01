@@ -62,7 +62,7 @@ func GetAgitBranchInfo(ctx context.Context, repoID int64, baseBranchName string)
 }
 
 // ProcReceive handle proc receive work
-func ProcReceive(ctx context.Context, repo *repo_model.Repository, gitRepo *git.Repository, opts *private.HookOptions) ([]private.HookProcReceiveRefResult, error) {
+func ProcReceive(ctx context.Context, repo *repo_model.Repository, opts *private.HookOptions) ([]private.HookProcReceiveRefResult, error) {
 	results := make([]private.HookProcReceiveRefResult, 0, len(opts.OldCommitIDs))
 	forcePush := opts.GitPushOptions.Bool(private.GitPushOptionForcePush)
 	topicBranch := opts.GitPushOptions["topic"]
@@ -144,20 +144,24 @@ func ProcReceive(ctx context.Context, repo *repo_model.Repository, gitRepo *git.
 				return nil, fmt.Errorf("failed to get unmerged agit flow pull request in repository: %s Error: %w", repo.FullName(), err)
 			}
 
-			var commit *git.Commit
+			var commitMessage string
 			if title == "" || description == "" {
-				commit, err = gitRepo.GetCommit(opts.NewCommitIDs[i])
+				commitInfo, err := gitrepo.RemoteGetCommitForAPI(ctx, repo, opts.NewCommitIDs[i])
 				if err != nil {
 					return nil, fmt.Errorf("failed to get commit %s in repository: %s Error: %w", opts.NewCommitIDs[i], repo.FullName(), err)
+				}
+				commitMessage = strings.TrimSpace(commitInfo.GetSubject())
+				if body := strings.TrimSpace(commitInfo.GetBody()); body != "" {
+					commitMessage += "\n\n" + body
 				}
 			}
 
 			// create a new pull request
 			if title == "" {
-				title = strings.Split(commit.CommitMessage, "\n")[0]
+				title = strings.Split(commitMessage, "\n")[0]
 			}
 			if description == "" {
-				_, description, _ = strings.Cut(commit.CommitMessage, "\n\n")
+				_, description, _ = strings.Cut(commitMessage, "\n\n")
 			}
 			if description == "" {
 				description = title
@@ -213,7 +217,7 @@ func ProcReceive(ctx context.Context, repo *repo_model.Repository, gitRepo *git.
 			return nil, fmt.Errorf("unable to load base repository for PR[%d] Error: %w", pr.ID, err)
 		}
 
-		oldCommitID, err := gitRepo.GetRefCommitID(pr.GetGitHeadRefName())
+		oldCommitID, err := gitrepo.GetFullCommitID(ctx, repo, pr.GetGitHeadRefName())
 		if err != nil {
 			return nil, fmt.Errorf("unable to get ref commit id in base repository for PR[%d] Error: %w", pr.ID, err)
 		}

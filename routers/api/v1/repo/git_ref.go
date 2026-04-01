@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	api "github.com/gitjet-ru/core-scm/modules/structs"
 	"github.com/gitjet-ru/core-scm/modules/util"
 	"github.com/gitjet-ru/core-scm/routers/api/v1/utils"
@@ -76,7 +78,49 @@ func GetGitRefs(ctx *context.APIContext) {
 }
 
 func getGitRefsInternal(ctx *context.APIContext, filter string) {
-	refs, lastMethodName, err := utils.GetGitRefs(ctx, filter)
+	normalizedFilter := strings.TrimPrefix(filter, "/")
+	if normalizedFilter != "" && !strings.HasPrefix(normalizedFilter, "refs/") {
+		normalizedFilter = "refs/" + normalizedFilter
+	}
+
+	if gitrepo.UseRemoteReadBackendForAPI() {
+		refs, err := gitrepo.RemoteListRefsForAPI(ctx, ctx.Repo.Repository, "refs/")
+		if err != nil {
+			ctx.APIErrorInternal(fmt.Errorf("RemoteListRefsForAPI: %w", err))
+			return
+		}
+		apiRefs := make([]*api.Reference, 0, len(refs))
+		for _, r := range refs {
+			if normalizedFilter != "" && !strings.HasPrefix(r.GetName(), normalizedFilter) && r.GetName() != normalizedFilter {
+				continue
+			}
+			refType := "commit"
+			if strings.HasPrefix(r.GetName(), "refs/tags/") {
+				refType = "tag"
+			}
+			apiRefs = append(apiRefs, &api.Reference{
+				Ref: r.GetName(),
+				URL: ctx.Repo.Repository.APIURL() + "/git/" + util.PathEscapeSegments(r.GetName()),
+				Object: &api.GitObject{
+					SHA:  r.GetObjectId(),
+					Type: refType,
+					URL:  ctx.Repo.Repository.APIURL() + "/git/" + url.PathEscape(refType) + "s/" + url.PathEscape(r.GetObjectId()),
+				},
+			})
+		}
+		if len(apiRefs) == 0 {
+			ctx.APIErrorNotFound()
+			return
+		}
+		if len(apiRefs) == 1 && apiRefs[0].Ref == normalizedFilter {
+			ctx.JSON(http.StatusOK, &apiRefs[0])
+			return
+		}
+		ctx.JSON(http.StatusOK, &apiRefs)
+		return
+	}
+
+	refs, lastMethodName, err := utils.GetGitRefs(ctx, normalizedFilter)
 	if err != nil {
 		ctx.APIErrorInternal(fmt.Errorf("%s: %w", lastMethodName, err))
 		return
@@ -100,7 +144,7 @@ func getGitRefsInternal(ctx *context.APIContext, filter string) {
 		}
 	}
 	// If single reference is found and it matches filter exactly return it as object
-	if len(apiRefs) == 1 && apiRefs[0].Ref == filter {
+	if len(apiRefs) == 1 && apiRefs[0].Ref == normalizedFilter {
 		ctx.JSON(http.StatusOK, &apiRefs[0])
 		return
 	}

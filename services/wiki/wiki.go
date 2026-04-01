@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gitjet-ru/core-scm/models/db"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
@@ -22,8 +23,14 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/log"
 	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
 	asymkey_service "github.com/gitjet-ru/core-scm/services/asymkey"
+	"github.com/gitjet-ru/core-scm/services/localgit"
 	repo_service "github.com/gitjet-ru/core-scm/services/repository"
 )
+
+func isMirrorlessBackend() bool {
+	backend := strings.ToLower(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")))
+	return backend == "remote" || backend == "shadow"
+}
 
 func getWikiWorkingLockKey(repoID int64) string {
 	return fmt.Sprintf("wiki_working_%d", repoID)
@@ -83,6 +90,9 @@ func prepareGitPath(gitRepo *git.Repository, defaultWikiBranch string, wikiPath 
 
 // updateWikiPage adds a new page or edits an existing page in repository wiki.
 func updateWikiPage(ctx context.Context, doer *user_model.User, repo *repo_model.Repository, oldWikiName, newWikiName WebPath, content, message string, isNew bool) (err error) {
+	if isMirrorlessBackend() {
+		return fmt.Errorf("wiki write is disabled in mirrorless hard-cut for %s", repo.FullName())
+	}
 	err = repo.MustNotBeArchived()
 	if err != nil {
 		return err
@@ -123,7 +133,7 @@ func updateWikiPage(ctx context.Context, doer *user_model.User, repo *repo_model
 		return fmt.Errorf("failed to clone repository: %s (%w)", repo.FullName(), err)
 	}
 
-	gitRepo, err := git.OpenRepository(ctx, basePath)
+	gitRepo, err := localgit.OpenRepository(ctx, basePath)
 	if err != nil {
 		log.Error("Unable to open temporary repository: %s (%v)", basePath, err)
 		return fmt.Errorf("failed to open new temporary repository in: %s %w", basePath, err)
@@ -252,6 +262,9 @@ func EditWikiPage(ctx context.Context, doer *user_model.User, repo *repo_model.R
 
 // DeleteWikiPage deletes a wiki page identified by its path.
 func DeleteWikiPage(ctx context.Context, doer *user_model.User, repo *repo_model.Repository, wikiName WebPath) (err error) {
+	if isMirrorlessBackend() {
+		return fmt.Errorf("wiki write is disabled in mirrorless hard-cut for %s", repo.FullName())
+	}
 	err = repo.MustNotBeArchived()
 	if err != nil {
 		return err
@@ -282,7 +295,7 @@ func DeleteWikiPage(ctx context.Context, doer *user_model.User, repo *repo_model
 		return fmt.Errorf("failed to clone repository: %s (%w)", repo.FullName(), err)
 	}
 
-	gitRepo, err := git.OpenRepository(ctx, basePath)
+	gitRepo, err := localgit.OpenRepository(ctx, basePath)
 	if err != nil {
 		log.Error("Unable to open temporary repository: %s (%v)", basePath, err)
 		return fmt.Errorf("failed to open new temporary repository in: %s %w", basePath, err)

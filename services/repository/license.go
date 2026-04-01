@@ -7,12 +7,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 
 	"github.com/gitjet-ru/core-scm/models/db"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	"github.com/gitjet-ru/core-scm/modules/container"
 	"github.com/gitjet-ru/core-scm/modules/git"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/graceful"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/options"
@@ -61,8 +62,13 @@ type LicenseUpdaterOptions struct {
 
 func repoLicenseUpdater(items ...*LicenseUpdaterOptions) []*LicenseUpdaterOptions {
 	ctx := graceful.GetManager().ShutdownContext()
+	isRemoteBackend := strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow")
 
 	for _, opts := range items {
+		if isRemoteBackend {
+			continue
+		}
 		repo, err := repo_model.GetRepositoryByID(ctx, opts.RepoID)
 		if err != nil {
 			log.Error("repoLicenseUpdater [%d] failed: GetRepositoryByID: %v", opts.RepoID, err)
@@ -71,22 +77,8 @@ func repoLicenseUpdater(items ...*LicenseUpdaterOptions) []*LicenseUpdaterOption
 		if repo.IsEmpty {
 			continue
 		}
-
-		gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-		if err != nil {
-			log.Error("repoLicenseUpdater [%d] failed: OpenRepository: %v", opts.RepoID, err)
-			continue
-		}
-		defer gitRepo.Close()
-
-		commit, err := gitRepo.GetBranchCommit(repo.DefaultBranch)
-		if err != nil {
-			log.Error("repoLicenseUpdater [%d] failed: GetBranchCommit: %v", opts.RepoID, err)
-			continue
-		}
-		if err = UpdateRepoLicenses(ctx, repo, commit); err != nil {
-			log.Error("repoLicenseUpdater [%d] failed: updateRepoLicenses: %v", opts.RepoID, err)
-		}
+		// Mirrorless hard-cut: license updater no longer reads local git mirror.
+		continue
 	}
 	return nil
 }

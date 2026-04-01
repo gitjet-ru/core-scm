@@ -18,10 +18,10 @@ import (
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/util"
 	asymkey_service "github.com/gitjet-ru/core-scm/services/asymkey"
+	"github.com/gitjet-ru/core-scm/services/localgit"
 )
 
 type mergeContext struct {
@@ -62,6 +62,11 @@ func (err ErrSHADoesNotMatch) Error() string {
 }
 
 func createTemporaryRepoForMerge(ctx context.Context, pr *issues_model.PullRequest, doer *user_model.User, expectedHeadCommitID string) (mergeCtx *mergeContext, cancel context.CancelFunc, err error) {
+	if strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "remote") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")), "shadow") {
+		return nil, nil, fmt.Errorf("merge via temporary local repo is disabled in mirrorless hard-cut for %s", pr.BaseRepo.FullName())
+	}
+
 	// Clone base repo.
 	prCtx, cancel, err := createTemporaryRepoForPR(ctx, pr)
 	if err != nil {
@@ -103,10 +108,10 @@ func createTemporaryRepoForMerge(ctx context.Context, pr *issues_model.PullReque
 	mergeCtx.sig = doer.NewGitSig()
 	mergeCtx.committer = mergeCtx.sig
 
-	gitRepo, err := gitrepo.OpenRepository(ctx, pr.BaseRepo)
+	gitRepo, err := localgit.OpenRepository(ctx, mergeCtx.tmpBasePath)
 	if err != nil {
 		defer cancel()
-		return nil, nil, fmt.Errorf("failed to open temp git repo for pr[%d]: %w", mergeCtx.pr.ID, err)
+		return nil, nil, fmt.Errorf("failed to open temporary merge repo for pr[%d]: %w", mergeCtx.pr.ID, err)
 	}
 	defer gitRepo.Close()
 

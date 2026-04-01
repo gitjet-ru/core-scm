@@ -34,13 +34,7 @@ func StartPRCheckAndAutoMerge(ctx context.Context, pull *issues_model.PullReques
 		return
 	}
 
-	gitRepo, err := gitrepo.OpenRepository(ctx, pull.BaseRepo)
-	if err != nil {
-		log.Error("OpenRepository: %v", err)
-		return
-	}
-	defer gitRepo.Close()
-	commitID, err := gitRepo.GetRefCommitID(pull.GetGitHeadRefName())
+	commitID, err := gitrepo.GetFullCommitID(ctx, pull.BaseRepo, pull.GetGitHeadRefName())
 	if err != nil {
 		log.Error("GetRefCommitID: %v", err)
 		return

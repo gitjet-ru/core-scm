@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
-	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/private"
 	gitea_context "github.com/gitjet-ru/core-scm/services/context"
@@ -27,17 +26,8 @@ func RepoAssignment(ctx *gitea_context.PrivateContext) {
 		return
 	}
 
-	gitRepo, err := gitrepo.RepositoryFromRequestContextOrOpen(ctx, repo)
-	if err != nil {
-		log.Error("Failed to open repository: %s/%s Error: %v", ownerName, repoName, err)
-		ctx.JSON(http.StatusInternalServerError, private.Response{
-			Err: fmt.Sprintf("Failed to open repository: %s/%s Error: %v", ownerName, repoName, err),
-		})
-		return
-	}
 	ctx.Repo = &gitea_context.Repository{
 		Repository: repo,
-		GitRepo:    gitRepo,
 	}
 }
 

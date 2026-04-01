@@ -169,20 +169,7 @@ func ForkRepository(ctx context.Context, doer, owner *user_model.User, opts Fork
 		return nil, fmt.Errorf("createDelegateHooks: %w", err)
 	}
 
-	// 6 - Sync the repository branches and tags
-	var gitRepo *git.Repository
-	gitRepo, err = gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		return nil, fmt.Errorf("OpenRepository: %w", err)
-	}
-	defer gitRepo.Close()
-
-	if _, _, err = repo_module.SyncRepoBranchesWithRepo(ctx, repo, gitRepo, doer.ID); err != nil {
-		return nil, fmt.Errorf("SyncRepoBranchesWithRepo: %w", err)
-	}
-	if _, err = repo_module.SyncReleasesWithTags(ctx, repo, gitRepo); err != nil {
-		return nil, fmt.Errorf("Sync releases from git tags failed: %v", err)
-	}
+	// 6 - Mirrorless hard-cut: no local mirror branch/tag/release sync on fork.
 
 	// 7 - Update the repository
 	// even if below operations failed, it could be ignored. And they will be retried

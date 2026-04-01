@@ -18,7 +18,6 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
-	"github.com/gitjet-ru/core-scm/modules/lfs"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/migration"
 	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
@@ -122,57 +121,9 @@ func MigrateRepositoryGitData(ctx context.Context, u *user_model.User,
 		return nil, fmt.Errorf("updateGitRepoAfterCreate: %w", err)
 	}
 
-	gitRepo, err := gitrepo.OpenRepository(ctx, repo)
-	if err != nil {
-		return repo, fmt.Errorf("OpenRepository: %w", err)
-	}
-	defer gitRepo.Close()
+	repo.IsEmpty = false
 
-	repo.IsEmpty, err = gitRepo.IsEmpty()
-	if err != nil {
-		return repo, fmt.Errorf("git.IsEmpty: %w", err)
-	}
-
-	if !repo.IsEmpty {
-		if len(repo.DefaultBranch) == 0 {
-			// Try to get HEAD branch and set it as default branch.
-			headBranchName, err := gitrepo.GetDefaultBranch(ctx, repo)
-			if err != nil {
-				return repo, fmt.Errorf("GetHEADBranch: %w", err)
-			}
-			if headBranchName != "" {
-				repo.DefaultBranch = headBranchName
-			}
-		}
-
-		if _, _, err := repo_module.SyncRepoBranchesWithRepo(ctx, repo, gitRepo, u.ID); err != nil {
-			return repo, fmt.Errorf("SyncRepoBranchesWithRepo: %v", err)
-		}
-
-		// if releases migration are not requested, we will sync all tags here
-		// otherwise, the releases sync will be done out of this function
-		if !opts.Releases {
-			repo.IsMirror = opts.Mirror
-			if _, err = repo_module.SyncReleasesWithTags(ctx, repo, gitRepo); err != nil {
-				log.Error("Failed to synchronize tags to releases for repository: %v", err)
-			}
-		}
-
-		if opts.LFS {
-			endpoint := lfs.DetermineEndpoint(opts.CloneAddr, opts.LFSEndpoint)
-			lfsClient := lfs.NewClient(endpoint, httpTransport)
-			if err = repo_module.StoreMissingLfsObjectsInRepository(ctx, repo, gitRepo, lfsClient); err != nil {
-				log.Error("Failed to store missing LFS objects for repository: %v", err)
-				return repo, fmt.Errorf("StoreMissingLfsObjectsInRepository: %w", err)
-			}
-		}
-
-		// Update repo license
-		if err := AddRepoToLicenseUpdaterQueue(&LicenseUpdaterOptions{RepoID: repo.ID}); err != nil {
-			log.Error("Failed to add repo to license updater queue: %v", err)
-		}
-	}
-
+	var err error
 	return db.WithTx2(ctx, func(ctx context.Context) (*repo_model.Repository, error) {
 		if opts.Mirror {
 			remoteAddress, err := util.SanitizeURL(opts.CloneAddr)
@@ -248,7 +199,7 @@ func MigrateRepositoryGitData(ctx context.Context, u *user_model.User,
 			enableRepoUnits = append(enableRepoUnits, repo_model.RepoUnit{RepoID: repo.ID, Type: unit_model.TypeWiki})
 		}
 		if len(enableRepoUnits) > 0 {
-			err = UpdateRepositoryUnits(ctx, repo, enableRepoUnits, nil)
+			err := UpdateRepositoryUnits(ctx, repo, enableRepoUnits, nil)
 			if err != nil {
 				return nil, err
 			}

@@ -14,7 +14,6 @@ import (
 	"github.com/gitjet-ru/core-scm/models/repo"
 	"github.com/gitjet-ru/core-scm/models/unit"
 	"github.com/gitjet-ru/core-scm/modules/charset"
-	"github.com/gitjet-ru/core-scm/modules/git/languagestats"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/indexer/code"
 	"github.com/gitjet-ru/core-scm/modules/markup"
@@ -49,37 +48,30 @@ func renderRepoFileCodePreview(ctx context.Context, opts markup.RenderCodePrevie
 	if !perms.CanRead(unit.TypeCode) {
 		return "", util.ErrPermissionDenied
 	}
-
-	gitRepo, err := gitrepo.OpenRepository(ctx, dbRepo)
+	maxBlobSize := int32(setting.UI.MaxDisplayFileSize)
+	if setting.UI.MaxDisplayFileSize > int64(^uint32(0)>>1) {
+		maxBlobSize = int32(^uint32(0) >> 1)
+	}
+	blob, err := gitrepo.RemoteGetBlobForAPI(ctx, dbRepo, opts.CommitID, opts.FilePath, maxBlobSize)
 	if err != nil {
 		return "", err
 	}
-	defer gitRepo.Close()
-
-	commit, err := gitRepo.GetCommit(opts.CommitID)
-	if err != nil {
-		return "", err
-	}
-
-	language, _ := languagestats.GetFileLanguage(ctx, gitRepo, opts.CommitID, opts.FilePath)
-	blob, err := commit.GetBlobByPath(opts.FilePath)
-	if err != nil {
-		return "", err
-	}
-
-	if blob.Size() > setting.UI.MaxDisplayFileSize {
+	if blob.GetTruncated() {
 		return "", errors.New("file is too large")
 	}
+	return renderCodePreviewFromReader(webCtx, dbRepo, opts, bufio.NewReader(strings.NewReader(string(blob.GetContent()))), "")
+}
 
-	dataRc, err := blob.DataAsync()
-	if err != nil {
-		return "", err
+func renderCodePreviewFromReader(webCtx *gitea_context.Context, dbRepo *repo.Repository, opts markup.RenderCodePreviewOptions, reader *bufio.Reader, language string) (template.HTML, error) {
+	opts.LineStop = max(opts.LineStop, opts.LineStart)
+	lineCount := opts.LineStop - opts.LineStart + 1
+	if lineCount <= 0 || lineCount > 140 {
+		lineCount = 10
+		opts.LineStop = opts.LineStart + lineCount
 	}
-	defer dataRc.Close()
 
-	reader := bufio.NewReader(dataRc)
 	for i := 1; i < opts.LineStart; i++ {
-		if _, err = reader.ReadBytes('\n'); err != nil {
+		if _, err := reader.ReadBytes('\n'); err != nil {
 			return "", err
 		}
 	}
