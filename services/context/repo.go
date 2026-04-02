@@ -685,19 +685,10 @@ func RepoAssignment(ctx *Context) {
 		ctx.Repo.GitRepo = nil
 	}
 
-	// Even in remote backend mode, web handlers still rely on ctx.Repo.GitRepo/ctx.Repo.Commit.
-	// Open the read mirror snapshot here so Home/src routes don't fall back to empty quickstart UI.
-	ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
-	if err != nil {
-		if isHomeOrSettings {
-			// Keep previous behavior of staying on repo home/settings for unavailable repositories.
-			log.Warn("Repository %s is not available yet in remote backend: %v", ctx.Repo.Repository.RelativePath(), err)
-			ctx.Redirect(ctx.Repo.RepoLink)
-			return
-		}
-		ctx.ServerError("RepositoryFromRequestContextOrOpen", err)
-		return
-	}
+	// Do not open git repo eagerly in RepoAssignment: this middleware also serves
+	// lightweight endpoints (branches/tags list, settings, etc.) and would force
+	// local mirror hydration for every request in remote backend mode.
+	// GitRepo is opened lazily by ref/content middlewares when really needed.
 
 	// Stop at this point when the repo is empty.
 	if ctx.Repo.Repository.IsEmpty {
@@ -910,13 +901,17 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 			return
 		}
 		if ctx.Repo.GitRepo == nil {
-			// Remote backend fallback: repo metadata is available, local mirror may lag.
-			ctx.Repo.BranchName = ctx.Repo.Repository.DefaultBranch
-			ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.BranchName)
-			ctx.Data["BranchName"] = ctx.Repo.BranchName
-			ctx.Data["RefFullName"] = ctx.Repo.RefFullName
-			ctx.Data["TreePath"] = ""
-			return
+			// Lazy-open repository only for routes that really need ref/commit data.
+			ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
+			if err != nil {
+				// Remote backend fallback: repo metadata is available, local mirror may lag.
+				ctx.Repo.BranchName = ctx.Repo.Repository.DefaultBranch
+				ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.BranchName)
+				ctx.Data["BranchName"] = ctx.Repo.BranchName
+				ctx.Data["RefFullName"] = ctx.Repo.RefFullName
+				ctx.Data["TreePath"] = ""
+				return
+			}
 		}
 
 		// Get default branch.

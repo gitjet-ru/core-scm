@@ -20,6 +20,7 @@ import (
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/gitrepo"
+	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/markup/markdown"
 	"github.com/gitjet-ru/core-scm/modules/optional"
 	"github.com/gitjet-ru/core-scm/modules/setting"
@@ -31,6 +32,7 @@ import (
 	"github.com/gitjet-ru/core-scm/services/context"
 	"github.com/gitjet-ru/core-scm/services/context/upload"
 	"github.com/gitjet-ru/core-scm/services/forms"
+	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
 	release_service "github.com/gitjet-ru/core-scm/services/release"
 )
 
@@ -222,11 +224,22 @@ func TagsList(ctx *context.Context) {
 		RepoID:        ctx.Repo.Repository.ID,
 		NamePattern:   optional.Some(namePattern),
 	}
-
 	releases, err := db.Find[repo_model.Release](ctx, opts)
 	if err != nil {
 		ctx.ServerError("GetReleasesByRepoID", err)
 		return
+	}
+	if len(releases) == 0 {
+		// Keep web tags in sync with git refs when hooks are bypassed in mirrorless flows.
+		if err := repo_module.SyncRepoTags(ctx, ctx.Repo.Repository.ID); err != nil {
+			log.Warn("TagsList SyncRepoTags[%d] failed: %v", ctx.Repo.Repository.ID, err)
+		} else {
+			releases, err = db.Find[repo_model.Release](ctx, opts)
+			if err != nil {
+				ctx.ServerError("GetReleasesByRepoID", err)
+				return
+			}
+		}
 	}
 
 	count, err := db.Count[repo_model.Release](ctx, opts)

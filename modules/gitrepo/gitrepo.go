@@ -348,6 +348,12 @@ func ensureRemoteMirror(ctx context.Context, repo Repository) (string, error) {
 		return localPath, nil
 	}
 	if err := hydrateRemoteMirrorViaBundle(ctx, client, repo.RelativePath(), localPath); err != nil {
+		// For large repositories, bundle hydration may time out/cancel.
+		// If we already have a usable local mirror snapshot, keep serving reads from it.
+		if isUsableLocalMirror(localPath) && (strings.Contains(err.Error(), "context canceled") || strings.Contains(err.Error(), "deadline exceeded")) {
+			_ = touchRemoteMirror(localPath)
+			return localPath, nil
+		}
 		return "", err
 	}
 	_ = touchRemoteMirror(localPath)
@@ -432,11 +438,11 @@ func shouldReuseRemoteMirror(localPath string) bool {
 func remoteMirrorTTL() time.Duration {
 	raw := strings.TrimSpace(os.Getenv("GIT_STORAGE_LOCAL_CACHE_TTL"))
 	if raw == "" {
-		return 3 * time.Second
+		return 2 * time.Minute
 	}
 	d, err := time.ParseDuration(raw)
 	if err != nil {
-		return 3 * time.Second
+		return 2 * time.Minute
 	}
 	return d
 }
@@ -444,4 +450,14 @@ func remoteMirrorTTL() time.Duration {
 func touchRemoteMirror(localPath string) error {
 	now := time.Now()
 	return os.Chtimes(localPath, now, now)
+}
+
+func isUsableLocalMirror(localPath string) bool {
+	required := []string{"HEAD", "config", "objects", "refs"}
+	for _, p := range required {
+		if _, err := os.Stat(filepath.Join(localPath, p)); err != nil {
+			return false
+		}
+	}
+	return true
 }

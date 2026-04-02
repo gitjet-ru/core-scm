@@ -598,6 +598,17 @@ func GetTagList(ctx *context.Context) {
 		ctx.JSON(http.StatusInternalServerError, err)
 		return
 	}
+	if len(tags) == 0 {
+		if err := repo_module.SyncRepoTags(ctx, ctx.Repo.Repository.ID); err != nil {
+			log.Warn("GetTagList SyncRepoTags[%d] failed: %v", ctx.Repo.Repository.ID, err)
+		} else {
+			tags, err = repo_model.GetTagNamesByRepoID(ctx, ctx.Repo.Repository.ID)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, err)
+				return
+			}
+		}
+	}
 	resp := &branchTagSearchResponse{}
 	resp.Results = tags
 	ctx.JSON(http.StatusOK, resp)

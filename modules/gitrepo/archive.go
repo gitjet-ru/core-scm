@@ -36,6 +36,17 @@ func CreateArchive(ctx context.Context, repo Repository, format string, target i
 		paths[i] = path.Clean(paths[i])
 	}
 	cmd.AddDynamicArguments(paths...)
+	if isRemoteBackendEnabled() {
+		stdout, stderr, err := RunCmdBytes(ctx, repo, cmd)
+		if err != nil {
+			return err
+		}
+		if len(stderr) > 0 {
+			return fmt.Errorf("create archive via remote stderr: %s", string(stderr))
+		}
+		_, copyErr := target.Write(stdout)
+		return copyErr
+	}
 	return RunCmdWithStderr(ctx, repo, cmd.WithStdoutCopy(target))
 }
 

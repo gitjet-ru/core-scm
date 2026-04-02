@@ -21,6 +21,7 @@ import (
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	"github.com/gitjet-ru/core-scm/modules/git"
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/json"
 	"github.com/gitjet-ru/core-scm/modules/lfstransfer"
 	"github.com/gitjet-ru/core-scm/modules/log"
@@ -34,6 +35,19 @@ import (
 	"github.com/kballard/go-shellquote"
 	"github.com/urfave/cli/v3"
 )
+
+func isRemoteGitStorageBackend() bool {
+	mode := strings.ToLower(strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")))
+	return mode == "remote" || mode == "shadow"
+}
+
+type servSmartRepo struct {
+	relative string
+}
+
+func (r servSmartRepo) RelativePath() string {
+	return r.relative
+}
 
 func newServCommand() *cli.Command {
 	return &cli.Command{
@@ -293,6 +307,67 @@ func runServ(ctx context.Context, c *cli.Command) error {
 		return nil
 	}
 
+	localRepoPath := filepath.Join(setting.RepoRootPath, filepath.FromSlash(repoPath))
+	_, localRepoErr := os.Stat(localRepoPath)
+	if verb == git.CmdVerbReceivePack && (isRemoteGitStorageBackend() || os.IsNotExist(localRepoErr)) {
+		if strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")) == "" {
+			_ = os.Setenv("GIT_STORAGE_BACKEND", "remote")
+		}
+		if strings.TrimSpace(os.Getenv("GIT_STORAGE_ENDPOINT")) == "" {
+			_ = os.Setenv("GIT_STORAGE_ENDPOINT", "git-storage:9093")
+		}
+		env := append([]string{}, os.Environ()...)
+		env = append(env,
+			repo_module.EnvRepoIsWiki+"="+strconv.FormatBool(results.IsWiki),
+			repo_module.EnvRepoName+"="+results.RepoName,
+			repo_module.EnvRepoUsername+"="+results.OwnerName,
+			repo_module.EnvPusherName+"="+results.UserName,
+			repo_module.EnvPusherEmail+"="+results.UserEmail,
+			repo_module.EnvPusherID+"="+strconv.FormatInt(results.UserID, 10),
+			repo_module.EnvRepoID+"="+strconv.FormatInt(results.RepoID, 10),
+			repo_module.EnvPRID+"="+strconv.Itoa(0),
+			repo_module.EnvDeployKeyID+"="+strconv.FormatInt(results.DeployKeyID, 10),
+			repo_module.EnvKeyID+"="+strconv.FormatInt(results.KeyID, 10),
+			repo_module.EnvAppURL+"="+setting.AppURL,
+		)
+		env = append(env, gitcmd.CommonCmdServEnvs()...)
+		exitCode, err := gitrepo.RunSmartServiceStream(ctx, servSmartRepo{relative: repoPath}, "receive-pack", env, os.Stdin, os.Stdout, os.Stderr)
+		if err != nil {
+			return fail(ctx, "Failed to execute git command", "Failed to execute git command: %v", err)
+		}
+		if exitCode != 0 {
+			return cli.Exit("", int(exitCode))
+		}
+		// `serv` CLI process doesn't initialize DB by default.
+		// Branch sync needs DB access to update branch index for UI/API.
+		if dbErr := initDB(ctx); dbErr != nil {
+			return fail(ctx, "Failed to initialize database", "initDB before SyncRepoBranches failed: %v", dbErr)
+		}
+		if _, syncErr := repo_module.SyncRepoBranches(ctx, results.RepoID, results.UserID); syncErr != nil {
+			return fail(ctx, "Failed to sync repository branches", "SyncRepoBranches after SSH receive-pack failed: %v", syncErr)
+		}
+		return nil
+	}
+	if isRemoteGitStorageBackend() || os.IsNotExist(localRepoErr) {
+		// SSH forced-command may run with a reduced env. Ensure gitrepo remote path
+		// detection still works when local bare repo is absent.
+		if strings.TrimSpace(os.Getenv("GIT_STORAGE_BACKEND")) == "" {
+			_ = os.Setenv("GIT_STORAGE_BACKEND", "remote")
+		}
+		if strings.TrimSpace(os.Getenv("GIT_STORAGE_ENDPOINT")) == "" {
+			_ = os.Setenv("GIT_STORAGE_ENDPOINT", "git-storage:9093")
+		}
+
+		// For SSH, keep native git-upload-pack/receive-pack behavior by ensuring
+		// local read mirror exists and then delegating to git binaries directly.
+		mirrorRepo, mirrorErr := gitrepo.OpenRepository(ctx, servSmartRepo{relative: repoPath})
+		if mirrorErr != nil {
+			return fail(ctx, "Failed to prepare repository for SSH", "Failed to prepare repository for SSH: %v", mirrorErr)
+		}
+		defer mirrorRepo.Close()
+		localRepoPath = mirrorRepo.Path
+	}
+
 	var command *exec.Cmd
 	gitBinPath := filepath.Dir(gitcmd.GitExecutable) // e.g. /usr/bin
 	gitBinVerb := filepath.Join(gitBinPath, verb)    // e.g. /usr/bin/git-upload-pack
@@ -302,12 +377,12 @@ func runServ(ctx context.Context, c *cli.Command) error {
 		verbFields := strings.SplitN(verb, "-", 2)
 		if len(verbFields) == 2 {
 			// use git binary with the sub-command part: "C:\...\bin\git.exe", "upload-pack", ...
-			command = exec.CommandContext(ctx, gitcmd.GitExecutable, verbFields[1], repoPath)
+			command = exec.CommandContext(ctx, gitcmd.GitExecutable, verbFields[1], localRepoPath)
 		}
 	}
 	if command == nil {
 		// by default, use the verb (it has been checked above by allowedCommands)
-		command = exec.CommandContext(ctx, gitBinVerb, repoPath)
+		command = exec.CommandContext(ctx, gitBinVerb, localRepoPath)
 	}
 
 	process.SetSysProcAttribute(command)

@@ -13,6 +13,7 @@ import (
 	"github.com/gitjet-ru/core-scm/models/organization"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
 	user_model "github.com/gitjet-ru/core-scm/models/user"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	api "github.com/gitjet-ru/core-scm/modules/structs"
 	"github.com/gitjet-ru/core-scm/modules/web"
 	"github.com/gitjet-ru/core-scm/routers/api/v1/utils"
@@ -54,6 +55,14 @@ func ListTags(ctx *context.APIContext) {
 	//     "$ref": "#/responses/notFound"
 
 	listOpts := utils.GetListOptions(ctx)
+	if ctx.Repo.GitRepo == nil {
+		var openErr error
+		ctx.Repo.GitRepo, openErr = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
+		if openErr != nil {
+			ctx.APIErrorInternal(openErr)
+			return
+		}
+	}
 
 	tags, total, err := ctx.Repo.GitRepo.GetTagInfos(listOpts.Page, listOpts.PageSize)
 	if err != nil {
