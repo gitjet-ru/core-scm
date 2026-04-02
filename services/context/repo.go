@@ -792,7 +792,14 @@ func getRefNameLegacy(ctx *Base, repo *Repository, reqPath, extraRef string) (re
 func getRefName(ctx *Base, repo *Repository, path string, refType git.RefType) string {
 	switch refType {
 	case git.RefTypeBranch:
-		ref := getRefNameFromPath(repo, path, repo.GitRepo.IsBranchExist)
+		var ref string
+		if gitrepo.UseRemoteReadBackendForAPI() {
+			ref = getRefNameFromPath(repo, path, func(branchName string) bool {
+				return gitrepo.IsBranchExist(ctx, repo.Repository, branchName)
+			})
+		} else {
+			ref = getRefNameFromPath(repo, path, repo.GitRepo.IsBranchExist)
+		}
 		if len(ref) == 0 {
 			// check if ref is HEAD
 			parts := strings.Split(path, "/")
@@ -822,6 +829,11 @@ func getRefName(ctx *Base, repo *Repository, path string, refType git.RefType) s
 
 		return ref
 	case git.RefTypeTag:
+		if gitrepo.UseRemoteReadBackendForAPI() {
+			return getRefNameFromPath(repo, path, func(tagName string) bool {
+				return gitrepo.IsTagExist(ctx, repo.Repository, tagName)
+			})
+		}
 		return getRefNameFromPath(repo, path, repo.GitRepo.IsTagExist)
 	case git.RefTypeCommit:
 		parts := strings.Split(path, "/")
@@ -833,12 +845,22 @@ func getRefName(ctx *Base, repo *Repository, path string, refType git.RefType) s
 
 		if parts[0] == headRefName {
 			// HEAD ref points to last default branch commit
-			commit, err := repo.GitRepo.GetBranchCommit(repo.Repository.DefaultBranch)
-			if err != nil {
-				return ""
+			var commitID string
+			if gitrepo.UseRemoteReadBackendForAPI() {
+				commitInfo, err := gitrepo.RemoteGetCommitForAPI(ctx, repo.Repository, repo.Repository.DefaultBranch)
+				if err != nil {
+					return ""
+				}
+				commitID = commitInfo.GetId()
+			} else {
+				commit, err := repo.GitRepo.GetBranchCommit(repo.Repository.DefaultBranch)
+				if err != nil {
+					return ""
+				}
+				commitID = commit.ID.String()
 			}
 			repo.TreePath = strings.Join(parts[1:], "/")
-			return commit.ID.String()
+			return commitID
 		}
 	default:
 		panic(fmt.Sprintf("Unrecognized ref type: %v", refType))
@@ -901,16 +923,30 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 			return
 		}
 		if ctx.Repo.GitRepo == nil {
-			// Lazy-open repository only for routes that really need ref/commit data.
-			ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
-			if err != nil {
-				// Remote backend fallback: repo metadata is available, local mirror may lag.
-				ctx.Repo.BranchName = ctx.Repo.Repository.DefaultBranch
-				ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.BranchName)
-				ctx.Data["BranchName"] = ctx.Repo.BranchName
-				ctx.Data["RefFullName"] = ctx.Repo.RefFullName
-				ctx.Data["TreePath"] = ""
-				return
+			// Mirrorless web reads: provide a remote-read repository adapter instead of
+			// hydrating a local git mirror (bundle creation can be extremely slow for big repos).
+			if gitrepo.UseRemoteReadBackendForAPI() {
+				ctx.Repo.GitRepo, err = git.NewRemoteRepositoryForReads(ctx, ctx.Repo.Repository.RelativePath(), ctx.Repo.Repository.ObjectFormatName)
+				if err != nil {
+					// Fall back to default branch metadata only.
+					ctx.Repo.BranchName = ctx.Repo.Repository.DefaultBranch
+					ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.BranchName)
+					ctx.Data["BranchName"] = ctx.Repo.BranchName
+					ctx.Data["RefFullName"] = ctx.Repo.RefFullName
+					ctx.Data["TreePath"] = ""
+					return
+				}
+			} else {
+				// Legacy behavior: use local mirror snapshots.
+				ctx.Repo.GitRepo, err = gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
+				if err != nil {
+					ctx.Repo.BranchName = ctx.Repo.Repository.DefaultBranch
+					ctx.Repo.RefFullName = git.RefNameFromBranch(ctx.Repo.BranchName)
+					ctx.Data["BranchName"] = ctx.Repo.BranchName
+					ctx.Data["RefFullName"] = ctx.Repo.RefFullName
+					ctx.Data["TreePath"] = ""
+					return
+				}
 			}
 		}
 
@@ -920,13 +956,17 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 		if reqPath == "" {
 			refShortName = ctx.Repo.Repository.DefaultBranch
 			if !gitrepo.IsBranchExist(ctx, ctx.Repo.Repository, refShortName) {
-				brs, _, err := ctx.Repo.GitRepo.GetBranchNames(0, 1)
-				if err == nil && len(brs) != 0 {
-					refShortName = brs[0]
-				} else if len(brs) == 0 {
-					log.Error("No branches in non-empty repository %s", ctx.Repo.Repository.RelativePath())
+				if !gitrepo.UseRemoteReadBackendForAPI() {
+					brs, _, err := ctx.Repo.GitRepo.GetBranchNames(0, 1)
+					if err == nil && len(brs) != 0 {
+						refShortName = brs[0]
+					} else if len(brs) == 0 {
+						log.Error("No branches in non-empty repository %s", ctx.Repo.Repository.RelativePath())
+					} else {
+						log.Error("GetBranches error: %v", err)
+					}
 				} else {
-					log.Error("GetBranches error: %v", err)
+					log.Error("Default branch %s is missing for %s (remote mode)", refShortName, ctx.Repo.Repository.RelativePath())
 				}
 			}
 			ctx.Repo.RefFullName = git.RefNameFromBranch(refShortName)
@@ -1052,7 +1092,11 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 			}
 		}
 		ctx.Data["CommitsCount"] = ctx.Repo.CommitsCount
-		ctx.Repo.GitRepo.LastCommitCache = git.NewLastCommitCache(ctx.Repo.CommitsCount, ctx.Repo.Repository.FullName(), ctx.Repo.GitRepo, cache.GetCache())
+		if ctx.Repo.GitRepo != nil && !gitrepo.UseRemoteReadBackendForAPI() {
+			// Latest-commit cache relies on local git-log traversal; in remote mode
+			// we render directory entries without latest-per-entry commit info.
+			ctx.Repo.GitRepo.LastCommitCache = git.NewLastCommitCache(ctx.Repo.CommitsCount, ctx.Repo.Repository.FullName(), ctx.Repo.GitRepo, cache.GetCache())
+		}
 	}
 }
 

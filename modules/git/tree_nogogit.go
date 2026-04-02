@@ -7,6 +7,7 @@ package git
 
 import (
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
@@ -23,6 +24,50 @@ type Tree struct {
 // ListEntries returns all entries of current tree.
 func (t *Tree) ListEntries() (Entries, error) {
 	if t.entriesParsed {
+		return t.entries, nil
+	}
+
+	// Mirrorless web reads: fetch tree entries directly from git-storage.
+	if remoteReadRepo(t.repo) {
+		entries, _, err := remoteGetTree(t.repo.Ctx, t.repo.Path, t.ID.String(), "", false, 0)
+		if err != nil {
+			return nil, err
+		}
+
+		// Ensure deterministic ordering (ls-tree is stable but RPC parsing can vary).
+		sort.Slice(entries, func(i, j int) bool { return entries[i].GetPath() < entries[j].GetPath() })
+
+		ret := make(Entries, 0, len(entries))
+		for _, e := range entries {
+			if e == nil {
+				continue
+			}
+			mode := ParseEntryMode(e.GetMode())
+			id, err := NewIDFromString(e.GetObjectId())
+			if err != nil {
+				return nil, err
+			}
+
+			te := &TreeEntry{
+				ID:        id,
+				ptree:     t,
+				name:      e.GetPath(),
+				entryMode: mode,
+			}
+			// Blob-ish entries include size in ls-tree output; mark them as sized so Blob.Size doesn't need cat-file.
+			if e.GetObjectType() == string(ObjectBlob) || mode != EntryModeTree && mode != EntryModeCommit {
+				// e.Size might be 0 for some edge cases; that's still fine.
+				te.size = e.GetSize()
+				te.sized = true
+			} else if mode == EntryModeTree || mode == EntryModeCommit {
+				// directory/submodule: size isn't a blob size
+				te.size = 0
+			}
+			ret = append(ret, te)
+		}
+
+		t.entries = ret
+		t.entriesParsed = true
 		return t.entries, nil
 	}
 

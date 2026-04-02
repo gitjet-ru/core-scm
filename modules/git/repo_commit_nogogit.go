@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/gitjet-ru/core-scm/modules/git/gitcmd"
 	"github.com/gitjet-ru/core-scm/modules/log"
@@ -36,6 +37,16 @@ func (repo *Repository) ResolveReference(name string) (string, error) {
 
 // GetRefCommitID returns the last commit ID string of given reference (branch or tag).
 func (repo *Repository) GetRefCommitID(name string) (string, error) {
+	if remoteReadRepo(repo) {
+		commit, err := remoteGetCommit(repo.Ctx, repo.Path, strings.TrimSpace(name))
+		if err != nil {
+			return "", err
+		}
+		if commit == nil {
+			return "", ErrNotExist{name, ""}
+		}
+		return commit.GetId(), nil
+	}
 	batch, cancel, err := repo.CatFileBatch(repo.Ctx)
 	if err != nil {
 		return "", err
@@ -51,6 +62,66 @@ func (repo *Repository) GetRefCommitID(name string) (string, error) {
 }
 
 func (repo *Repository) getCommit(id ObjectID) (*Commit, error) {
+	if remoteReadRepo(repo) {
+		info, err := remoteGetCommit(repo.Ctx, repo.Path, id.String())
+		if err != nil {
+			return nil, err
+		}
+		if info == nil {
+			return nil, ErrNotExist{ID: id.String()}
+		}
+
+		treeID, err := NewIDFromString(info.GetTreeId())
+		if err != nil {
+			return nil, err
+		}
+		commitID, err := NewIDFromString(info.GetId())
+		if err != nil {
+			return nil, err
+		}
+
+		authorWhen := time.Unix(info.GetAuthorUnix(), 0)
+		committerWhen := time.Unix(info.GetCommitterUnix(), 0)
+
+		message := info.GetSubject()
+		if body := strings.TrimSpace(info.GetBody()); body != "" {
+			message += "\n\n" + body
+		}
+
+		parents := make([]ObjectID, 0, len(info.GetParentIds()))
+		for _, pid := range info.GetParentIds() {
+			if strings.TrimSpace(pid) == "" {
+				continue
+			}
+			p, err := NewIDFromString(pid)
+			if err != nil {
+				return nil, err
+			}
+			parents = append(parents, p)
+		}
+
+		return &Commit{
+			Tree: Tree{
+				TreeCommon: TreeCommon{
+					ID:   treeID,
+					repo: repo,
+				},
+			},
+			ID: commitID,
+			Author: &Signature{
+				Name:  info.GetAuthorName(),
+				Email: info.GetAuthorEmail(),
+				When:  authorWhen,
+			},
+			Committer: &Signature{
+				Name:  info.GetCommitterName(),
+				Email: info.GetCommitterEmail(),
+				When:  committerWhen,
+			},
+			CommitMessage: message,
+			Parents:        parents,
+		}, nil
+	}
 	batch, cancel, err := repo.CatFileBatch(repo.Ctx)
 	if err != nil {
 		return nil, err
@@ -120,6 +191,17 @@ func (repo *Repository) ConvertToGitID(commitID string) (ObjectID, error) {
 		if err == nil {
 			return ID, nil
 		}
+	}
+
+	if remoteReadRepo(repo) {
+		info, err := remoteGetCommit(repo.Ctx, repo.Path, strings.TrimSpace(commitID))
+		if err != nil {
+			return nil, err
+		}
+		if info == nil {
+			return nil, ErrNotExist{commitID, ""}
+		}
+		return MustIDFromString(info.GetId()), nil
 	}
 
 	batch, cancel, err := repo.CatFileBatch(repo.Ctx)

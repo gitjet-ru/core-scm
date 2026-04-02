@@ -40,5 +40,6 @@ func (te *TreeEntry) Blob() *Blob {
 		size:    te.size,
 		gotSize: te.sized,
 		repo:    te.ptree.repo,
+		treeRef: te.ptree.ID,
 	}
 }

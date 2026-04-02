@@ -21,6 +21,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/httplib"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	repo_module "github.com/gitjet-ru/core-scm/modules/repository"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/setting"
 	"github.com/gitjet-ru/core-scm/modules/svg"
 	"github.com/gitjet-ru/core-scm/modules/util"
@@ -31,6 +32,10 @@ import (
 
 func checkOutdatedBranch(ctx *context.Context) {
 	if !(ctx.Repo.IsAdmin() || ctx.Repo.IsOwner()) {
+		return
+	}
+	if ctx.Repo.GitRepo == nil {
+		// Mirrorless web reads may not have a local git repository opened.
 		return
 	}
 
@@ -213,7 +218,7 @@ func updateContextRepoEmptyAndStatus(ctx *context.Context, empty bool, status re
 
 func handleRepoEmptyOrBroken(ctx *context.Context) {
 	showEmpty := true
-	if ctx.Repo.GitRepo != nil {
+	if ctx.Repo.GitRepo != nil && !gitrepo.UseRemoteReadBackendForAPI() {
 		reallyEmpty, err := ctx.Repo.GitRepo.IsEmpty()
 		if err != nil {
 			showEmpty = true // the repo is broken

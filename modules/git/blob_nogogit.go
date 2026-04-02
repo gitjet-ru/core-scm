@@ -6,6 +6,7 @@
 package git
 
 import (
+	"bytes"
 	"io"
 
 	"github.com/gitjet-ru/core-scm/modules/log"
@@ -19,11 +20,40 @@ type Blob struct {
 	size    int64
 	name    string
 	repo    *Repository
+
+	// treeRef is the tree object ID that owns this blob entry.
+	// It lets us fetch blob contents via git-storage without needing the full path.
+	treeRef ObjectID
 }
 
 // DataAsync gets a ReadCloser for the contents of a blob without reading it all.
 // Calling the Close function on the result will discard all unread output.
 func (b *Blob) DataAsync() (_ io.ReadCloser, retErr error) {
+	if remoteReadRepo(b.repo) {
+		maxBytes := int32(0)
+		if b.gotSize && b.size > 0 {
+			if b.size > int64(^uint32(0)>>1) {
+				maxBytes = int32(^uint32(0) >> 1)
+			} else {
+				maxBytes = int32(b.size)
+			}
+		}
+
+		resp, err := remoteGetBlob(b.repo.Ctx, b.repo.Path, b.treeRef.String(), b.name, maxBytes)
+		if err != nil {
+			return nil, err
+		}
+		if resp == nil {
+			return nil, ErrNotExist{ID: b.ID.String()}
+		}
+
+		b.gotSize = true
+		b.size = resp.GetSize()
+
+		// git-storage returns bytes (not streaming); wrap it into a ReadCloser.
+		return io.NopCloser(bytes.NewReader(resp.GetContent())), nil
+	}
+
 	batch, cancel, err := b.repo.CatFileBatch(b.repo.Ctx)
 	if err != nil {
 		return nil, err

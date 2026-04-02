@@ -10,6 +10,15 @@ import (
 )
 
 func (repo *Repository) getTree(id ObjectID) (*Tree, error) {
+	if remoteReadRepo(repo) {
+		// In remote read mode we don't have a local object store.
+		// We still create a Tree wrapper, but actual entries are fetched lazily
+		// by Tree.ListEntries via git-storage RPC.
+		tree := NewTree(repo, id)
+		tree.ResolvedID = id
+		return tree, nil
+	}
+
 	batch, cancel, err := repo.CatFileBatch(repo.Ctx)
 	if err != nil {
 		return nil, err

@@ -16,6 +16,19 @@ import (
 
 // GetCommitsInfo gets information of all commits that are corresponding to these entries
 func (tes Entries) GetCommitsInfo(ctx context.Context, repoLink string, commit *Commit, treePath string) ([]CommitInfo, *Commit, error) {
+	// Mirrorless web reads: latest-per-entry commit computation relies on local git log traversal.
+	// For remote-only repositories, fall back to rendering entries without latest commit info.
+	if commit != nil && remoteReadRepo(commit.repo) {
+		commitsInfo := make([]CommitInfo, len(tes))
+		for i, entry := range tes {
+			commitsInfo[i] = CommitInfo{Entry: entry}
+		}
+		if treePath == "" {
+			return commitsInfo, commit, nil
+		}
+		return commitsInfo, nil, nil
+	}
+
 	entryPaths := make([]string, len(tes)+1)
 	// Get the commit for the treePath itself
 	entryPaths[0] = ""
