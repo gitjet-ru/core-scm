@@ -22,6 +22,22 @@ func EntryInfoFromGitTreeEntry(commit *git.Commit, fullPath string, gitEntry *gi
 	return ret
 }
 
+// EntryInfoFromIndexedName builds icon metadata from branch-tree index fields (no git tree walk).
+func EntryInfoFromIndexedName(name string, isDir, isLink, isSubmodule bool) *EntryInfo {
+	var mode git.EntryMode
+	switch {
+	case isSubmodule:
+		mode = git.EntryModeCommit
+	case isDir:
+		mode = git.EntryModeTree
+	case isLink:
+		mode = git.EntryModeSymlink
+	default:
+		mode = git.EntryModeBlob
+	}
+	return &EntryInfo{BaseName: name, EntryMode: mode}
+}
+
 func EntryInfoFolder() *EntryInfo {
 	return &EntryInfo{EntryMode: git.EntryModeTree}
 }

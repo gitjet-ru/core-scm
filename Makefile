@@ -839,6 +839,17 @@ docker:
 	docker build --disable-content-trust=false -t $(DOCKER_REF) .
 # support also build args docker build --build-arg GITEA_VERSION=v1.2.3 --build-arg TAGS="bindata sqlite sqlite_unlock_notify"  .
 
+# Fast local image: webpack on host (make frontend), Docker only compiles Go — faster for backend-only work.
+#   make docker-fast
+#   make docker-fast-git-storage   # with docker-compose.git-storage.yml (context ..)
+.PHONY: docker-fast
+docker-fast: frontend
+	docker compose -f docker-compose.yml -f docker-compose.local-fast.yml build gitea
+
+.PHONY: docker-fast-git-storage
+docker-fast-git-storage: frontend
+	docker compose -f docker-compose.yml -f docker-compose.git-storage.yml -f docker-compose.local-fast.yml build gitea
+
 # Disable parallel execution because it would break some targets that don't
 # specify exact dependencies like 'backend' which does currently not depend
 # on 'frontend' to enable Node.js-less builds from source tarballs.

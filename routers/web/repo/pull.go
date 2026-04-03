@@ -193,6 +193,14 @@ func GetPullDiffStats(ctx *context.Context) {
 	if !ok {
 		return
 	}
+	if ctx.Repo.GitRepo == nil {
+		gitRepo, err := gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
+		if err != nil {
+			log.Error("Failed to open GitRepo for PR diff stats: %v, repo: %v", err, ctx.Repo.Repository.FullName())
+			return
+		}
+		ctx.Repo.GitRepo = gitRepo
+	}
 	pull := issue.PullRequest
 
 	mergeBaseCommitID := GetMergedBaseCommitID(ctx, issue)
@@ -216,6 +224,14 @@ func GetPullDiffStats(ctx *context.Context) {
 }
 
 func GetMergedBaseCommitID(ctx *context.Context, issue *issues_model.Issue) string {
+	if ctx.Repo.GitRepo == nil {
+		gitRepo, err := gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
+		if err != nil {
+			log.Error("Failed to open GitRepo for merge-base lookup: %v, repo: %v", err, ctx.Repo.Repository.FullName())
+			return ""
+		}
+		ctx.Repo.GitRepo = gitRepo
+	}
 	pull := issue.PullRequest
 
 	var baseCommit string
@@ -826,10 +842,15 @@ func viewPullFiles(ctx *context.Context, beforeCommitID, afterCommitID string) {
 		}
 	}
 
-	diffShortStat, err := gitdiff.GetDiffShortStat(ctx, ctx.Repo.Repository, ctx.Repo.GitRepo, beforeCommitID, afterCommitID)
-	if err != nil {
-		ctx.ServerError("GetDiffShortStat", err)
-		return
+	var diffShortStat *gitdiff.DiffShortStat
+	if !diff.IsIncomplete {
+		diffShortStat = gitdiff.ShortStatFromDiff(diff)
+	} else {
+		diffShortStat, err = gitdiff.GetDiffShortStat(ctx, ctx.Repo.Repository, ctx.Repo.GitRepo, beforeCommitID, afterCommitID)
+		if err != nil {
+			ctx.ServerError("GetDiffShortStat", err)
+			return
+		}
 	}
 	ctx.Data["DiffShortStat"] = diffShortStat
 	ctx.Data["NumViewedFiles"] = numViewedFiles
@@ -874,9 +895,9 @@ func viewPullFiles(ctx *context.Context, beforeCommitID, afterCommitID string) {
 
 	if !fileOnly {
 		// note: use mergeBase is set to false because we already have the merge base from the pull request info
-		diffTree, err := gitdiff.GetDiffTree(ctx, gitRepo, false, beforeCommitID, afterCommitID)
+		diffTree, err := gitdiff.DiffTreeForSidebar(ctx, gitRepo, false, beforeCommitID, afterCommitID, diff)
 		if err != nil {
-			ctx.ServerError("GetDiffTree", err)
+			ctx.ServerError("DiffTreeForSidebar", err)
 			return
 		}
 		var filesViewedState map[string]pull_model.ViewedState

@@ -51,6 +51,61 @@ func GetDiffTree(ctx context.Context, gitRepo *git.Repository, useMergeBase bool
 	}, nil
 }
 
+// DiffTreeFromDiffFiles builds a DiffTree from an already-computed Diff (same two commits / range as GetDiffTree).
+// Callers should use this when the diff was produced with the same options as the page render, to avoid a second
+// git diff-tree invocation (notably slow on remote git-storage).
+func DiffTreeFromDiffFiles(diff *Diff) *DiffTree {
+	if diff == nil || len(diff.Files) == 0 {
+		return &DiffTree{Files: nil}
+	}
+	records := make([]*DiffTreeRecord, 0, len(diff.Files))
+	for _, f := range diff.Files {
+		records = append(records, diffFileToDiffTreeRecord(f))
+	}
+	return &DiffTree{Files: records}
+}
+
+// DiffTreeForSidebar returns a DiffTree for the left-hand diff file tree. When diff is complete (not truncated
+// by MaxFiles), it reuses diff.Files instead of running git diff-tree again.
+func DiffTreeForSidebar(ctx context.Context, gitRepo *git.Repository, useMergeBase bool, baseSha, headSha string, diff *Diff) (*DiffTree, error) {
+	if diff != nil && !diff.IsIncomplete {
+		return DiffTreeFromDiffFiles(diff), nil
+	}
+	return GetDiffTree(ctx, gitRepo, useMergeBase, baseSha, headSha)
+}
+
+func diffFileToDiffTreeRecord(f *DiffFile) *DiffTreeRecord {
+	headPath := f.Name
+	if headPath == "" {
+		headPath = f.OldName
+	}
+	status := "modified"
+	switch {
+	case f.IsDeleted:
+		status = "deleted"
+	case f.IsCreated:
+		status = "added"
+	case f.Type == DiffFileRename:
+		status = "renamed"
+	case f.Type == DiffFileCopy:
+		status = "copied"
+	}
+	headMode := git.ParseEntryMode(f.EntryMode)
+	if f.IsDeleted && f.EntryMode == "" {
+		headMode = git.ParseEntryMode(f.OldEntryMode)
+	}
+	if f.IsSubmodule {
+		headMode = git.EntryModeCommit
+	}
+	return &DiffTreeRecord{
+		Status:   status,
+		HeadPath: headPath,
+		BasePath: f.OldName,
+		HeadMode: headMode,
+		BaseMode: git.ParseEntryMode(f.OldEntryMode),
+	}
+}
+
 func runGitDiffTree(ctx context.Context, gitRepo *git.Repository, useMergeBase bool, baseSha, headSha string) ([]*DiffTreeRecord, error) {
 	useMergeBase, baseCommitID, headCommitID, err := validateGitDiffTreeArguments(gitRepo, useMergeBase, baseSha, headSha)
 	if err != nil {

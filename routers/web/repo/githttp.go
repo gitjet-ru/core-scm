@@ -19,6 +19,8 @@ import (
 	"time"
 
 	auth_model "github.com/gitjet-ru/core-scm/models/auth"
+	"github.com/gitjet-ru/core-scm/models/db"
+	git_model "github.com/gitjet-ru/core-scm/models/git"
 	"github.com/gitjet-ru/core-scm/models/perm"
 	access_model "github.com/gitjet-ru/core-scm/models/perm/access"
 	repo_model "github.com/gitjet-ru/core-scm/models/repo"
@@ -447,6 +449,9 @@ func serviceRPC(ctx *context.Context, service string) {
 			return
 		}
 		_, _ = ctx.Resp.Write(stdout)
+		if service == ServiceTypeReceivePack {
+			syncRepoBranchesAfterReceivePack(ctx, h.repo)
+		}
 		return
 	}
 
@@ -457,6 +462,41 @@ func serviceRPC(ctx *context.Context, service string) {
 	); err != nil {
 		if !gitcmd.IsErrorCanceledOrKilled(err) {
 			log.Error("Fail to serve RPC(%s) in %s: %v", service, h.getStorageRepo().RelativePath(), err)
+		}
+		return
+	}
+	if service == ServiceTypeReceivePack {
+		syncRepoBranchesAfterReceivePack(ctx, h.repo)
+	}
+}
+
+func syncRepoBranchesAfterReceivePack(ctx *context.Context, repo *repo_model.Repository) {
+	if repo == nil {
+		return
+	}
+	doerID := int64(0)
+	if ctx.Doer != nil {
+		doerID = ctx.Doer.ID
+	}
+	if _, err := repo_module.SyncRepoBranches(ctx, repo.ID, doerID); err != nil {
+		log.Error("SyncRepoBranches after HTTP receive-pack failed: repo=%d err=%v", repo.ID, err)
+		return
+	}
+
+	branches, err := db.Find[git_model.Branch](ctx, git_model.FindBranchOptions{
+		RepoID:      repo.ID,
+		ListOptions: db.ListOptionsAll,
+	})
+	if err != nil {
+		log.Error("Find branches after HTTP receive-pack failed: repo=%d err=%v", repo.ID, err)
+		return
+	}
+	for _, b := range branches {
+		if b.IsDeleted || b.CommitID == "" {
+			continue
+		}
+		if err := repo_service.EnqueueBranchTreeIndexSync(repo.ID, b.Name, b.CommitID); err != nil {
+			log.Error("EnqueueBranchTreeIndexSync after HTTP receive-pack failed: repo=%d branch=%s err=%v", repo.ID, b.Name, err)
 		}
 	}
 }

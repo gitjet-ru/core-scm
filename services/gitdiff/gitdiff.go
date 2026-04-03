@@ -1433,6 +1433,20 @@ type DiffShortStat struct {
 	NumFiles, TotalAddition, TotalDeletion int
 }
 
+// ShortStatFromDiff aggregates per-file line counts from an already-parsed Diff. When diff.IsIncomplete
+// is false, this matches the full compare and avoids a separate git diff --stat / shortstat call.
+func ShortStatFromDiff(diff *Diff) *DiffShortStat {
+	if diff == nil {
+		return &DiffShortStat{}
+	}
+	out := &DiffShortStat{NumFiles: len(diff.Files)}
+	for _, f := range diff.Files {
+		out.TotalAddition += f.Addition
+		out.TotalDeletion += f.Deletion
+	}
+	return out
+}
+
 func GetDiffShortStat(ctx context.Context, repoStorage gitrepo.Repository, gitRepo *git.Repository, beforeCommitID, afterCommitID string) (*DiffShortStat, error) {
 	afterCommit, err := gitRepo.GetCommit(afterCommitID)
 	if err != nil {

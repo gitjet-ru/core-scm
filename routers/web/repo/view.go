@@ -32,6 +32,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/charset"
 	"github.com/gitjet-ru/core-scm/modules/fileicon"
 	"github.com/gitjet-ru/core-scm/modules/git"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/lfs"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/markup"
@@ -43,6 +44,8 @@ import (
 	asymkey_service "github.com/gitjet-ru/core-scm/services/asymkey"
 	"github.com/gitjet-ru/core-scm/services/context"
 	repo_service "github.com/gitjet-ru/core-scm/services/repository"
+
+	"golang.org/x/sync/errgroup"
 
 	_ "golang.org/x/image/bmp"  // for processing bmp images
 	_ "golang.org/x/image/webp" // for processing webp images
@@ -67,6 +70,114 @@ type fileInfo struct {
 
 func (fi *fileInfo) isLFSFile() bool {
 	return fi.lfsMeta != nil && fi.lfsMeta.Oid != ""
+}
+
+type indexedTreeListItem struct {
+	Name              string
+	Path              string
+	IsDir             bool
+	IsLink            bool
+	IsSubmodule       bool
+	LastCommitID      string
+	LastCommitSubject string
+	LastCommitWhen    *time.Time
+}
+
+func renderDirectoryFilesFromIndex(ctx *context.Context) bool {
+	// Fast path is only defined for branch HEAD index.
+	if !ctx.Repo.RefFullName.IsBranch() {
+		return false
+	}
+	entries, err := git_model.FindBranchTreeEntries(ctx, ctx.Repo.Repository.ID, ctx.Repo.RefFullName.ShortName(), ctx.Repo.TreePath)
+	if err != nil || len(entries) == 0 {
+		return false
+	}
+
+	git_model.SortBranchTreeEntriesForListing(entries)
+
+	items := make([]indexedTreeListItem, 0, len(entries))
+	for _, e := range entries {
+		fullPath := e.EntryName
+		if ctx.Repo.TreePath != "" {
+			fullPath = path.Join(ctx.Repo.TreePath, e.EntryName)
+		}
+		items = append(items, indexedTreeListItem{
+			Name:        e.EntryName,
+			Path:        fullPath,
+			IsDir:       e.EntryType == "dir",
+			IsLink:      e.EntryType == "symlink",
+			IsSubmodule: e.EntryType == "submodule",
+		})
+	}
+	ctx.Data["UseIndexedTreeList"] = true
+	hydrateIndexedTreeLastCommitsFromRemote(ctx, items)
+	ctx.Data["IndexedFiles"] = items
+	// HTMX → /lastcommit/ only when GetCommitsInfo can return per-row commits (not remote-only git).
+	hasLoader := ctx.Repo.GitRepo != nil && !git.ListingOmitsPerEntryLastCommit(ctx.Repo.GitRepo)
+	ctx.Data["HasFilesWithoutLatestCommit"] = hasLoader
+	prepareDirectoryFileIconsFromIndex(ctx, items)
+	loadLatestCommitDataForDirectoryListing(ctx)
+	lastCommitLoaderURL := ctx.Repo.RepoLink + "/lastcommit/" + url.PathEscape(ctx.Repo.CommitID) + "/" + util.PathEscapeSegments(ctx.Repo.TreePath)
+	ctx.Data["LastCommitLoaderURL"] = lastCommitLoaderURL + "?refSubUrl=" + url.QueryEscape(ctx.Repo.RefTypeNameSubURL())
+	return true
+}
+
+func prepareDirectoryFileIconsFromIndex(ctx *context.Context, items []indexedTreeListItem) {
+	renderedIconPool := fileicon.NewRenderedIconPool()
+	fileIcons := map[string]template.HTML{}
+	for _, it := range items {
+		entryInfo := fileicon.EntryInfoFromIndexedName(it.Name, it.IsDir, it.IsLink, it.IsSubmodule)
+		fileIcons[it.Name] = fileicon.RenderEntryIconHTML(renderedIconPool, entryInfo)
+	}
+	fileIcons[".."] = fileicon.RenderEntryIconHTML(renderedIconPool, fileicon.EntryInfoFolder())
+	ctx.Data["FileIcons"] = fileIcons
+	ctx.Data["FileIconPoolHTML"] = renderedIconPool.RenderToHTML()
+}
+
+// hydrateIndexedTreeLastCommitsFromRemote fills per-row last commit via git-storage ListCommits (git log -1 -- path)
+// when local nogogit cannot (remote-only repo path).
+func hydrateIndexedTreeLastCommitsFromRemote(ctx *context.Context, items []indexedTreeListItem) {
+	if ctx.Repo.Commit == nil || len(items) == 0 {
+		return
+	}
+	if ctx.Repo.GitRepo == nil || !git.ListingOmitsPerEntryLastCommit(ctx.Repo.GitRepo) {
+		return
+	}
+	ref := ctx.Repo.CommitID
+	const maxConcurrent = 8
+	// Bound total wait: each path is one git-storage ListCommits (git log -1 -- path).
+	hydrateCtx, cancel := gocontext.WithTimeout(ctx.Req.Context(), 45*time.Second)
+	defer cancel()
+	sem := make(chan struct{}, maxConcurrent)
+	eg, egCtx := errgroup.WithContext(hydrateCtx)
+	for i := range items {
+		i := i
+		eg.Go(func() error {
+			select {
+			case <-egCtx.Done():
+				return egCtx.Err()
+			case sem <- struct{}{}:
+			}
+			defer func() { <-sem }()
+			commits, err := gitrepo.RemoteListCommitsForAPI(egCtx, ctx.Repo.Repository, ref, 1, 0, items[i].Path, "", "", "")
+			if err != nil {
+				log.Debug("RemoteListCommitsForAPI path=%s: %v", items[i].Path, err)
+				return nil
+			}
+			if len(commits) == 0 {
+				return nil
+			}
+			c := commits[0]
+			t := time.Unix(c.GetCommitterUnix(), 0).UTC()
+			items[i].LastCommitID = strings.TrimSpace(c.GetId())
+			items[i].LastCommitSubject = c.GetSubject()
+			items[i].LastCommitWhen = &t
+			return nil
+		})
+	}
+	if err := eg.Wait(); err != nil && !errors.Is(err, gocontext.Canceled) {
+		log.Debug("hydrateIndexedTreeLastCommitsFromRemote: %v", err)
+	}
 }
 
 func getFileReader(ctx gocontext.Context, repoID int64, blob *git.Blob) (buf []byte, dataRc io.ReadCloser, fi *fileInfo, err error) {
@@ -118,6 +229,29 @@ func getFileReader(ctx gocontext.Context, repoID int64, blob *git.Blob) (buf []b
 	fi.blobOrLfsSize = meta.Pointer.Size
 	fi.lfsMeta = &meta.Pointer
 	return buf, dataRc, fi, nil
+}
+
+// loadLatestCommitDataForDirectoryListing sets LatestCommit for the file table header when using the
+// PG branch-tree index (no per-entry GetCommitsInfo). Uses one rev-list for subdirectories.
+func loadLatestCommitDataForDirectoryListing(ctx *context.Context) {
+	if ctx.Repo.Commit == nil {
+		return
+	}
+	if ctx.Repo.GitRepo == nil {
+		_ = loadLatestCommitData(ctx, ctx.Repo.Commit)
+		return
+	}
+	if ctx.Repo.TreePath == "" {
+		_ = loadLatestCommitData(ctx, ctx.Repo.Commit)
+		return
+	}
+	lc, err := ctx.Repo.GitRepo.GetTreePathLatestCommit(ctx.Repo.Commit.ID.String(), ctx.Repo.TreePath)
+	if err != nil {
+		log.Debug("GetTreePathLatestCommit: %v", err)
+		_ = loadLatestCommitData(ctx, ctx.Repo.Commit)
+		return
+	}
+	_ = loadLatestCommitData(ctx, lc)
 }
 
 func loadLatestCommitData(ctx *context.Context, latestCommit *git.Commit) bool {
@@ -268,6 +402,22 @@ func prepareDirectoryFileIcons(ctx *context.Context, files []git.CommitInfo) {
 }
 
 func renderDirectoryFiles(ctx *context.Context, timeout time.Duration) git.Entries {
+	if ctx.Repo.Commit == nil {
+		// In mirrorless remote mode, commit hydration can fail on malformed requests.
+		// Fall back to indexed listing instead of panicking.
+		if renderDirectoryFilesFromIndex(ctx) {
+			return nil
+		}
+		ctx.NotFound(nil)
+		return nil
+	}
+
+	// PG branch-tree index: only for the initial HTML (timeout > 0). Async /lastcommit/ uses timeout==0
+	// and must fall through to git + GetCommitsInfo so per-row last commit + age render.
+	if timeout > 0 && renderDirectoryFilesFromIndex(ctx) {
+		return nil
+	}
+
 	tree, err := ctx.Repo.Commit.SubTree(ctx.Repo.TreePath)
 	if err != nil {
 		HandleGitError(ctx, "Repo.Commit.SubTree", err)
@@ -302,6 +452,11 @@ func renderDirectoryFiles(ctx *context.Context, timeout time.Duration) git.Entri
 		var cancel gocontext.CancelFunc
 		commitInfoCtx, cancel = gocontext.WithTimeout(ctx, timeout)
 		defer cancel()
+	} else {
+		// /lastcommit/ HTMX: bound GetCommitsInfo (very large trees can take minutes on remote git).
+		var cancel gocontext.CancelFunc
+		commitInfoCtx, cancel = gocontext.WithTimeout(ctx, 3*time.Minute)
+		defer cancel()
 	}
 
 	files, latestCommit, err := allEntries.GetCommitsInfo(commitInfoCtx, ctx.Repo.RepoLink, ctx.Repo.Commit, ctx.Repo.TreePath)
@@ -331,6 +486,9 @@ func renderDirectoryFiles(ctx *context.Context, timeout time.Duration) git.Entri
 			ctx.Data["HasFilesWithoutLatestCommit"] = true
 			break
 		}
+	}
+	if ctx.Repo.GitRepo != nil && git.ListingOmitsPerEntryLastCommit(ctx.Repo.GitRepo) {
+		ctx.Data["HasFilesWithoutLatestCommit"] = false
 	}
 
 	if !loadLatestCommitData(ctx, latestCommit) {

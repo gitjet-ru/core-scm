@@ -109,7 +109,10 @@ func Init(ctx context.Context) error {
 	if err := initPushQueue(); err != nil {
 		return err
 	}
-	return initBranchSyncQueue(graceful.GetManager().ShutdownContext())
+	if err := initBranchSyncQueue(graceful.GetManager().ShutdownContext()); err != nil {
+		return err
+	}
+	return initBranchTreeIndexQueue(graceful.GetManager().ShutdownContext())
 }
 
 // UpdateRepository updates a repository

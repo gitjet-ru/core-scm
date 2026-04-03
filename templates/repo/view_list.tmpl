@@ -10,6 +10,34 @@
 		{{index $.FileIcons ".."}} ..
 	</a>
 	{{end}}
+	{{if .UseIndexedTreeList}}
+		{{range $item := .IndexedFiles}}
+		<div class="repo-file-item">
+			<div class="repo-file-cell name muted-links">
+				{{index $.FileIcons $item.Name}}
+				{{if $item.IsDir}}
+					<a class="entry-name" href="{{$.BranchLink}}/{{PathEscapeSegments $item.Path}}" title="{{$item.Name}}">{{$item.Name}}</a>
+				{{else if $item.IsSubmodule}}
+					<a class="entry-name" href="{{$.BranchLink}}/{{PathEscapeSegments $item.Path}}" title="{{$item.Name}}">{{$item.Name}}</a>
+				{{else}}
+					<a class="entry-name" href="{{$.BranchLink}}/{{PathEscapeSegments $item.Path}}" title="{{$item.Name}}">{{$item.Name}}</a>
+					{{if $item.IsLink}}
+						<a class="entry-symbol-link flex-text-inline" data-tooltip-content title="{{ctx.Locale.Tr "repo.find_file.follow_symlink"}}" href="{{$.BranchLink}}/{{PathEscapeSegments $item.Path}}?follow_symlink=1">{{svg "octicon-link" 12}}</a>
+					{{end}}
+				{{end}}
+			</div>
+			<div class="repo-file-cell message commit-summary">
+				{{if $item.LastCommitID}}
+					{{$commitLink := printf "%s/commit/%s" $.RepoLink (PathEscape $item.LastCommitID)}}
+					{{ctx.RenderUtils.RenderCommitMessageLinkSubject $item.LastCommitSubject $commitLink $.Repository}}
+				{{else}}
+					-
+				{{end}}
+			</div>
+			<div class="repo-file-cell age">{{if $item.LastCommitWhen}}{{DateUtils.TimeSince $item.LastCommitWhen}}{{else}}-{{end}}</div>
+		</div>
+		{{end}}
+	{{else}}
 	{{range $item := .Files}}
 		<div class="repo-file-item">
 			{{$entry := $item.Entry}}
@@ -57,5 +85,6 @@
 			</div>
 			<div class="repo-file-cell age">{{if $commit}}{{DateUtils.TimeSince $commit.Committer.When}}{{end}}</div>
 		</div>
+	{{end}}
 	{{end}}
 </div>

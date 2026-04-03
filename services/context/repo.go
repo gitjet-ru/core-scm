@@ -795,6 +795,10 @@ func getRefName(ctx *Base, repo *Repository, path string, refType git.RefType) s
 		var ref string
 		if gitrepo.UseRemoteReadBackendForAPI() {
 			ref = getRefNameFromPath(repo, path, func(branchName string) bool {
+				exists, err := git_model.IsBranchExist(ctx, repo.Repository.ID, branchName)
+				if err == nil {
+					return exists
+				}
 				return gitrepo.IsBranchExist(ctx, repo.Repository, branchName)
 			})
 		} else {
@@ -955,7 +959,12 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 		reqPath := ctx.PathParam("*")
 		if reqPath == "" {
 			refShortName = ctx.Repo.Repository.DefaultBranch
-			if !gitrepo.IsBranchExist(ctx, ctx.Repo.Repository, refShortName) {
+			existsInDB, dbErr := git_model.IsBranchExist(ctx, ctx.Repo.Repository.ID, refShortName)
+			exists := existsInDB && dbErr == nil
+			if !exists {
+				exists = gitrepo.IsBranchExist(ctx, ctx.Repo.Repository, refShortName)
+			}
+			if !exists {
 				if !gitrepo.UseRemoteReadBackendForAPI() {
 					brs, _, err := ctx.Repo.GitRepo.GetBranchNames(0, 1)
 					if err == nil && len(brs) != 0 {
@@ -971,15 +980,23 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 			}
 			ctx.Repo.RefFullName = git.RefNameFromBranch(refShortName)
 			ctx.Repo.BranchName = refShortName
-			ctx.Repo.Commit, err = ctx.Repo.GitRepo.GetBranchCommit(refShortName)
-			if err == nil {
-				ctx.Repo.CommitID = ctx.Repo.Commit.ID.String()
-			} else if strings.Contains(err.Error(), "fatal: not a git repository") || strings.Contains(err.Error(), "object does not exist") {
-				// if the repository is broken, we can continue to the handler code, to show "Settings -> Delete Repository" for end users
-				log.Error("GetBranchCommit: %v", err)
-			} else {
-				ctx.ServerError("GetBranchCommit", err)
-				return
+			useSrcFastPath := gitrepo.UseRemoteReadBackendForAPI() && strings.Contains(ctx.Req.URL.Path, "/src/")
+			if useSrcFastPath {
+				if b, bErr := git_model.GetBranch(ctx, ctx.Repo.Repository.ID, refShortName); bErr == nil && !b.IsDeleted && b.CommitID != "" {
+					ctx.Repo.CommitID = b.CommitID
+				}
+			}
+			if ctx.Repo.CommitID == "" {
+				ctx.Repo.Commit, err = ctx.Repo.GitRepo.GetBranchCommit(refShortName)
+				if err == nil {
+					ctx.Repo.CommitID = ctx.Repo.Commit.ID.String()
+				} else if strings.Contains(err.Error(), "fatal: not a git repository") || strings.Contains(err.Error(), "object does not exist") {
+					// if the repository is broken, we can continue to the handler code, to show "Settings -> Delete Repository" for end users
+					log.Error("GetBranchCommit: %v", err)
+				} else {
+					ctx.ServerError("GetBranchCommit", err)
+					return
+				}
 			}
 		} else { // there is a path in request
 			guessLegacyPath := refType == ""
@@ -999,16 +1016,32 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 				return
 			}
 
-			if refType == git.RefTypeBranch && gitrepo.IsBranchExist(ctx, ctx.Repo.Repository, refShortName) {
+			refBranchExists := false
+			if refType == git.RefTypeBranch {
+				existsInDB, dbErr := git_model.IsBranchExist(ctx, ctx.Repo.Repository.ID, refShortName)
+				refBranchExists = existsInDB && dbErr == nil
+				if !refBranchExists {
+					refBranchExists = gitrepo.IsBranchExist(ctx, ctx.Repo.Repository, refShortName)
+				}
+			}
+			if refType == git.RefTypeBranch && refBranchExists {
 				ctx.Repo.BranchName = refShortName
 				ctx.Repo.RefFullName = git.RefNameFromBranch(refShortName)
 
-				ctx.Repo.Commit, err = ctx.Repo.GitRepo.GetBranchCommit(refShortName)
-				if err != nil {
-					ctx.ServerError("GetBranchCommit", err)
-					return
+				useSrcFastPath := gitrepo.UseRemoteReadBackendForAPI() && strings.Contains(ctx.Req.URL.Path, "/src/")
+				if useSrcFastPath {
+					if b, bErr := git_model.GetBranch(ctx, ctx.Repo.Repository.ID, refShortName); bErr == nil && !b.IsDeleted && b.CommitID != "" {
+						ctx.Repo.CommitID = b.CommitID
+					}
 				}
-				ctx.Repo.CommitID = ctx.Repo.Commit.ID.String()
+				if ctx.Repo.CommitID == "" {
+					ctx.Repo.Commit, err = ctx.Repo.GitRepo.GetBranchCommit(refShortName)
+					if err != nil {
+						ctx.ServerError("GetBranchCommit", err)
+						return
+					}
+					ctx.Repo.CommitID = ctx.Repo.Commit.ID.String()
+				}
 			} else if refType == git.RefTypeTag && gitrepo.IsTagExist(ctx, ctx.Repo.Repository, refShortName) {
 				ctx.Repo.RefFullName = git.RefNameFromTag(refShortName)
 
@@ -1077,10 +1110,15 @@ func RepoRefByType(detectRefType git.RefType) func(*Context) {
 
 		ctx.Data["CanCreateBranch"] = ctx.Repo.CanCreateBranch() // only used by the branch selector dropdown: AllowCreateNewRef
 
-		ctx.Repo.CommitsCount, err = ctx.Repo.GetCommitsCount(ctx)
-		if err != nil {
-			ctx.ServerError("GetCommitsCount", err)
-			return
+		if gitrepo.UseRemoteReadBackendForAPI() {
+			// Commit count is expensive over remote storage and not critical for source browsing.
+			ctx.Repo.CommitsCount = 0
+		} else {
+			ctx.Repo.CommitsCount, err = ctx.Repo.GetCommitsCount(ctx)
+			if err != nil {
+				ctx.ServerError("GetCommitsCount", err)
+				return
+			}
 		}
 		if ctx.Repo.RefFullName.IsTag() {
 			rel, err := repo_model.GetRelease(ctx, ctx.Repo.Repository.ID, ctx.Repo.RefFullName.TagName())

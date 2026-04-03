@@ -1,0 +1,16 @@
+# Fast local rebuild of gitea (~2–5 min with warm go mod + go-build cache): skips webpack inside Docker.
+#
+# Prerequisite (once per frontend change):
+#   cd core-scm && make frontend
+#
+# Build + run (with git-storage overlay):
+#   docker compose -f docker-compose.yml -f docker-compose.git-storage.yml -f docker-compose.local-fast.yml build gitea
+#   docker compose -f docker-compose.yml -f docker-compose.git-storage.yml -f docker-compose.local-fast.yml up -d
+#
+# "prebuilt" must point at generated assets (same as .dockerignore excludes from main context).
+services:
+  gitea:
+    build:
+      target: gitea-fast
+      additional_contexts:
+        prebuilt: ./public/assets

@@ -292,7 +292,7 @@ func SyncBranchesToDB(ctx context.Context, repoID, pusherID int64, branchNames, 
 		return errors.New("branchNames and commitIDs length not match")
 	}
 
-	return db.WithTx(ctx, func(ctx context.Context) error {
+	if err := db.WithTx(ctx, func(ctx context.Context) error {
 		branches, err := git_model.GetBranches(ctx, repoID, branchNames, true)
 		if err != nil {
 			return fmt.Errorf("git_model.GetBranches: %v", err)
@@ -357,7 +357,19 @@ func SyncBranchesToDB(ctx context.Context, repoID, pusherID int64, branchNames, 
 			return db.Insert(ctx, newBranches)
 		}
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	for i, branchName := range branchNames {
+		if i >= len(commitIDs) {
+			break
+		}
+		if queueErr := EnqueueBranchTreeIndexSync(repoID, branchName, commitIDs[i]); queueErr != nil {
+			log.Error("EnqueueBranchTreeIndexSync failed: repo=%d branch=%s err=%v", repoID, branchName, queueErr)
+		}
+	}
+	return nil
 }
 
 // CreateNewBranchFromCommit creates a new repository branch
@@ -639,6 +651,9 @@ func deleteBranchSuccessPostProcess(doer *user_model.User, repo *repo_model.Repo
 			RepoName:     repo.Name,
 		}); err != nil {
 		log.Error("PushUpdateOptions: %v", err)
+	}
+	if err := git_model.DeleteBranchTreeIndex(graceful.GetManager().ShutdownContext(), repo.ID, branchName); err != nil {
+		log.Error("DeleteBranchTreeIndex: %v", err)
 	}
 }
 

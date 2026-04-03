@@ -412,6 +412,20 @@ func runServ(ctx context.Context, c *cli.Command) error {
 		return fail(ctx, "Failed to execute git command", "Failed to execute git command: %v", err)
 	}
 
+	// Keep the branch list in sync with git refs.
+	// The web UI/API branch list is backed by DB table `branch`, not by live refs.
+	// For receive-pack paths delegated to git binaries, DB branch sync might not run
+	// unless we explicitly sync here.
+	if verb == git.CmdVerbReceivePack {
+		// `serv` CLI process doesn't initialize DB by default.
+		if dbErr := initDB(ctx); dbErr != nil {
+			return fail(ctx, "Failed to initialize database", "initDB before SyncRepoBranches failed: %v", dbErr)
+		}
+		if _, syncErr := repo_module.SyncRepoBranches(ctx, results.RepoID, results.UserID); syncErr != nil {
+			return fail(ctx, "Failed to sync repository branches", "SyncRepoBranches after SSH receive-pack failed: %v", syncErr)
+		}
+	}
+
 	// Update user key activity.
 	if results.KeyID > 0 {
 		if err = private.UpdatePublicKeyInRepo(ctx, results.KeyID, results.RepoID); err != nil {

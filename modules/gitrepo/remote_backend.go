@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -39,7 +40,13 @@ func getRemoteClient() (gitstoragev1.GitStorageClient, error) {
 			remoteClientErr = err
 			return
 		}
-		conn, err := grpc.NewClient(endpoint, grpc.WithTransportCredentials(transportCreds))
+		conn, err := grpc.NewClient(
+			endpoint,
+			grpc.WithTransportCredentials(transportCreds),
+			grpc.WithDefaultCallOptions(
+				grpc.MaxCallRecvMsgSize(gitStorageMaxRecvMessageBytes()),
+			),
+		)
 		if err != nil {
 			remoteClientErr = err
 			return
@@ -84,6 +91,20 @@ func gitStorageTransportCredentials() (credentials.TransportCredentials, error) 
 		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
 	return credentials.NewTLS(tlsConfig), nil
+}
+
+func gitStorageMaxRecvMessageBytes() int {
+	// gRPC default is 4MiB, which is too small for larger receive-pack responses.
+	const def = 64 << 20 // 64MiB
+	raw := strings.TrimSpace(os.Getenv("GIT_STORAGE_GRPC_MAX_RECV_BYTES"))
+	if raw == "" {
+		return def
+	}
+	v, err := strconv.Atoi(raw)
+	if err != nil || v <= 0 {
+		return def
+	}
+	return v
 }
 
 func callRemoteWithTimeout(ctx context.Context, fn func(context.Context) error) error {

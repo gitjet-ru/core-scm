@@ -143,6 +143,10 @@ func prepareToRenderDirectory(ctx *context.Context) {
 	if ctx.Written() {
 		return
 	}
+	if useIndexed, ok := ctx.Data["UseIndexedTreeList"].(bool); ok && useIndexed {
+		// Indexed fast-path: skip README probing to avoid extra remote RPC roundtrips.
+		return
+	}
 
 	if ctx.Repo.TreePath != "" {
 		ctx.Data["HideRepoInfo"] = true
@@ -157,6 +161,7 @@ func prepareToRenderDirectory(ctx *context.Context) {
 
 	prepareToRenderReadmeFile(ctx, subfolder, readmeFile)
 }
+
 
 func prepareHomeSidebarLanguageStats(ctx *context.Context) {
 	langs, err := repo_model.GetTopLanguageStats(ctx, ctx.Repo.Repository, 5)
@@ -408,6 +413,23 @@ func Home(ctx *context.Context) {
 	ctx.Data["Title"] = title
 	prepareRepoViewContent(ctx, ctx.Repo.RefTypeNameSubURL())
 
+	if ctx.Repo.Commit == nil && gitrepo.UseRemoteReadBackendForAPI() {
+		// Mirrorless fast path: serve directory listing from PG index without opening commit/tree from remote backend.
+		if renderDirectoryFilesFromIndex(ctx) {
+			prepareHomeTreeSideBarSwitch(ctx)
+			prepareOpenWithEditorApps(ctx)
+			prepareHomeSidebarRepoTopics(ctx)
+			if isViewHomeOnlyContent(ctx) {
+				ctx.HTML(http.StatusOK, tplRepoViewContent)
+			} else if ctx.Repo.TreePath != "" {
+				ctx.HTML(http.StatusOK, tplRepoView)
+			} else {
+				ctx.HTML(http.StatusOK, tplRepoHome)
+			}
+			return
+		}
+	}
+
 	if ctx.Repo.Commit == nil || ctx.Repo.Repository.IsEmpty || ctx.Repo.Repository.IsBroken() {
 		// empty or broken repositories need to be handled differently
 		handleRepoEmptyOrBroken(ctx)
@@ -433,12 +455,13 @@ func Home(ctx *context.Context) {
 	prepareFuncs := []func(*context.Context){
 		prepareOpenWithEditorApps,
 		prepareHomeSidebarRepoTopics,
-		checkOutdatedBranch,
 		prepareToRenderDirOrFile(entry),
-		prepareRecentlyPushedNewBranches,
+	}
+	if !gitrepo.UseRemoteReadBackendForAPI() {
+		prepareFuncs = append(prepareFuncs, checkOutdatedBranch, prepareRecentlyPushedNewBranches)
 	}
 
-	if isTreePathRoot {
+	if isTreePathRoot && !gitrepo.UseRemoteReadBackendForAPI() {
 		prepareFuncs = append(prepareFuncs,
 			prepareUpstreamDivergingInfo,
 			prepareHomeSidebarLicenses,

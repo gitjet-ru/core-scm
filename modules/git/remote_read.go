@@ -53,6 +53,12 @@ func remoteReadRepo(repo *Repository) bool {
 	return remoteReadsEnabled() && repo != nil && !filepath.IsAbs(repo.Path)
 }
 
+// ListingOmitsPerEntryLastCommit is true when GetCommitsInfo cannot fill per-row last commits (nogogit
+// fast-path). Web UI must not HTMX-poll /lastcommit/ in that case or it loops forever.
+func ListingOmitsPerEntryLastCommit(repo *Repository) bool {
+	return remoteReadRepo(repo)
+}
+
 func getRemoteClient() (gitstoragev1.GitStorageClient, error) {
 	remoteClientOnce.Do(func() {
 		endpoint := strings.TrimSpace(os.Getenv("GIT_STORAGE_ENDPOINT"))

@@ -66,3 +66,26 @@ func TestTransformDiffTreeForWeb(t *testing.T) {
 		},
 	}, ret)
 }
+
+func TestTransformDiffTreeForWeb_sortsDirsBeforeFiles(t *testing.T) {
+	renderedIconPool := fileicon.NewRenderedIconPool()
+	// Input order: file at repo root first, nested file second — output must list the directory branch first.
+	ret := transformDiffTreeForWeb(renderedIconPool, &gitdiff.DiffTree{Files: []*gitdiff.DiffTreeRecord{
+		{
+			Status:   "added",
+			HeadPath: "file1",
+			HeadMode: git.EntryModeBlob,
+		},
+		{
+			Status:   "modified",
+			HeadPath: "dir-a/dir-a-x/file-deep",
+			HeadMode: git.EntryModeBlob,
+		},
+	}}, nil)
+
+	assert.Len(t, ret.TreeRoot.Children, 2)
+	assert.Equal(t, "tree", ret.TreeRoot.Children[0].EntryMode)
+	assert.Equal(t, "dir-a/dir-a-x", ret.TreeRoot.Children[0].FullName)
+	assert.Equal(t, "", ret.TreeRoot.Children[1].EntryMode)
+	assert.Equal(t, "file1", ret.TreeRoot.Children[1].FullName)
+}

@@ -20,6 +20,12 @@ Documentation on using docker image can be found on [Gitea Docs site](https://do
   - `GIT_STORAGE_BACKEND=local|remote|shadow`
   - `GIT_STORAGE_ENDPOINT=git-storage:9093`
 
+## Local single-instance profile
+
+- Stable local rollout profile (no S3/remote): `docs/single-instance-local-profile.md`
+- Smoke checklist for local profile: `docs/single-instance-smoke-checklist.md`
+- Remote storage freeze status/roadmap: `docs/remote-storage-freeze-status.md`
+
 ## Spilo / Patroni: `waiting for leader to bootstrap`, Spilo unhealthy
 
 Patroni хранит состояние кластера **в etcd**, а не только в данных Postgres. Если сбросили том `spilo_data`, но **не** очистили ключи Patroni в etcd (или наоборот), узел может бесконечно писать `Lock owner: None` / `waiting for leader to bootstrap` (см. [zalando/spilo#690](https://github.com/zalando/spilo/issues/690)).

@@ -960,6 +960,9 @@ func getRepoContentsRemote(ctx *context.APIContext, opts files_service.GetConten
 	}
 
 	if treePath != "" {
+		if indexedResp := getRepoContentsFromIndex(ctx, ref, treePath, opts.IncludeSingleFileContent); indexedResp != nil {
+			return indexedResp, nil
+		}
 		blobResp, blobErr := gitrepo.RemoteGetBlobForAPI(ctx, ctx.Repo.Repository, ref, treePath, 2*1024*1024)
 		if blobErr == nil {
 			resp := &api.ContentsResponse{
@@ -977,6 +980,10 @@ func getRepoContentsRemote(ctx *context.APIContext, opts files_service.GetConten
 			}
 			return &api.ContentsExtResponse{FileContents: resp}, nil
 		}
+	}
+
+	if indexedResp := getRepoContentsFromIndex(ctx, ref, treePath, false); indexedResp != nil {
+		return indexedResp, nil
 	}
 
 	entries, _, err := gitrepo.RemoteGetTreeForAPI(ctx, ctx.Repo.Repository, ref, treePath, false, 2000)
@@ -998,6 +1005,65 @@ func getRepoContentsRemote(ctx *context.APIContext, opts files_service.GetConten
 		})
 	}
 	return &api.ContentsExtResponse{DirContents: items}, nil
+}
+
+func getRepoContentsFromIndex(ctx *context.APIContext, ref, treePath string, includeSingleFileContent bool) *api.ContentsExtResponse {
+	if ref == "" {
+		return nil
+	}
+	exists, err := git_model.IsBranchExist(ctx, ctx.Repo.Repository.ID, ref)
+	if err != nil || !exists {
+		return nil
+	}
+	treePath = strings.Trim(treePath, "/")
+
+	if treePath != "" {
+		entry, err := git_model.FindBranchTreeEntryByPath(ctx, ctx.Repo.Repository.ID, ref, treePath)
+		if err == nil && entry != nil && entry.EntryType != "dir" {
+			resp := &api.ContentsResponse{
+				Name: entry.EntryName,
+				Path: treePath,
+				SHA:  entry.ObjectID,
+				Type: "file",
+				Size: entry.Size,
+			}
+			if includeSingleFileContent {
+				if blobResp, blobErr := gitrepo.RemoteGetBlobForAPI(ctx, ctx.Repo.Repository, ref, treePath, 2*1024*1024); blobErr == nil {
+					enc := "base64"
+					resp.Encoding = &enc
+					content := base64.StdEncoding.EncodeToString(blobResp.GetContent())
+					resp.Content = &content
+					resp.Size = blobResp.GetSize()
+				}
+			}
+			return &api.ContentsExtResponse{FileContents: resp}
+		}
+	}
+
+	entries, err := git_model.FindBranchTreeEntries(ctx, ctx.Repo.Repository.ID, ref, treePath)
+	if err != nil || len(entries) == 0 {
+		return nil
+	}
+	git_model.SortBranchTreeEntriesForListing(entries)
+	items := make([]*api.ContentsResponse, 0, len(entries))
+	for _, e := range entries {
+		entryPath := e.EntryName
+		if treePath != "" {
+			entryPath = path.Join(treePath, e.EntryName)
+		}
+		itemType := "file"
+		if e.EntryType == "dir" {
+			itemType = "dir"
+		}
+		items = append(items, &api.ContentsResponse{
+			Name: e.EntryName,
+			Path: entryPath,
+			SHA:  e.ObjectID,
+			Type: itemType,
+			Size: e.Size,
+		})
+	}
+	return &api.ContentsExtResponse{DirContents: items}
 }
 
 func gitObjectTypeToAPIType(t string) string {

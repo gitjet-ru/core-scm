@@ -324,10 +324,15 @@ func Diff(ctx *context.Context) {
 		ctx.NotFound(err)
 		return
 	}
-	diffShortStat, err := gitdiff.GetDiffShortStat(ctx, gitRepoStore, gitRepo, "", commitID)
-	if err != nil {
-		ctx.ServerError("GetDiffShortStat", err)
-		return
+	var diffShortStat *gitdiff.DiffShortStat
+	if !diff.IsIncomplete {
+		diffShortStat = gitdiff.ShortStatFromDiff(diff)
+	} else {
+		diffShortStat, err = gitdiff.GetDiffShortStat(ctx, gitRepoStore, gitRepo, "", commitID)
+		if err != nil {
+			ctx.ServerError("GetDiffShortStat", err)
+			return
+		}
 	}
 	ctx.Data["DiffShortStat"] = diffShortStat
 
@@ -363,9 +368,9 @@ func Diff(ctx *context.Context) {
 	ctx.Data["DiffBlobExcerptData"] = diffBlobExcerptData
 
 	if !fileOnly {
-		diffTree, err := gitdiff.GetDiffTree(ctx, gitRepo, false, parentCommitID, commitID)
+		diffTree, err := gitdiff.DiffTreeForSidebar(ctx, gitRepo, false, parentCommitID, commitID, diff)
 		if err != nil {
-			ctx.ServerError("GetDiffTree", err)
+			ctx.ServerError("DiffTreeForSidebar", err)
 			return
 		}
 

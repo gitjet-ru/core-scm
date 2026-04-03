@@ -269,25 +269,6 @@ func (ctx *APIContext) APIErrorNotFound(objs ...any) {
 // you can optional skip the IsEmpty check
 func ReferencesGitRepo(allowEmpty ...bool) func(ctx *APIContext) {
 	return func(ctx *APIContext) {
-		// In remote read mode, /contents endpoints should not depend on local mirror.
-		if gitrepo.UseRemoteReadBackendForAPI() &&
-			(strings.Contains(ctx.Req.URL.Path, "/contents") ||
-				strings.Contains(ctx.Req.URL.Path, "/contents-ext") ||
-				strings.Contains(ctx.Req.URL.Path, "/git/refs") ||
-				strings.Contains(ctx.Req.URL.Path, "/git/commits") ||
-				strings.Contains(ctx.Req.URL.Path, "/commits") ||
-				strings.Contains(ctx.Req.URL.Path, "/branches") ||
-				strings.Contains(ctx.Req.URL.Path, "/src/") ||
-				strings.Contains(ctx.Req.URL.Path, "/wiki") ||
-				strings.Contains(ctx.Req.URL.Path, "/raw/") ||
-				strings.Contains(ctx.Req.URL.Path, "/media/") ||
-				strings.Contains(ctx.Req.URL.Path, "/archive/") ||
-				strings.Contains(ctx.Req.URL.Path, "/tarball/") ||
-				strings.Contains(ctx.Req.URL.Path, "/zipball/") ||
-				strings.Contains(ctx.Req.URL.Path, "/compare/")) {
-			return
-		}
-
 		// Empty repository does not have reference information.
 		if ctx.Repo.Repository.IsEmpty && !(len(allowEmpty) != 0 && allowEmpty[0]) {
 			return
@@ -295,7 +276,16 @@ func ReferencesGitRepo(allowEmpty ...bool) func(ctx *APIContext) {
 
 		// For API calls.
 		if ctx.Repo.GitRepo == nil {
-			return
+			gitRepo, err := gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
+			if err != nil {
+				if errors.Is(err, util.ErrNotExist) {
+					ctx.APIErrorNotFound("unable to open git repository")
+				} else {
+					ctx.APIErrorInternal(err)
+				}
+				return
+			}
+			ctx.Repo.GitRepo = gitRepo
 		}
 	}
 }
@@ -311,7 +301,18 @@ func RepoRefForAPI(next http.Handler) http.Handler {
 		}
 
 		if ctx.Repo.GitRepo == nil {
-			panic("no GitRepo, forgot to call the middleware?") // it is a programming error
+			// Remote API read-path intentionally skips local mirror for a subset of endpoints.
+			// Resolve ref/tree path and commit id via git-storage instead of panicking.
+			if !gitrepo.UseRemoteReadBackendForAPI() {
+				panic("no GitRepo, forgot to call the middleware?") // it is a programming error
+			}
+			refName, _, _ := getRefNameLegacy(ctx.Base, ctx.Repo, ctx.PathParam("*"), ctx.FormTrim("ref"))
+			ctx.Repo.CommitID = refName
+			if commitInfo, err := gitrepo.RemoteGetCommitForAPI(ctx, ctx.Repo.Repository, refName); err == nil && strings.TrimSpace(commitInfo.GetId()) != "" {
+				ctx.Repo.CommitID = strings.TrimSpace(commitInfo.GetId())
+			}
+			next.ServeHTTP(w, req)
+			return
 		}
 
 		refName, refType, _ := getRefNameLegacy(ctx.Base, ctx.Repo, ctx.PathParam("*"), ctx.FormTrim("ref"))

@@ -195,6 +195,18 @@ func ParseCompareInfo(ctx *context.Context) *git_service.CompareInfo {
 	baseRepo := ctx.Repo.Repository
 	fileOnly := ctx.FormBool("file-only")
 
+	// In remote backend mode we intentionally skip opening local mirrors for some
+	// lightweight endpoints (incl. "/compare/"). Ensure GitRepo is available
+	// before we try to guess refs/commits from it.
+	if ctx.Repo.GitRepo == nil {
+		gitRepo, _, err := gitrepo.RepositoryFromContextOrOpen(ctx.Req.Context(), ctx.Repo.Repository)
+		if err != nil {
+			ctx.ServerError("OpenRepository", err)
+			return nil
+		}
+		ctx.Repo.GitRepo = gitRepo
+	}
+
 	// 1 Parse compare router param
 	compareReq := common.ParseCompareRouterParam(ctx.PathParam("*"))
 
@@ -517,10 +529,15 @@ func PrepareCompareDiff(
 		ctx.ServerError("GetDiff", err)
 		return false
 	}
-	diffShortStat, err := gitdiff.GetDiffShortStat(ctx, ci.HeadRepo, ci.HeadGitRepo, beforeCommitID, headCommitID)
-	if err != nil {
-		ctx.ServerError("GetDiffShortStat", err)
-		return false
+	var diffShortStat *gitdiff.DiffShortStat
+	if !diff.IsIncomplete {
+		diffShortStat = gitdiff.ShortStatFromDiff(diff)
+	} else {
+		diffShortStat, err = gitdiff.GetDiffShortStat(ctx, ci.HeadRepo, ci.HeadGitRepo, beforeCommitID, headCommitID)
+		if err != nil {
+			ctx.ServerError("GetDiffShortStat", err)
+			return false
+		}
 	}
 	ctx.Data["DiffShortStat"] = diffShortStat
 	ctx.Data["Diff"] = diff
@@ -532,9 +549,9 @@ func PrepareCompareDiff(
 	ctx.Data["DiffNotAvailable"] = diffShortStat.NumFiles == 0
 
 	if !fileOnly {
-		diffTree, err := gitdiff.GetDiffTree(ctx, ci.HeadGitRepo, false, beforeCommitID, headCommitID)
+		diffTree, err := gitdiff.DiffTreeForSidebar(ctx, ci.HeadGitRepo, false, beforeCommitID, headCommitID, diff)
 		if err != nil {
-			ctx.ServerError("GetDiffTree", err)
+			ctx.ServerError("DiffTreeForSidebar", err)
 			return false
 		}
 

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"path"
+	"sort"
 	"strings"
 
 	pull_model "github.com/gitjet-ru/core-scm/models/pull"
@@ -139,7 +140,31 @@ func transformDiffTreeForWeb(renderedIconPool *fileicon.RenderedIconPool, diffTr
 	for _, node := range dft.TreeRoot.Children {
 		mergeSingleDir(node)
 	}
+	sortWebDiffFileTree(&dft.TreeRoot)
 	return dft
+}
+
+// webDiffTreeEntrySortsBeforeFiles matches git tree listing: trees and submodules first, then blobs
+// (see git.Entries.CustomSort / BranchTreeEntrySortsBeforeBlobs).
+func webDiffTreeEntrySortsBeforeFiles(it *WebDiffFileItem) bool {
+	return it.EntryMode == "tree" || it.EntryMode == "commit"
+}
+
+func sortWebDiffFileTree(node *WebDiffFileItem) {
+	if len(node.Children) == 0 {
+		return
+	}
+	sort.SliceStable(node.Children, func(i, j int) bool {
+		ci, cj := node.Children[i], node.Children[j]
+		di, dj := webDiffTreeEntrySortsBeforeFiles(ci), webDiffTreeEntrySortsBeforeFiles(cj)
+		if di != dj {
+			return di
+		}
+		return base.NaturalSortCompare(ci.DisplayName, cj.DisplayName) < 0
+	})
+	for _, ch := range node.Children {
+		sortWebDiffFileTree(ch)
+	}
 }
 
 func TreeViewNodes(ctx *context.Context) {

@@ -1,7 +1,10 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7-labs
+# Full image: webpack + go inside Docker (~15–25 min cold). Fast image: see target gitea-fast + docker-compose.local-fast.yml
+#
 # Build frontend on the native platform to avoid QEMU-related issues with esbuild/webpack
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26-alpine3.23 AS frontend-build
-RUN apk --no-cache add build-base git nodejs pnpm
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache build-base git nodejs pnpm
 WORKDIR /src
 ARG SRC_ROOT=.
 COPY ${SRC_ROOT}/package.json ${SRC_ROOT}/pnpm-lock.yaml ${SRC_ROOT}/.npmrc ./
@@ -9,16 +12,16 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --froze
 COPY --exclude=.git/ ${SRC_ROOT}/ ./
 RUN make frontend
 
-# Build backend for each target platform
-FROM docker.io/library/golang:1.26-alpine3.23 AS build-env
+# Shared backend prep (no assets, no compile yet)
+FROM docker.io/library/golang:1.26-alpine3.23 AS build-env-base
 
 ARG GITEA_VERSION
 ARG TAGS="sqlite sqlite_unlock_notify"
 ENV TAGS="bindata timetzdata $TAGS"
 ARG CGO_EXTRA_CFLAGS
 
-# Build deps
-RUN apk --no-cache add \
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache \
     build-base \
     git
 
@@ -31,6 +34,10 @@ RUN go mod download
 # Use COPY instead of bind mount as read-only one breaks makefile state tracking and read-write one needs binary to be moved as it's discarded.
 # ".git" directory is mounted separately later only for version data extraction.
 COPY --exclude=.git/ ${SRC_ROOT}/ ./
+
+# Default path: assets from webpack stage above
+FROM build-env-base AS build-env
+ARG SRC_ROOT=.
 COPY --from=frontend-build /src/public/assets public/assets
 
 # Build gitea, .git mount is required for version data
@@ -47,11 +54,28 @@ RUN chmod 755 /tmp/local/usr/bin/entrypoint \
               /tmp/local/etc/s6/.s6-svscan/* \
               /go/src/github.com/gitjet-ru/core-scm/gitea
 
+# Fast local path: skip webpack in Docker — build assets on host first: (cd core-scm && make frontend)
+# Build: docker compose ... -f docker-compose.local-fast.yml build gitea
+#   or: docker build --build-context prebuilt=./core-scm/public/assets --target gitea-fast ...
+FROM build-env-base AS build-env-fast
+ARG SRC_ROOT=.
+COPY --from=prebuilt / public/assets
+RUN --mount=type=cache,target="/root/.cache/go-build" \
+    make backend
+COPY ${SRC_ROOT}/docker/root /tmp/local
+RUN chmod 755 /tmp/local/usr/bin/entrypoint \
+              /tmp/local/usr/local/bin/* \
+              /tmp/local/etc/s6/gitea/* \
+              /tmp/local/etc/s6/openssh/* \
+              /tmp/local/etc/s6/.s6-svscan/* \
+              /go/src/github.com/gitjet-ru/core-scm/gitea
+
 FROM docker.io/library/alpine:3.23 AS gitea
 
 EXPOSE 22 3000
 
-RUN apk --no-cache add \
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache \
     bash \
     ca-certificates \
     curl \
@@ -85,6 +109,48 @@ ENV GITEA_CUSTOM=/data/gitea
 VOLUME ["/data"]
 
 # HINT: HEALTH-CHECK-ENDPOINT: don't use HEALTHCHECK, search this hint keyword for more information
+ENTRYPOINT ["/usr/bin/entrypoint"]
+CMD ["/usr/bin/s6-svscan", "/etc/s6"]
+
+# Same runtime as gitea; binary/assets from build-env-fast (host-built public/assets)
+FROM docker.io/library/alpine:3.23 AS gitea-fast
+
+EXPOSE 22 3000
+
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add --no-cache \
+    bash \
+    ca-certificates \
+    curl \
+    gettext \
+    git \
+    linux-pam \
+    openssh \
+    s6 \
+    sqlite \
+    su-exec \
+    gnupg
+
+RUN addgroup \
+    -S -g 1000 \
+    git && \
+  adduser \
+    -S -H -D \
+    -h /data/git \
+    -s /bin/bash \
+    -u 1000 \
+    -G git \
+    git && \
+  echo "git:*" | chpasswd -e
+
+COPY --from=build-env-fast /tmp/local /
+COPY --from=build-env-fast /go/src/github.com/gitjet-ru/core-scm/gitea /app/gitea/gitea
+
+ENV USER=git
+ENV GITEA_CUSTOM=/data/gitea
+
+VOLUME ["/data"]
+
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/usr/bin/s6-svscan", "/etc/s6"]
 
