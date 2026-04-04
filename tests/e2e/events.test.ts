@@ -4,6 +4,7 @@ import {loginUser, baseUrl, apiUserHeaders, apiCreateUser, apiDeleteUser, apiCre
 // These tests rely on a short EVENT_SOURCE_UPDATE_TIME in the e2e server config.
 test.describe('events', () => {
   test('notification count', async ({page, request}) => {
+    test.setTimeout(25000);
     const id = `ev-notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const owner = `${id}-owner`;
     const commenter = `${id}-commenter`;

@@ -546,6 +546,12 @@ playwright: deps-frontend
 test-e2e: playwright $(EXECUTABLE_E2E)
 	@EXECUTABLE=$(EXECUTABLE_E2E) ./tools/test-e2e.sh $(GITEA_TEST_E2E_FLAGS)
 
+# Run Playwright e2e against a running deployment (post-deploy / staging). Does not start gitea-e2e.
+# Requires: GITEA_TEST_E2E_URL. Usually also GITEA_TEST_E2E_USER, GITEA_TEST_E2E_PASSWORD, GITEA_TEST_E2E_DOMAIN.
+.PHONY: test-e2e-deployed
+test-e2e-deployed: playwright
+	@$(NODE_VARS) bash ./tools/test-e2e-deployed.sh $(GITEA_TEST_E2E_FLAGS)
+
 .PHONY: bench-sqlite
 bench-sqlite: bench-pgsql ## deprecated alias
 	@true

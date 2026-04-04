@@ -55,6 +55,16 @@ func checkOutdatedBranch(ctx *context.Context) {
 	}
 
 	if dbBranch.CommitID != commit.ID.String() {
+		// Stale branch row (merge, import, or missed hook) — try to align DB with git before warning about hooks.
+		if _, syncErr := repo_module.SyncRepoBranches(ctx, ctx.Repo.Repository.ID, 0); syncErr != nil {
+			log.Error("checkOutdatedBranch SyncRepoBranches: %v", syncErr)
+		} else if dbBranch, err = git_model.GetBranch(ctx, ctx.Repo.Repository.ID, ctx.Repo.BranchName); err != nil {
+			log.Error("GetBranch after sync: %v", err)
+			return
+		}
+	}
+
+	if dbBranch.CommitID != commit.ID.String() {
 		ctx.Flash.Warning(ctx.Tr("repo.error.broken_git_hook", "https://docs.gitea.com/help/faq#push-hook--webhook--actions-arent-running"), true)
 	}
 }

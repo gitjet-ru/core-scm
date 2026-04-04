@@ -193,6 +193,7 @@ Here's how to run the test suite:
 |``make test[\#SpecificTestName]``            |  run unit test(s)                                        |                                             |
 |``make test-sqlite[\#SpecificTestName]``     |  run [integration](tests/integration) test(s) for SQLite | [More details](tests/integration/README.md) |
 |``make test-e2e``                            |  run [end-to-end](tests/e2e) test(s) using Playwright    |                                             |
+|``make test-e2e-deployed``                   |  run the same Playwright suite against an already running instance (`GITEA_TEST_E2E_URL` required) | |
 
 - E2E test environment variables
 
@@ -200,6 +201,8 @@ Here's how to run the test suite:
 | :------------------------ | :---------------------------------------------------------------- |
 | ``GITEA_TEST_E2E_DEBUG``  | When set, show Gitea server output                                |
 | ``GITEA_TEST_E2E_FLAGS``  | Additional flags passed to Playwright, for example ``--ui``       |
+| ``GITEA_TEST_E2E_URL``     | Base URL for ``make test-e2e-deployed`` (e.g. ``https://git.example.com``) |
+| ``GITEA_TEST_E2E_DB_*``    | Optional overrides for ``tools/test-e2e.sh`` Postgres (``HOST``, ``NAME``, ``USER``, ``PASSWD``, ``SSL_MODE``) |
 
 ## Translation
 

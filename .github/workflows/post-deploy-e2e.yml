@@ -1,0 +1,59 @@
+# Post-deploy UI e2e (Playwright) against a running instance. Non-blocking: failures do not fail the job by default.
+# Configure repository secrets: GITEA_TEST_E2E_USER, GITEA_TEST_E2E_PASSWORD, GITEA_TEST_E2E_DOMAIN (optional; tests default domain if unset).
+# Trigger manually with target URL, or call from another workflow after deploy (workflow_call + secrets: inherit).
+
+name: post-deploy-e2e
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: Base URL of the deployed instance (no trailing slash)
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      target_url:
+        description: Base URL of the deployed instance (no trailing slash)
+        required: true
+        type: string
+
+concurrency:
+  group: post-deploy-e2e-${{ github.repository }}-${{ inputs.target_url }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-deployed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install frontend deps and Playwright browsers
+        run: |
+          make deps-frontend
+          GITHUB_ACTIONS=1 make playwright
+      - name: Run Playwright against deployment
+        id: playwright
+        continue-on-error: true
+        env:
+          FORCE_COLOR: 1
+          GITHUB_ACTIONS: 1
+          GITEA_TEST_E2E_URL: ${{ inputs.target_url }}
+          GITEA_TEST_E2E_USER: ${{ secrets.GITEA_TEST_E2E_USER }}
+          GITEA_TEST_E2E_PASSWORD: ${{ secrets.GITEA_TEST_E2E_PASSWORD }}
+          GITEA_TEST_E2E_DOMAIN: ${{ secrets.GITEA_TEST_E2E_DOMAIN }}
+        run: make test-e2e-deployed
+      - name: Upload Playwright output on failure
+        if: steps.playwright.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-deploy-e2e-output
+          path: tests/e2e-output/
+          if-no-files-found: ignore

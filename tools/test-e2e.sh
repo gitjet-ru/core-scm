@@ -18,10 +18,19 @@ trap cleanup EXIT
 
 # Write config file for isolated instance
 mkdir -p "$WORK_DIR/custom/conf"
+DB_HOST="${GITEA_TEST_E2E_DB_HOST:-127.0.0.1:5432}"
+DB_NAME="${GITEA_TEST_E2E_DB_NAME:-gitea}"
+DB_USER="${GITEA_TEST_E2E_DB_USER:-gitea}"
+DB_PASSWD="${GITEA_TEST_E2E_DB_PASSWD:-gitea}"
+DB_SSL_MODE="${GITEA_TEST_E2E_DB_SSL_MODE:-disable}"
 cat > "$WORK_DIR/custom/conf/app.ini" <<EOF
 [database]
-DB_TYPE = sqlite3
-PATH = $WORK_DIR/data/gitea.db
+DB_TYPE = postgres
+HOST = $DB_HOST
+NAME = $DB_NAME
+USER = $DB_USER
+PASSWD = $DB_PASSWD
+SSL_MODE = $DB_SSL_MODE
 
 [server]
 HTTP_PORT = $FREE_PORT
@@ -76,7 +85,7 @@ done
 echo "Gitea server is ready at $E2E_URL"
 
 GITEA_TEST_E2E_DOMAIN="e2e.gitea.com"
-GITEA_TEST_E2E_USER="e2e-admin"
+GITEA_TEST_E2E_USER="e2e-admin-${FREE_PORT}"
 GITEA_TEST_E2E_PASSWORD="password"
 GITEA_TEST_E2E_EMAIL="$GITEA_TEST_E2E_USER@$GITEA_TEST_E2E_DOMAIN"
 

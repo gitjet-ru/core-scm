@@ -1,5 +1,7 @@
-# Локальный запуск: single PostgreSQL 17 + образ core-scm.
-# Сборка: docker compose up -d --build
+# Локальный запуск: single PostgreSQL 17 + образ core-scm (без сервиса git-storage).
+# Сборка из корня монорепы: context = родитель каталога core-scm, чтобы Dockerfile видел
+# соседний git-storage (Go replace), см. Dockerfile build-env-base.
+# Запуск из каталога core-scm: docker compose up -d --build
 # UI: http://localhost:3000/
 
 services:
@@ -23,10 +25,12 @@ services:
 
   gitea:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: core-scm/Dockerfile
+      target: gitea
       args:
         TAGS: ""
+        SRC_ROOT: core-scm
     restart: unless-stopped
     depends_on:
       postgres:

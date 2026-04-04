@@ -1,6 +1,10 @@
 # syntax=docker/dockerfile:1.7-labs
 # Full image: webpack + go inside Docker (~15–25 min cold). Fast image: see target gitea-fast + docker-compose.local-fast.yml
 #
+# Build context must include the sibling Go module github.com/gitjet-ru/git-storage (go.mod replace => ../git-storage).
+# docker-compose.yml uses context: .. (monorepo root: core-scm + git-storage) and args SRC_ROOT=core-scm — no git-storage *service* required.
+# Manual: docker build -f core-scm/Dockerfile --target gitea -t core-scm:gitea --build-arg SRC_ROOT=core-scm ..
+#
 # Build frontend on the native platform to avoid QEMU-related issues with esbuild/webpack
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26-alpine3.23 AS frontend-build
 RUN --mount=type=cache,target=/var/cache/apk \

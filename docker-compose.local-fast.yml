@@ -3,11 +3,14 @@
 # Prerequisite (once per frontend change):
 #   cd core-scm && make frontend
 #
-# Build + run (with git-storage overlay):
-#   docker compose -f docker-compose.yml -f docker-compose.git-storage.yml -f docker-compose.local-fast.yml build gitea
-#   docker compose -f docker-compose.yml -f docker-compose.git-storage.yml -f docker-compose.local-fast.yml up -d
+# Build + run (default stack, без сервиса git-storage):
+#   docker compose -f docker-compose.yml -f docker-compose.local-fast.yml build gitea
+#   docker compose -f docker-compose.yml -f docker-compose.local-fast.yml up -d
 #
-# "prebuilt" must point at generated assets (same as .dockerignore excludes from main context).
+# Optional remote-storage overlay (отдельный контейнер git-storage):
+#   docker compose -f docker-compose.yml -f docker-compose.git-storage.yml -f docker-compose.local-fast.yml build gitea
+#
+# "prebuilt" is relative to this compose file: core-scm/public/assets after make frontend.
 services:
   gitea:
     build:

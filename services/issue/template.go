@@ -118,6 +118,9 @@ func ParseTemplatesFromDefaultBranch(repo *repo.Repository, gitRepo *git.Reposit
 	if repo.IsEmpty {
 		return ret
 	}
+	if gitRepo == nil {
+		return ret
+	}
 
 	commit, err := gitRepo.GetBranchCommit(repo.DefaultBranch)
 	if err != nil {
@@ -159,6 +162,9 @@ func GetTemplateConfigFromDefaultBranch(repo *repo.Repository, gitRepo *git.Repo
 	if repo.IsEmpty {
 		return GetDefaultTemplateConfig(), nil
 	}
+	if gitRepo == nil {
+		return GetDefaultTemplateConfig(), nil
+	}
 
 	commit, err := gitRepo.GetBranchCommit(repo.DefaultBranch)
 	if err != nil {
@@ -179,6 +185,9 @@ func GetTemplateConfigFromDefaultBranch(repo *repo.Repository, gitRepo *git.Repo
 }
 
 func HasTemplatesOrContactLinks(repo *repo.Repository, gitRepo *git.Repository) bool {
+	if gitRepo == nil {
+		return false
+	}
 	ret := ParseTemplatesFromDefaultBranch(repo, gitRepo)
 	if len(ret.IssueTemplates) > 0 {
 		return true

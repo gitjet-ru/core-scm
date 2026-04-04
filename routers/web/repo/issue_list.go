@@ -21,6 +21,7 @@ import (
 	user_model "github.com/gitjet-ru/core-scm/models/user"
 	issue_indexer "github.com/gitjet-ru/core-scm/modules/indexer/issues"
 	db_indexer "github.com/gitjet-ru/core-scm/modules/indexer/issues/db"
+	"github.com/gitjet-ru/core-scm/modules/gitrepo"
 	"github.com/gitjet-ru/core-scm/modules/log"
 	"github.com/gitjet-ru/core-scm/modules/optional"
 	"github.com/gitjet-ru/core-scm/modules/setting"
@@ -746,7 +747,19 @@ func Issues(ctx *context.Context) {
 		}
 		ctx.Data["Title"] = ctx.Tr("repo.issues")
 		ctx.Data["PageIsIssueList"] = true
-		ctx.Data["NewIssueChooseTemplate"] = issue_service.HasTemplatesOrContactLinks(ctx.Repo.Repository, ctx.Repo.GitRepo)
+		if ctx.Repo.GitRepo == nil {
+			gitRepo, err := gitrepo.RepositoryFromRequestContextOrOpen(ctx, ctx.Repo.Repository)
+			if err != nil {
+				log.Error("Failed to open GitRepo for issue list: %v", err)
+			} else {
+				ctx.Repo.GitRepo = gitRepo
+			}
+		}
+		newIssueChoose := false
+		if ctx.Repo.GitRepo != nil {
+			newIssueChoose = issue_service.HasTemplatesOrContactLinks(ctx.Repo.Repository, ctx.Repo.GitRepo)
+		}
+		ctx.Data["NewIssueChooseTemplate"] = newIssueChoose
 	}
 
 	prepareIssueFilterAndList(ctx, ctx.FormInt64("milestone"), ctx.FormInt64("project"), optional.Some(isPullList))

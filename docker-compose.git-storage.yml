@@ -40,6 +40,7 @@ services:
       dockerfile: core-scm/Dockerfile
       target: gitea
       args:
+        TAGS: ""
         SRC_ROOT: core-scm
     depends_on:
       git-storage:
