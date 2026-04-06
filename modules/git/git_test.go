@@ -6,7 +6,7 @@ package git
 import (
 	"testing"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/gitjet-ru/core-scm/modules/semver"
 	"github.com/stretchr/testify/assert"
 )
 

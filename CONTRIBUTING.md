@@ -191,7 +191,7 @@ Here's how to run the test suite:
 |  Command                                    | Action                                                   |                                             |
 | :------------------------------------------ | :------------------------------------------------------- | ------------------------------------------- |
 |``make test[\#SpecificTestName]``            |  run unit test(s)                                        |                                             |
-|``make test-sqlite[\#SpecificTestName]``     |  run [integration](tests/integration) test(s) for SQLite | [More details](tests/integration/README.md) |
+|``make test-pgsql[\#SpecificTestName]``      |  run [integration](tests/integration) test(s) for PostgreSQL | [More details](tests/integration/README.md) |
 |``make test-e2e``                            |  run [end-to-end](tests/e2e) test(s) using Playwright    |                                             |
 |``make test-e2e-deployed``                   |  run the same Playwright suite against an already running instance (`GITEA_TEST_E2E_URL` required) | |
 

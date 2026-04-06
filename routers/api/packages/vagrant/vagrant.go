@@ -20,7 +20,7 @@ import (
 	"github.com/gitjet-ru/core-scm/services/context"
 	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/gitjet-ru/core-scm/modules/semver"
 )
 
 func apiError(ctx *context.Context, status int, obj any) {

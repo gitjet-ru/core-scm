@@ -727,7 +727,7 @@ been added to each release, please refer to the [blog](https://blog.gitea.com).
   * Only git operations should update last changed of a repository (#34388) #34427
   * Fix comment textarea scroll issue in Firefox (#34438) #34446
   * Fix repo broken check (#34444) #34452
-  * Fix remove org user failure on mssql (#34449) #34453
+  * Fix remove org user failure on a specific database backend (#34449) #34453
   * Fix Workflow run Not Found page (#34459) #34466
   * When updating comment, if the content is the same, just return and not update the database (#34422) #34464
   * Fix project board view (#34470) #34475
@@ -1568,7 +1568,7 @@ been added to each release, please refer to the [blog](https://blog.gitea.com).
   * Include collaboration repositories on dashboard source/forks/mirrors list (#31946) (#32122)
   * Add null check for responseData.invalidTopics (#32212) (#32217)
 * TESTING
-  * Fix mssql ci with a new mssql version on ci (#32094)
+  * Fix DB CI with a new backend version on CI (#32094)
 * MISC
   * Upgrade some dependencies include minio-go (#32166)
   * Add bin to Composer Metadata (#32099) (#32106)
@@ -1717,7 +1717,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Remember log in for a month by default (#30150)
   * Breaking summary for template refactoring (#29395)
     * All custom templates need to follow these changes
-  * Recommend/convert to use case-sensitive collation for MySQL/MSSQL (#28662)
+  * Recommend/convert to use case-sensitive collation for SQL backend/SQL backend (#28662)
   * Make offline mode as default to not connect external avatar service by default (#28548)
   * Include public repos in the doer's dashboard for issue search (#28304)
   * Use restricted sanitizer for repository description (#28141)
@@ -1725,7 +1725,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Enhanced auth token / remember me (#27606)
   * Rename the default themes to `gitea-light`, `gitea-dark`, `gitea-auto` (#27419)
     * If you didn't see the new themes, please remove the `[ui].THEMES` config option from `app.ini`
-  * Require MySQL 8.0, PostgreSQL 12, MSSQL 2012 (#27337)
+  * Require SQL backend 8.0, PostgreSQL 12, SQL backend 2012 (#27337)
 * FEATURES
   * Allow everyone to read or write a wiki by a repo unit setting (#30495)
   * Use raw Wiki links for non-renderable Wiki files (#30273)
@@ -1800,7 +1800,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Include resource state events in Gitlab downloads (#29382)
   * Properly migrate target branch change GitLab comment (#29340)
   * Recolor dark theme to blue shade (#29283)
-  * Partially enable MSSQL case-sensitive collation support (#29238)
+  * Partially enable SQL backend case-sensitive collation support (#29238)
   * Auto-update the system status in the admin dashboard (#29163)
   * Integrate alpine `noarch` packages into other architectures index (#29137)
   * Document how the TOC election process works (#29135)
@@ -1904,7 +1904,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Update actions variables documents (#30394) (#30405)
 * MISC
   * Update katex to 0.16.10 (#30089)
-  * Upgrade go-sqlite to v1.14.22 (#30462)
+  * Upgrade embedded DB driver dependency to v1.14.22 (#30462)
 
 ## [1.21.10](https://github.com/go-gitea/gitea/releases/tag/v1.21.10) - 2024-03-25
 
@@ -2068,7 +2068,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Prevent anonymous container access if `RequireSignInView` is enabled (#28877) (#28882)
   * Update go dependencies and fix go-git (#28893) (#28934)
 * BUGFIXES
-  * Revert "Speed up loading the dashboard on mysql/mariadb (#28546)" (#29006) (#29007)
+  * Revert "Speed up loading the dashboard on certain SQL backends (#28546)" (#29006) (#29007)
   * Fix an actions schedule bug (#28942) (#28999)
   * Fix update enable_prune even if mirror_interval is not provided (#28905) (#28929)
   * Fix uploaded artifacts should be overwritten (#28726) backport v1.21 (#28832)
@@ -2134,7 +2134,7 @@ Key highlights of this release encompass significant changes categorized under `
 * ENHANCEMENTS
   * Rework markup link rendering (#26745) (#28803)
   * Modernize merge button (#28140) (#28786)
-  * Speed up loading the dashboard on mysql/mariadb (#28546) (#28784)
+  * Speed up loading the dashboard on certain SQL backends (#28546) (#28784)
   * Assign pull request to project during creation (#28227) (#28775)
   * Show description as tooltip instead of title for labels (#28754) (#28766)
   * Make template `DateTime` show proper tooltip (#28677) (#28683)
@@ -2186,7 +2186,7 @@ Key highlights of this release encompass significant changes categorized under `
 * BUGFIXES
   * Fix margin in server signed signature verification view (#28379) (#28381)
   * Fix object does not exist error when checking citation file (#28314) (#28369)
-  * Use `filepath` instead of `path` to create SQLite3 database file (#28374) (#28378)
+  * Use `filepath` instead of `path` to create embedded DB database file (#28374) (#28378)
   * Fix the runs will not be displayed bug when the main branch have no workflows but other branches have (#28359) (#28365)
   * Handle repository.size column being NULL in migration v263 (#28336) (#28363)
   * Convert git commit summary to valid UTF8. (#28356) (#28358)
@@ -2250,7 +2250,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Refactor to use urfave/cli/v2 (#25959)
   * Move public asset files to the proper directory (#25907)
   * Remove commit status running and warning to align GitHub (#25839) (partially reverted: Restore warning commit status (#27504) (#27529))
-  * Remove "CHARSET" config option for MySQL, always use "utf8mb4" (#25413)
+  * Remove "CHARSET" config option for SQL backend, always use "utf8mb4" (#25413)
   * Set SSH_AUTHORIZED_KEYS_BACKUP to false (#25412)
 * FEATURES
   * User details page (#26713)
@@ -2793,7 +2793,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Bypass MariaDB performance bug of the "IN" sub-query, fix incorrect IssueIndex (#26279) (#26368)
   * Fix incorrect CLI exit code and duplicate error message (#26346) (#26347)
   * Prevent newline errors with Debian packages (#26332) (#26342)
-  * Fix bug with sqlite load read (#26305) (#26339)
+  * Fix bug with embedded DB read load (#26305) (#26339)
   * Make git batch operations use parent context timeout instead of default timeout (#26325) (#26330)
   * Support getting changed files when commit ID is `EmptySHA` (#26290) (#26316)
   * Clarify the logger's MODE config option (#26267) (#26281)
@@ -3418,7 +3418,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Fix input `line-height` cutting off `g` (#25334) (#25533)
   * Clarify the reason why the user can't add a new email if there is a pending activation (#25509) (#25514)
   * Improve loadprojects for issue list (#25468) (#25493)
-  * Use "utf8mb4" for MySQL by default (#25432)
+  * Use "utf8mb4" for SQL backend by default (#25432)
   * Show outdated comments in files changed tab (#24936) (#25428)
   * Avoid polluting config file when "save" (#25395) (#25406)
   * Fix blank dir message when uploading files from web editor (#25391) (#25400)
@@ -3492,7 +3492,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Fix task list checkbox toggle to work with YAML front matter (#25184) (#25236)
   * Hide limited users if viewed by anonymous ghost (#25214) (#25224)
   * Add `WithPullRequest` for `actionsNotifier` (#25144) (#25196)
-  * Fix parallelly generating index failure with Mysql (#24567) (#25081)
+  * Fix parallelly generating index failure with SQL backend (#24567) (#25081)
   * GitLab migration: Sanitize response for reaction list (#25054) (#25059)
   * Fix users cannot visit issue attachment bug (#25019) (#25027)
   * Fix missing reference prefix of commits when sync mirror repository (#24994)
@@ -3582,7 +3582,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Fix incorrect server error content in RunnersList (#24118) (#24121)
   * Fix mismatch between hook events and github event types (#24048) (#24091)
 * BUILD
-  * Support converting varchar to nvarchar for mssql database (#24105) (#24168)
+  * Support converting varchar to nvarchar for SQL Server style databases (#24105) (#24168)
 
 ## [1.19.1](https://github.com/go-gitea/gitea/releases/tag/v1.19.1) - 2023-04-12
 
@@ -3942,7 +3942,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Pass `--global` when calling `git config --get`, for consistency with `git config --set` (#23157) (#23199)
   * Make `gitea serv` respect git binary home (#23138) (#23197)
   * Change button text for commenting and closing an issue at the same time (#23135) (#23182)
-  * Fix DBConsistency checks on MSSQL (#23132) (#23134)
+  * Fix DBConsistency checks on SQL backend (#23132) (#23134)
   * Show empty repos in Admin Repository Management page (#23114) (#23130)
   * Redirect to the commit page after applying patch (#23056) (#23127)
   * Fix nil context in RenderMarkdownToHtml (#23092) (#23108)
@@ -4483,7 +4483,7 @@ Key highlights of this release encompass significant changes categorized under `
   * Remove manual rollback for failed generated repositories (#20639) (#20762)
   * Use correct field name in npm template (#20675) (#20760)
   * Keep download count on Container tag overwrite (#20728) (#20735)
-  * Fix v220 migration to be compatible for MSSQL 2008 r2 (#20702) (#20707)
+  * Fix v220 migration to be compatible for SQL backend 2008 r2 (#20702) (#20707)
   * Use request timeout for git service rpc (#20689) (#20693)
   * Send correct NuGet status codes (#20647) (#20677)
   * Use correct context to get package content (#20673) (#20676)

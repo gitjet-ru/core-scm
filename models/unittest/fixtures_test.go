@@ -20,45 +20,6 @@ var NewFixturesLoaderVendor = func(e *xorm.Engine, opts unittest.FixturesOptions
 	return nil, nil //nolint:nilnil // no vendor fixtures loader configured
 }
 
-/*
-// the old code is kept here in case we are still interested in benchmarking the two implementations
-func init() {
-	NewFixturesLoaderVendor = func(e *xorm.Engine, opts unittest.FixturesOptions) (unittest.FixturesLoader, error) {
-		return NewFixturesLoaderVendorGoTestfixtures(e, opts)
-	}
-}
-
-func NewFixturesLoaderVendorGoTestfixtures(e *xorm.Engine, opts unittest.FixturesOptions) (*testfixtures.Loader, error) {
-	files, err := unittest.FixturesFileFullPaths(opts.Dir, opts.Files)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get fixtures files: %w", err)
-	}
-	var dialect string
-	switch e.Dialect().URI().DBType {
-	case schemas.POSTGRES:
-		dialect = "postgres"
-	case schemas.MYSQL:
-		dialect = "mysql"
-	case schemas.MSSQL:
-		dialect = "mssql"
-	case schemas.SQLITE:
-		dialect = "sqlite3"
-	default:
-		return nil, fmt.Errorf("unsupported RDBMS for integration tests: %q", e.Dialect().URI().DBType)
-	}
-	loaderOptions := []func(loader *testfixtures.Loader) error{
-		testfixtures.Database(e.DB().DB),
-		testfixtures.Dialect(dialect),
-		testfixtures.DangerousSkipTestDatabaseCheck(),
-		testfixtures.Files(files...),
-	}
-	if e.Dialect().URI().DBType == schemas.POSTGRES {
-		loaderOptions = append(loaderOptions, testfixtures.SkipResetSequences())
-	}
-	return testfixtures.New(loaderOptions...)
-}
-*/
-
 func TestMain(m *testing.M) {
 	setting.SetupGiteaTestEnv()
 	os.Exit(m.Run())

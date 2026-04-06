@@ -9268,8 +9268,6 @@
     "pkb": "database",
     "accdb": "database",
     "mdb": "database",
-    "sqlite": "database",
-    "sqlite3": "database",
     "pgsql": "database",
     "postgres": "database",
     "plpgsql": "database",

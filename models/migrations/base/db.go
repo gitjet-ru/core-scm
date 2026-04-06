@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/gitjet-ru/core-scm/modules/log"
@@ -82,13 +81,6 @@ func RecreateTable(sess *xorm.Session, bean any) error {
 		hasID = hasID || (column.IsPrimaryKey && column.IsAutoIncrement)
 	}
 
-	if hasID && setting.Database.Type.IsMSSQL() {
-		if _, err := sess.Exec(fmt.Sprintf("SET IDENTITY_INSERT `%s` ON", tempTableName)); err != nil {
-			log.Error("Unable to set identity insert for table %s. Error: %v", tempTableName, err)
-			return err
-		}
-	}
-
 	sqlStringBuilder := &strings.Builder{}
 	_, _ = sqlStringBuilder.WriteString("INSERT INTO `")
 	_, _ = sqlStringBuilder.WriteString(tempTableName)
@@ -136,68 +128,7 @@ func RecreateTable(sess *xorm.Session, bean any) error {
 		return err
 	}
 
-	if hasID && setting.Database.Type.IsMSSQL() {
-		if _, err := sess.Exec(fmt.Sprintf("SET IDENTITY_INSERT `%s` OFF", tempTableName)); err != nil {
-			log.Error("Unable to switch off identity insert for table %s. Error: %v", tempTableName, err)
-			return err
-		}
-	}
-
-	switch {
-	case setting.Database.Type.IsSQLite3():
-		// SQLite will drop all the constraints on the old table
-		if _, err := sess.Exec(fmt.Sprintf("DROP TABLE `%s`", tableName)); err != nil {
-			log.Error("Unable to drop old table %s. Error: %v", tableName, err)
-			return err
-		}
-
-		if err := sess.Table(tempTableName).DropIndexes(bean); err != nil {
-			log.Error("Unable to drop indexes on temporary table %s. Error: %v", tempTableName, err)
-			return err
-		}
-
-		if _, err := sess.Exec(fmt.Sprintf("ALTER TABLE `%s` RENAME TO `%s`", tempTableName, tableName)); err != nil {
-			log.Error("Unable to rename %s to %s. Error: %v", tempTableName, tableName, err)
-			return err
-		}
-
-		if err := sess.Table(tableName).CreateIndexes(bean); err != nil {
-			log.Error("Unable to recreate indexes on table %s. Error: %v", tableName, err)
-			return err
-		}
-
-		if err := sess.Table(tableName).CreateUniques(bean); err != nil {
-			log.Error("Unable to recreate uniques on table %s. Error: %v", tableName, err)
-			return err
-		}
-	case setting.Database.Type.IsMySQL():
-		// MySQL will drop all the constraints on the old table
-		if _, err := sess.Exec(fmt.Sprintf("DROP TABLE `%s`", tableName)); err != nil {
-			log.Error("Unable to drop old table %s. Error: %v", tableName, err)
-			return err
-		}
-
-		if err := sess.Table(tempTableName).DropIndexes(bean); err != nil {
-			log.Error("Unable to drop indexes on temporary table %s. Error: %v", tempTableName, err)
-			return err
-		}
-
-		// SQLite and MySQL will move all the constraints from the temporary table to the new table
-		if _, err := sess.Exec(fmt.Sprintf("ALTER TABLE `%s` RENAME TO `%s`", tempTableName, tableName)); err != nil {
-			log.Error("Unable to rename %s to %s. Error: %v", tempTableName, tableName, err)
-			return err
-		}
-
-		if err := sess.Table(tableName).CreateIndexes(bean); err != nil {
-			log.Error("Unable to recreate indexes on table %s. Error: %v", tableName, err)
-			return err
-		}
-
-		if err := sess.Table(tableName).CreateUniques(bean); err != nil {
-			log.Error("Unable to recreate uniques on table %s. Error: %v", tableName, err)
-			return err
-		}
-	case setting.Database.Type.IsPostgreSQL():
+	{
 		var originalSequences []string
 		type sequenceData struct {
 			LastValue int  `xorm:"'last_value'"`
@@ -285,20 +216,6 @@ func RecreateTable(sess *xorm.Session, bean any) error {
 				}
 			}
 		}
-	case setting.Database.Type.IsMSSQL():
-		// MSSQL will drop all the constraints on the old table
-		if _, err := sess.Exec(fmt.Sprintf("DROP TABLE `%s`", tableName)); err != nil {
-			log.Error("Unable to drop old table %s. Error: %v", tableName, err)
-			return err
-		}
-
-		// MSSQL sp_rename will move all the constraints from the temporary table to the new table
-		if _, err := sess.Exec(fmt.Sprintf("sp_rename `%s`,`%s`", tempTableName, tableName)); err != nil {
-			log.Error("Unable to rename %s to %s. Error: %v", tempTableName, tableName, err)
-			return err
-		}
-	default:
-		log.Fatal("Unrecognized DB")
 	}
 	return nil
 }
@@ -311,88 +228,6 @@ func DropTableColumns(sess *xorm.Session, tableName string, columnNames ...strin
 	// TODO: This will not work if there are foreign keys
 
 	switch {
-	case setting.Database.Type.IsSQLite3():
-		// First drop the indexes on the columns
-		res, errIndex := sess.Query(fmt.Sprintf("PRAGMA index_list(`%s`)", tableName))
-		if errIndex != nil {
-			return errIndex
-		}
-		for _, row := range res {
-			indexName := row["name"]
-			indexRes, err := sess.Query(fmt.Sprintf("PRAGMA index_info(`%s`)", indexName))
-			if err != nil {
-				return err
-			}
-			if len(indexRes) != 1 {
-				continue
-			}
-			indexColumn := string(indexRes[0]["name"])
-			for _, name := range columnNames {
-				if name == indexColumn {
-					_, err := sess.Exec(fmt.Sprintf("DROP INDEX `%s`", indexName))
-					if err != nil {
-						return err
-					}
-				}
-			}
-		}
-
-		// Here we need to get the columns from the original table
-		sql := fmt.Sprintf("SELECT sql FROM sqlite_master WHERE tbl_name='%s' and type='table'", tableName)
-		res, err := sess.Query(sql)
-		if err != nil {
-			return err
-		}
-		tableSQL := string(res[0]["sql"])
-
-		// Get the string offset for column definitions: `CREATE TABLE ( column-definitions... )`
-		columnDefinitionsIndex := strings.Index(tableSQL, "(")
-		if columnDefinitionsIndex < 0 {
-			return errors.New("couldn't find column definitions")
-		}
-
-		// Separate out the column definitions
-		tableSQL = tableSQL[columnDefinitionsIndex:]
-
-		// Remove the required columnNames
-		for _, name := range columnNames {
-			tableSQL = regexp.MustCompile(regexp.QuoteMeta("`"+name+"`")+"[^`,)]*?[,)]").ReplaceAllString(tableSQL, "")
-		}
-
-		// Ensure the query is ended properly
-		tableSQL = strings.TrimSpace(tableSQL)
-		if tableSQL[len(tableSQL)-1] != ')' {
-			if tableSQL[len(tableSQL)-1] == ',' {
-				tableSQL = tableSQL[:len(tableSQL)-1]
-			}
-			tableSQL += ")"
-		}
-
-		// Find all the columns in the table
-		columns := regexp.MustCompile("`([^`]*)`").FindAllString(tableSQL, -1)
-
-		tableSQL = fmt.Sprintf("CREATE TABLE `new_%s_new` ", tableName) + tableSQL
-		if _, err := sess.Exec(tableSQL); err != nil {
-			return err
-		}
-
-		// Now restore the data
-		columnsSeparated := strings.Join(columns, ",")
-		insertSQL := fmt.Sprintf("INSERT INTO `new_%s_new` (%s) SELECT %s FROM %s", tableName, columnsSeparated, columnsSeparated, tableName)
-		if _, err := sess.Exec(insertSQL); err != nil {
-			return err
-		}
-
-		// Now drop the old table
-		if _, err := sess.Exec(fmt.Sprintf("DROP TABLE `%s`", tableName)); err != nil {
-			return err
-		}
-
-		// Rename the table
-		if _, err := sess.Exec(fmt.Sprintf("ALTER TABLE `new_%s_new` RENAME TO `%s`", tableName, tableName)); err != nil {
-			return err
-		}
-
 	case setting.Database.Type.IsPostgreSQL():
 		cols := ""
 		for _, col := range columnNames {
@@ -402,68 +237,6 @@ func DropTableColumns(sess *xorm.Session, tableName string, columnNames ...strin
 			cols += "DROP COLUMN `" + col + "` CASCADE"
 		}
 		if _, err := sess.Exec(fmt.Sprintf("ALTER TABLE `%s` %s", tableName, cols)); err != nil {
-			return fmt.Errorf("drop table `%s` columns %v: %w", tableName, columnNames, err)
-		}
-	case setting.Database.Type.IsMySQL():
-		// Drop indexes on columns first
-		sql := fmt.Sprintf("SHOW INDEX FROM %s WHERE column_name IN ('%s')", tableName, strings.Join(columnNames, "','"))
-		res, err := sess.Query(sql)
-		if err != nil {
-			return err
-		}
-		for _, index := range res {
-			indexName := index["column_name"]
-			if len(indexName) > 0 {
-				_, err := sess.Exec(fmt.Sprintf("DROP INDEX `%s` ON `%s`", indexName, tableName))
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		// Now drop the columns
-		cols := ""
-		for _, col := range columnNames {
-			if cols != "" {
-				cols += ", "
-			}
-			cols += "DROP COLUMN `" + col + "`"
-		}
-		if _, err := sess.Exec(fmt.Sprintf("ALTER TABLE `%s` %s", tableName, cols)); err != nil {
-			return fmt.Errorf("drop table `%s` columns %v: %w", tableName, columnNames, err)
-		}
-	case setting.Database.Type.IsMSSQL():
-		cols := ""
-		for _, col := range columnNames {
-			if cols != "" {
-				cols += ", "
-			}
-			cols += "`" + strings.ToLower(col) + "`"
-		}
-		sql := fmt.Sprintf("SELECT Name FROM sys.default_constraints WHERE parent_object_id = OBJECT_ID('%[1]s') AND parent_column_id IN (SELECT column_id FROM sys.columns WHERE LOWER(name) IN (%[2]s) AND object_id = OBJECT_ID('%[1]s'))",
-			tableName, strings.ReplaceAll(cols, "`", "'"))
-		constraints := make([]string, 0)
-		if err := sess.SQL(sql).Find(&constraints); err != nil {
-			return fmt.Errorf("find constraints: %w", err)
-		}
-		for _, constraint := range constraints {
-			if _, err := sess.Exec(fmt.Sprintf("ALTER TABLE `%s` DROP CONSTRAINT `%s`", tableName, constraint)); err != nil {
-				return fmt.Errorf("drop table `%s` default constraint `%s`: %w", tableName, constraint, err)
-			}
-		}
-		sql = fmt.Sprintf("SELECT DISTINCT Name FROM sys.indexes INNER JOIN sys.index_columns ON indexes.index_id = index_columns.index_id AND indexes.object_id = index_columns.object_id WHERE indexes.object_id = OBJECT_ID('%[1]s') AND index_columns.column_id IN (SELECT column_id FROM sys.columns WHERE LOWER(name) IN (%[2]s) AND object_id = OBJECT_ID('%[1]s'))",
-			tableName, strings.ReplaceAll(cols, "`", "'"))
-		constraints = make([]string, 0)
-		if err := sess.SQL(sql).Find(&constraints); err != nil {
-			return fmt.Errorf("find constraints: %w", err)
-		}
-		for _, constraint := range constraints {
-			if _, err := sess.Exec(fmt.Sprintf("DROP INDEX `%[2]s` ON `%[1]s`", tableName, constraint)); err != nil {
-				return fmt.Errorf("drop index `%[2]s` on `%[1]s`: %[3]w", tableName, constraint, err)
-			}
-		}
-
-		if _, err := sess.Exec(fmt.Sprintf("ALTER TABLE `%s` DROP COLUMN %s", tableName, cols)); err != nil {
 			return fmt.Errorf("drop table `%s` columns %v: %w", tableName, columnNames, err)
 		}
 	default:

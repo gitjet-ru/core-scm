@@ -18,7 +18,7 @@ import (
 	base "github.com/gitjet-ru/core-scm/modules/migration"
 	"github.com/gitjet-ru/core-scm/modules/structs"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/gitjet-ru/core-scm/modules/semver"
 )
 
 const OneDevRequiredVersion = "12.0.1"

@@ -1,6 +1,5 @@
 # Gitea
 
-[![](https://github.com/gitjet-ru/core-scm/actions/workflows/release-nightly.yml/badge.svg?branch=main)](https://github.com/gitjet-ru/core-scm/actions/workflows/release-nightly.yml?query=branch%3Amain "Release Nightly")
 [![](https://img.shields.io/discord/322538954119184384.svg?logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/Gitea "Join the Discord chat at https://discord.gg/Gitea")
 [![](https://goreportcard.com/badge/github.com/gitjet-ru/core-scm)](https://goreportcard.com/report/github.com/gitjet-ru/core-scm "Go Report Card")
 [![](https://pkg.go.dev/badge/github.com/gitjet-ru/core-scm?status.svg)](https://pkg.go.dev/github.com/gitjet-ru/core-scm "GoDoc")
@@ -38,10 +37,6 @@
 从源代码树的根目录运行：
 
     TAGS="bindata" make build
-
-如果需要 SQLite 支持：
-
-    TAGS="bindata sqlite sqlite_unlock_notify" make build
 
 `build` 目标分为两个子目标：
 

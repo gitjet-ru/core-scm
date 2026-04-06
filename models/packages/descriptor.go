@@ -35,7 +35,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/packages/vagrant"
 	"github.com/gitjet-ru/core-scm/modules/util"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/gitjet-ru/core-scm/modules/semver"
 )
 
 // PackagePropertyList is a list of package properties

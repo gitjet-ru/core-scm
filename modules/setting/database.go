@@ -142,11 +142,6 @@ func (t DatabaseType) IsPostgreSQL() bool {
 	return t == "postgres"
 }
 
-// IsMySQL, IsMSSQL, IsSQLite3 always return false (GitJet supports PostgreSQL only; kept for legacy migration code paths).
-func (DatabaseType) IsMySQL() bool   { return false }
-func (DatabaseType) IsMSSQL() bool   { return false }
-func (DatabaseType) IsSQLite3() bool { return false }
-
 // MustBePostgreSQL returns an error if the database type is not postgres.
 func (t DatabaseType) MustBePostgreSQL() error {
 	if t != "postgres" {

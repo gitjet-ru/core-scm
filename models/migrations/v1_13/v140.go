@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/gitjet-ru/core-scm/models/migrations/base"
-	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"xorm.io/xorm"
 )
@@ -36,9 +35,6 @@ func FixLanguageStatsToSaveSize(x *xorm.Engine) error {
 
 	// Delete language stat statuses
 	truncExpr := "TRUNCATE TABLE"
-	if setting.Database.Type.IsSQLite3() {
-		truncExpr = "DELETE FROM"
-	}
 
 	// Delete language stats
 	if _, err := x.Exec(truncExpr + " language_stat"); err != nil {

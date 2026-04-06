@@ -27,7 +27,6 @@ type FixtureItem struct {
 	sqlInserts      []string
 	sqlInsertArgs   [][]any
 
-	mssqlHasIdentityColumn bool
 }
 
 type fixturesLoaderInternal struct {
@@ -38,15 +37,6 @@ type fixturesLoaderInternal struct {
 	fixtures         map[string]*FixtureItem
 	quoteObject      func(string) string
 	paramPlaceholder func(idx int) string
-}
-
-func (f *fixturesLoaderInternal) mssqlTableHasIdentityColumn(db *sql.DB, tableName string) (bool, error) {
-	row := db.QueryRow(`SELECT COUNT(*) FROM sys.identity_columns WHERE OBJECT_ID = OBJECT_ID(?)`, tableName)
-	var count int
-	if err := row.Scan(&count); err != nil {
-		return false, err
-	}
-	return count > 0, nil
 }
 
 func (f *fixturesLoaderInternal) preprocessFixtureRow(row []map[string]any) (err error) {
@@ -66,13 +56,6 @@ func (f *fixturesLoaderInternal) preprocessFixtureRow(row []map[string]any) (err
 
 func (f *fixturesLoaderInternal) prepareFixtureItem(fixture *FixtureItem) (err error) {
 	fixture.tableNameQuoted = f.quoteObject(fixture.tableName)
-
-	if f.dbType == schemas.MSSQL {
-		fixture.mssqlHasIdentityColumn, err = f.mssqlTableHasIdentityColumn(f.db, fixture.tableName)
-		if err != nil {
-			return err
-		}
-	}
 
 	data, err := os.ReadFile(fixture.fileFullPath)
 	if err != nil {
@@ -120,17 +103,9 @@ func (f *fixturesLoaderInternal) loadFixtures(tx *sql.Tx, fixture *FixtureItem) 
 		}
 	}
 
-	_, err = tx.Exec("DELETE FROM " + fixture.tableNameQuoted) // sqlite3 doesn't support truncate
+	_, err = tx.Exec("DELETE FROM " + fixture.tableNameQuoted)
 	if err != nil {
 		return err
-	}
-
-	if fixture.mssqlHasIdentityColumn {
-		_, err = tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s ON", fixture.tableNameQuoted))
-		if err != nil {
-			return err
-		}
-		defer func() { _, err = tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF", fixture.tableNameQuoted)) }()
 	}
 	for i := range fixture.sqlInserts {
 		_, err = tx.Exec(fixture.sqlInserts[i], fixture.sqlInsertArgs[i]...)
@@ -201,18 +176,11 @@ func NewFixturesLoader(x *xorm.Engine, opts FixturesOptions) (FixturesLoader, er
 
 	f := &fixturesLoaderInternal{xormEngine: x, db: x.DB().DB, dbType: x.Dialect().URI().DBType, fixtures: fixtureItems}
 	switch f.dbType {
-	case schemas.SQLITE:
-		f.quoteObject = func(s string) string { return fmt.Sprintf(`"%s"`, s) }
-		f.paramPlaceholder = func(idx int) string { return "?" }
 	case schemas.POSTGRES:
 		f.quoteObject = func(s string) string { return fmt.Sprintf(`"%s"`, s) }
 		f.paramPlaceholder = func(idx int) string { return fmt.Sprintf(`$%d`, idx) }
-	case schemas.MYSQL:
-		f.quoteObject = func(s string) string { return fmt.Sprintf("`%s`", s) }
-		f.paramPlaceholder = func(idx int) string { return "?" }
-	case schemas.MSSQL:
-		f.quoteObject = func(s string) string { return fmt.Sprintf("[%s]", s) }
-		f.paramPlaceholder = func(idx int) string { return "?" }
+	default:
+		return nil, fmt.Errorf("unsupported RDBMS for integration tests: %q", f.dbType)
 	}
 
 	xormBeans, _ := db.NamesToBean()

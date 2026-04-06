@@ -3,26 +3,8 @@
 
 package v1_16
 
-import (
-	"github.com/gitjet-ru/core-scm/modules/setting"
-
-	"xorm.io/xorm"
-)
+import "xorm.io/xorm"
 
 func AlterIssueAndCommentTextFieldsToLongText(x *xorm.Engine) error {
-	sess := x.NewSession()
-	defer sess.Close()
-	if err := sess.Begin(); err != nil {
-		return err
-	}
-
-	if setting.Database.Type.IsMySQL() {
-		if _, err := sess.Exec("ALTER TABLE `issue` CHANGE `content` `content` LONGTEXT"); err != nil {
-			return err
-		}
-		if _, err := sess.Exec("ALTER TABLE `comment` CHANGE `content` `content` LONGTEXT, CHANGE `patch` `patch` LONGTEXT"); err != nil {
-			return err
-		}
-	}
-	return sess.Commit()
+	return nil
 }

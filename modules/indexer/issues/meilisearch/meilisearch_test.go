@@ -20,7 +20,7 @@ import (
 )
 
 func TestMeilisearchIndexer(t *testing.T) {
-	// The meilisearch instance started by pull-db-tests.yml > test-unit > services > meilisearch
+	// The meilisearch instance started by CI test services.
 	url := "http://meilisearch:7700"
 	key := "" // auth has been disabled in test environment
 

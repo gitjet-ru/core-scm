@@ -1,6 +1,5 @@
 # Gitea
 
-[![](https://github.com/gitjet-ru/core-scm/actions/workflows/release-nightly.yml/badge.svg?branch=main)](https://github.com/gitjet-ru/core-scm/actions/workflows/release-nightly.yml?query=branch%3Amain "Release Nightly")
 [![](https://img.shields.io/discord/322538954119184384.svg?logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/Gitea "Join the Discord chat at https://discord.gg/Gitea")
 [![](https://goreportcard.com/badge/github.com/gitjet-ru/core-scm)](https://goreportcard.com/report/github.com/gitjet-ru/core-scm "Go Report Card")
 [![](https://pkg.go.dev/badge/github.com/gitjet-ru/core-scm?status.svg)](https://pkg.go.dev/github.com/gitjet-ru/core-scm "GoDoc")
@@ -44,10 +43,6 @@ If you have any suggestions or would like to contribute to it, you can visit the
 From the root of the source tree, run:
 
     TAGS="bindata" make build
-
-or if SQLite support is required:
-
-    TAGS="bindata sqlite sqlite_unlock_notify" make build
 
 The `build` target is split into two sub-targets:
 

@@ -12,7 +12,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/json"
 	"github.com/gitjet-ru/core-scm/modules/validation"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/gitjet-ru/core-scm/modules/semver"
 )
 
 const PropertyYanked = "cargo.yanked"

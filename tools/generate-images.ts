@@ -1,8 +1,22 @@
 #!/usr/bin/env node
-import {initWasm, Resvg} from '@resvg/resvg-wasm';
+import {chromium} from '@playwright/test';
 import {optimize} from 'svgo';
 import {readFile, writeFile} from 'node:fs/promises';
 import {argv, exit} from 'node:process';
+
+async function renderPng(svg: string, size: number, bg?: boolean): Promise<Buffer> {
+  const browser = await chromium.launch({headless: true});
+  const page = await browser.newPage({viewport: {width: size, height: size}});
+  const escapedSvg = svg.replaceAll('</script>', '<\\/script>');
+  const background = bg ? 'white' : 'transparent';
+  await page.setContent(
+    `<html><body style="margin:0;background:${background};display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;">${escapedSvg}</body></html>`,
+    {waitUntil: 'load'},
+  );
+  const screenshot = await page.locator('body').screenshot({type: 'png'});
+  await browser.close();
+  return screenshot;
+}
 
 async function generate(svg: string, path: string, {size, bg}: {size: number, bg?: boolean}) {
   const outputFile = new URL(path, import.meta.url);
@@ -24,24 +38,14 @@ async function generate(svg: string, path: string, {size, bg}: {size: number, bg
     return;
   }
 
-  const resvgJS = new Resvg(svg, {
-    fitTo: {
-      mode: 'width',
-      value: size,
-    },
-    ...(bg && {background: 'white'}),
-  });
-  const renderedImage = resvgJS.render();
-  const pngBytes = renderedImage.asPng();
-  await writeFile(outputFile, Buffer.from(pngBytes));
+  const pngBytes = await renderPng(svg, size, bg);
+  await writeFile(outputFile, pngBytes);
 }
 
 async function main() {
   const gitea = argv.slice(2).includes('gitea');
   const logoSvg = await readFile(new URL('../assets/logo.svg', import.meta.url), 'utf8');
   const faviconSvg = await readFile(new URL('../assets/favicon.svg', import.meta.url), 'utf8');
-  await initWasm(await readFile(new URL(import.meta.resolve('@resvg/resvg-wasm/index_bg.wasm'))));
-
   await Promise.all([
     generate(logoSvg, '../public/assets/img/logo.svg', {size: 32}),
     generate(logoSvg, '../public/assets/img/logo.png', {size: 512}),

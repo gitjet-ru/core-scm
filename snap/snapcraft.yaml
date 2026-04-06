@@ -35,15 +35,12 @@ apps:
     plugs: [home, removable-media]
   version:
     command: gitea --version
-  sqlite:
-    command: usr/bin/sqlite3
-
 parts:
   gitea:
     plugin: make
     source: .
-    stage-packages: [ git, sqlite3, openssh-client ]
-    build-packages: [ git, libpam0g-dev, libsqlite3-dev, build-essential]
+    stage-packages: [ git, openssh-client ]
+    build-packages: [ git, libpam0g-dev, build-essential]
     build-snaps: [ go/1.25/stable, node/22/stable ]
     build-environment:
       - LDFLAGS: ""
@@ -69,7 +66,7 @@ parts:
       set -x
       sed -i 's/os.Getuid()/1/g' modules/setting/setting.go
       npm install -g pnpm
-      TAGS="bindata sqlite sqlite_unlock_notify pam cert" make build
+      TAGS="bindata pam cert" make build
       install -D gitea "${SNAPCRAFT_PART_INSTALL}/gitea"
       cp -r options "${SNAPCRAFT_PART_INSTALL}/"
 

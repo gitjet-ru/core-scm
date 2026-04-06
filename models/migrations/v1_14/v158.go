@@ -4,11 +4,9 @@
 package v1_14
 
 import (
-	"errors"
 	"strconv"
 
 	"github.com/gitjet-ru/core-scm/modules/log"
-	"github.com/gitjet-ru/core-scm/modules/setting"
 
 	"xorm.io/xorm"
 )
@@ -62,28 +60,8 @@ func UpdateCodeCommentReplies(x *xorm.Engine) error {
 			return err
 		}
 
-		if setting.Database.Type.IsMSSQL() {
-			if _, err := sess.Exec(sqlSelect + " INTO #temp_comments" + sqlTail); err != nil {
-				log.Error("unable to create temporary table")
-				return err
-			}
-		}
-
 		comments := make([]*Comment, 0, batchSize)
-
-		switch {
-		case setting.Database.Type.IsMySQL():
-			sqlCmd = sqlSelect + sqlTail + " LIMIT " + strconv.Itoa(batchSize) + ", " + strconv.Itoa(start)
-		case setting.Database.Type.IsPostgreSQL():
-			fallthrough
-		case setting.Database.Type.IsSQLite3():
-			sqlCmd = sqlSelect + sqlTail + " LIMIT " + strconv.Itoa(batchSize) + " OFFSET " + strconv.Itoa(start)
-		case setting.Database.Type.IsMSSQL():
-			sqlCmd = "SELECT TOP " + strconv.Itoa(batchSize) + " * FROM #temp_comments WHERE " +
-				"(id NOT IN ( SELECT TOP " + strconv.Itoa(start) + " id FROM #temp_comments ORDER BY id )) ORDER BY id"
-		default:
-			return errors.New("Unsupported database type")
-		}
+		sqlCmd = sqlSelect + sqlTail + " LIMIT " + strconv.Itoa(batchSize) + " OFFSET " + strconv.Itoa(start)
 
 		if err := sess.SQL(sqlCmd).Find(&comments); err != nil {
 			log.Error("failed to select: %v", err)

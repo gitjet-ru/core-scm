@@ -19,7 +19,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/util"
 	"github.com/gitjet-ru/core-scm/modules/validation"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/gitjet-ru/core-scm/modules/semver"
 )
 
 // TypeProperty is the name of the property for Composer package types

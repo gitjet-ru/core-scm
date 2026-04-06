@@ -3,50 +3,8 @@
 
 package v1_25
 
-import (
-	"github.com/gitjet-ru/core-scm/models/migrations/base"
-	"github.com/gitjet-ru/core-scm/modules/setting"
-
-	"xorm.io/xorm"
-	"xorm.io/xorm/schemas"
-)
+import "xorm.io/xorm"
 
 func UseLongTextInSomeColumnsAndFixBugs(x *xorm.Engine) error {
-	if !setting.Database.Type.IsMySQL() {
-		return nil // Only mysql need to change from text to long text, for other databases, they are the same
-	}
-
-	if err := base.ModifyColumn(x, "review_state", &schemas.Column{
-		Name: "updated_files",
-		SQLType: schemas.SQLType{
-			Name: "LONGTEXT",
-		},
-		Length:         0,
-		Nullable:       false,
-		DefaultIsEmpty: true,
-	}); err != nil {
-		return err
-	}
-
-	if err := base.ModifyColumn(x, "package_property", &schemas.Column{
-		Name: "value",
-		SQLType: schemas.SQLType{
-			Name: "LONGTEXT",
-		},
-		Length:         0,
-		Nullable:       false,
-		DefaultIsEmpty: true,
-	}); err != nil {
-		return err
-	}
-
-	return base.ModifyColumn(x, "notice", &schemas.Column{
-		Name: "description",
-		SQLType: schemas.SQLType{
-			Name: "LONGTEXT",
-		},
-		Length:         0,
-		Nullable:       false,
-		DefaultIsEmpty: true,
-	})
+	return nil
 }

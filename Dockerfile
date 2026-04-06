@@ -20,7 +20,7 @@ RUN make frontend
 FROM docker.io/library/golang:1.26-alpine3.23 AS build-env-base
 
 ARG GITEA_VERSION
-ARG TAGS="sqlite sqlite_unlock_notify"
+ARG TAGS=""
 ENV TAGS="bindata timetzdata $TAGS"
 ARG CGO_EXTRA_CFLAGS
 
@@ -88,7 +88,6 @@ RUN --mount=type=cache,target=/var/cache/apk \
     linux-pam \
     openssh \
     s6 \
-    sqlite \
     su-exec \
     gnupg
 
@@ -131,7 +130,6 @@ RUN --mount=type=cache,target=/var/cache/apk \
     linux-pam \
     openssh \
     s6 \
-    sqlite \
     su-exec \
     gnupg
 

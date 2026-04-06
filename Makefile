@@ -21,7 +21,6 @@ MISSPELL_PACKAGE ?= github.com/golangci/misspell/cmd/misspell@v0.8.0
 SWAGGER_PACKAGE ?= github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
 XGO_PACKAGE ?= src.techknowlogick.com/xgo@latest
 GOVULNCHECK_PACKAGE ?= golang.org/x/vuln/cmd/govulncheck@v1
-ACTIONLINT_PACKAGE ?= github.com/rhysd/actionlint/cmd/actionlint@v1.7.11
 
 DOCKER_IMAGE ?= gitea/gitea
 DOCKER_TAG ?= latest
@@ -33,7 +32,7 @@ ifeq ($(HAS_GO), yes)
 endif
 
 CGO_ENABLED ?= 0
-ifneq (,$(findstring sqlite,$(TAGS))$(findstring pam,$(TAGS)))
+ifneq (,$(findstring pam,$(TAGS)))
 	CGO_ENABLED = 1
 endif
 
@@ -139,7 +138,7 @@ TAGS ?=
 TAGS_SPLIT := $(subst $(COMMA), ,$(TAGS))
 TAGS_EVIDENCE := $(MAKE_EVIDENCE_DIR)/tags
 
-# GitJet: integration/unit DB tests use PostgreSQL only (no sqlite build tags by default).
+# GitJet: integration/unit DB tests use PostgreSQL only.
 TEST_TAGS ?= $(TAGS_SPLIT)
 
 TAR_EXCLUDES := .git data indexers queues log node_modules $(EXECUTABLE) $(DIST) $(MAKE_EVIDENCE_DIR) $(AIR_TMP_DIR)
@@ -150,7 +149,7 @@ WEB_DIRS := web_src/js web_src/css
 ESLINT_FILES := web_src/js tools *.ts tests/e2e
 STYLELINT_FILES := web_src/css web_src/js/components/*.vue
 SPELLCHECK_FILES := $(GO_DIRS) $(WEB_DIRS) templates options/locale/locale_en-US.json .github $(filter-out CHANGELOG.md, $(wildcard *.go *.md *.yml *.yaml *.toml))
-EDITORCONFIG_FILES := templates .github/workflows options/locale/locale_en-US.json
+EDITORCONFIG_FILES := templates options/locale/locale_en-US.json
 
 GO_SOURCES := $(wildcard *.go)
 GO_SOURCES += $(shell find $(GO_DIRS) -type f -name "*.go")
@@ -162,20 +161,12 @@ SWAGGER_SPEC := templates/swagger/v1_json.tmpl
 SWAGGER_SPEC_INPUT := templates/swagger/v1_input.json
 SWAGGER_EXCLUDE := code.gitea.io/sdk
 
-TEST_MYSQL_HOST ?= mysql:3306
-TEST_MYSQL_DBNAME ?= testgitea
-TEST_MYSQL_USERNAME ?= root
-TEST_MYSQL_PASSWORD ?=
 TEST_PGSQL_HOST ?= pgsql:5432
 TEST_PGSQL_DBNAME ?= testgitea
 TEST_PGSQL_USERNAME ?= postgres
 TEST_PGSQL_PASSWORD ?= postgres
 TEST_PGSQL_SCHEMA ?= gtestschema
 TEST_MINIO_ENDPOINT ?= minio:9000
-TEST_MSSQL_HOST ?= mssql:1433
-TEST_MSSQL_DBNAME ?= gitea
-TEST_MSSQL_USERNAME ?= sa
-TEST_MSSQL_PASSWORD ?= MwantsaSecurePassword1
 
 # Include local Makefile
 # Makefile.local is listed in .gitignore
@@ -355,10 +346,6 @@ lint-editorconfig:
 	@echo "Running editorconfig check..."
 	@$(GO) run $(EDITORCONFIG_CHECKER_PACKAGE) $(EDITORCONFIG_FILES)
 
-.PHONY: lint-actions
-lint-actions: ## lint action workflow files
-	$(GO) run $(ACTIONLINT_PACKAGE)
-
 .PHONY: lint-templates
 lint-templates: .venv node_modules ## lint template files
 	@node tools/lint-templates-svg.ts
@@ -454,46 +441,6 @@ go-licenses: $(GO_LICENSE_FILE) ## regenerate go licenses
 $(GO_LICENSE_FILE): go.mod go.sum
 	GO=$(GO) $(GO) run build/generate-go-licenses.go $(GO_LICENSE_FILE)
 
-generate-ini-sqlite:
-	sed -e 's|{{WORK_PATH}}|$(CURDIR)/tests/$(or $(TEST_TYPE),integration)/gitea-$(or $(TEST_TYPE),integration)-sqlite|g' \
-		-e 's|{{TEST_LOGGER}}|$(or $(TEST_LOGGER),test$(COMMA)file)|g' \
-			tests/sqlite.ini.tmpl > tests/sqlite.ini
-
-.PHONY: test-sqlite
-test-sqlite: ## deprecated: alias for test-pgsql
-	@echo "GitJet uses PostgreSQL only; running test-pgsql..."
-	@$(MAKE) test-pgsql
-
-.PHONY: test-sqlite\#%
-test-sqlite\#%: ## deprecated: alias for test-pgsql
-	@echo "GitJet uses PostgreSQL only; running test-pgsql..."
-	@$(MAKE) test-pgsql\#$*
-
-.PHONY: test-sqlite-migration
-test-sqlite-migration: test-pgsql-migration ## deprecated alias
-	@true
-
-generate-ini-mysql:
-	sed -e 's|{{TEST_MYSQL_HOST}}|${TEST_MYSQL_HOST}|g' \
-		-e 's|{{TEST_MYSQL_DBNAME}}|${TEST_MYSQL_DBNAME}|g' \
-		-e 's|{{TEST_MYSQL_USERNAME}}|${TEST_MYSQL_USERNAME}|g' \
-		-e 's|{{TEST_MYSQL_PASSWORD}}|${TEST_MYSQL_PASSWORD}|g' \
-		-e 's|{{WORK_PATH}}|$(CURDIR)/tests/$(or $(TEST_TYPE),integration)/gitea-$(or $(TEST_TYPE),integration)-mysql|g' \
-		-e 's|{{TEST_LOGGER}}|$(or $(TEST_LOGGER),test$(COMMA)file)|g' \
-			tests/mysql.ini.tmpl > tests/mysql.ini
-
-.PHONY: test-mysql
-test-mysql: test-pgsql ## deprecated alias
-	@true
-
-.PHONY: test-mysql\#%
-test-mysql\#%: test-pgsql\#% ## deprecated alias
-	@true
-
-.PHONY: test-mysql-migration
-test-mysql-migration: test-pgsql-migration ## deprecated alias
-	@true
-
 generate-ini-pgsql:
 	sed -e 's|{{TEST_PGSQL_HOST}}|${TEST_PGSQL_HOST}|g' \
 		-e 's|{{TEST_PGSQL_DBNAME}}|${TEST_PGSQL_DBNAME}|g' \
@@ -516,27 +463,6 @@ test-pgsql\#%: integrations.pgsql.test generate-ini-pgsql
 .PHONY: test-pgsql-migration
 test-pgsql-migration: migrations.pgsql.test migrations.individual.pgsql.test
 
-generate-ini-mssql:
-	sed -e 's|{{TEST_MSSQL_HOST}}|${TEST_MSSQL_HOST}|g' \
-		-e 's|{{TEST_MSSQL_DBNAME}}|${TEST_MSSQL_DBNAME}|g' \
-		-e 's|{{TEST_MSSQL_USERNAME}}|${TEST_MSSQL_USERNAME}|g' \
-		-e 's|{{TEST_MSSQL_PASSWORD}}|${TEST_MSSQL_PASSWORD}|g' \
-		-e 's|{{WORK_PATH}}|$(CURDIR)/tests/$(or $(TEST_TYPE),integration)/gitea-$(or $(TEST_TYPE),integration)-mssql|g' \
-		-e 's|{{TEST_LOGGER}}|$(or $(TEST_LOGGER),test$(COMMA)file)|g' \
-			tests/mssql.ini.tmpl > tests/mssql.ini
-
-.PHONY: test-mssql
-test-mssql: test-pgsql ## deprecated alias
-	@true
-
-.PHONY: test-mssql\#%
-test-mssql\#%: test-pgsql\#% ## deprecated alias
-	@true
-
-.PHONY: test-mssql-migration
-test-mssql-migration: test-pgsql-migration ## deprecated alias
-	@true
-
 .PHONY: playwright
 playwright: deps-frontend
 	@# on GitHub Actions VMs, playwright's system deps are pre-installed
@@ -552,18 +478,6 @@ test-e2e: playwright $(EXECUTABLE_E2E)
 test-e2e-deployed: playwright
 	@$(NODE_VARS) bash ./tools/test-e2e-deployed.sh $(GITEA_TEST_E2E_FLAGS)
 
-.PHONY: bench-sqlite
-bench-sqlite: bench-pgsql ## deprecated alias
-	@true
-
-.PHONY: bench-mysql
-bench-mysql: bench-pgsql ## deprecated alias
-	@true
-
-.PHONY: bench-mssql
-bench-mssql: bench-pgsql ## deprecated alias
-	@true
-
 .PHONY: bench-pgsql
 bench-pgsql: integrations.pgsql.test generate-ini-pgsql
 	GITEA_TEST_CONF=tests/pgsql.ini ./integrations.pgsql.test -test.cpuprofile=cpu.out -test.run DontRunTests -test.bench .
@@ -572,55 +486,17 @@ bench-pgsql: integrations.pgsql.test generate-ini-pgsql
 integration-test-coverage: integrations.cover.test generate-ini-pgsql
 	GITEA_TEST_CONF=tests/pgsql.ini ./integrations.cover.test -test.coverprofile=integration.coverage.out
 
-.PHONY: integration-test-coverage-sqlite
-integration-test-coverage-sqlite: integration-test-coverage ## deprecated alias
-	@true
-
-integrations.mysql.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -o integrations.mysql.test
-
 integrations.pgsql.test: git-check $(GO_SOURCES)
 	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -o integrations.pgsql.test
-
-integrations.mssql.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -o integrations.mssql.test
-
-integrations.sqlite.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -o integrations.sqlite.test -tags '$(TEST_TAGS)'
 
 integrations.cover.test: git-check $(GO_SOURCES)
 	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -coverpkg $(shell echo $(GO_TEST_PACKAGES) | tr ' ' ',') -o integrations.cover.test
 
-integrations.cover.sqlite.test: git-check $(GO_SOURCES)
-	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration -coverpkg $(shell echo $(GO_TEST_PACKAGES) | tr ' ' ',') -o integrations.cover.sqlite.test -tags '$(TEST_TAGS)'
-
-.PHONY: migrations.mysql.test
-migrations.mysql.test: $(GO_SOURCES) generate-ini-mysql
-	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration/migration-test -o migrations.mysql.test
-	GITEA_TEST_CONF=tests/mysql.ini ./migrations.mysql.test
 
 .PHONY: migrations.pgsql.test
 migrations.pgsql.test: $(GO_SOURCES) generate-ini-pgsql
 	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration/migration-test -o migrations.pgsql.test
 	GITEA_TEST_CONF=tests/pgsql.ini ./migrations.pgsql.test
-
-.PHONY: migrations.mssql.test
-migrations.mssql.test: $(GO_SOURCES) generate-ini-mssql
-	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration/migration-test -o migrations.mssql.test
-	GITEA_TEST_CONF=tests/mssql.ini ./migrations.mssql.test
-
-.PHONY: migrations.sqlite.test
-migrations.sqlite.test: $(GO_SOURCES) generate-ini-sqlite
-	$(GO) test $(GOTESTFLAGS) -c github.com/gitjet-ru/core-scm/tests/integration/migration-test -o migrations.sqlite.test -tags '$(TEST_TAGS)'
-	GITEA_TEST_CONF=tests/sqlite.ini ./migrations.sqlite.test
-
-.PHONY: migrations.individual.mysql.test
-migrations.individual.mysql.test: $(GO_SOURCES) generate-ini-mysql
-	GITEA_TEST_CONF=tests/mysql.ini $(GO) test $(GOTESTFLAGS) -tags='$(TEST_TAGS)' -p 1 $(MIGRATE_TEST_PACKAGES)
-
-.PHONY: migrations.individual.sqlite.test\#%
-migrations.individual.sqlite.test\#%: $(GO_SOURCES) generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' github.com/gitjet-ru/core-scm/models/migrations/$*
 
 .PHONY: migrations.individual.pgsql.test
 migrations.individual.pgsql.test: $(GO_SOURCES) generate-ini-pgsql
@@ -629,22 +505,6 @@ migrations.individual.pgsql.test: $(GO_SOURCES) generate-ini-pgsql
 .PHONY: migrations.individual.pgsql.test\#%
 migrations.individual.pgsql.test\#%: $(GO_SOURCES) generate-ini-pgsql
 	GITEA_TEST_CONF=tests/pgsql.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' github.com/gitjet-ru/core-scm/models/migrations/$*
-
-.PHONY: migrations.individual.mssql.test
-migrations.individual.mssql.test: $(GO_SOURCES) generate-ini-mssql
-	GITEA_TEST_CONF=tests/mssql.ini $(GO) test $(GOTESTFLAGS) -tags='$(TEST_TAGS)' -p 1 $(MIGRATE_TEST_PACKAGES)
-
-.PHONY: migrations.individual.mssql.test\#%
-migrations.individual.mssql.test\#%: $(GO_SOURCES) generate-ini-mssql
-	GITEA_TEST_CONF=tests/mssql.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' github.com/gitjet-ru/core-scm/models/migrations/$*
-
-.PHONY: migrations.individual.sqlite.test
-migrations.individual.sqlite.test: $(GO_SOURCES) generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini $(GO) test $(GOTESTFLAGS) -tags='$(TEST_TAGS)' -p 1 $(MIGRATE_TEST_PACKAGES)
-
-.PHONY: migrations.individual.sqlite.test\#%
-migrations.individual.sqlite.test\#%: $(GO_SOURCES) generate-ini-sqlite
-	GITEA_TEST_CONF=tests/sqlite.ini $(GO) test $(GOTESTFLAGS) -tags '$(TEST_TAGS)' github.com/gitjet-ru/core-scm/models/migrations/$*
 
 .PHONY: check
 check: test
@@ -758,7 +618,6 @@ deps-tools: ## install tool dependencies
 	$(GO) install $(SWAGGER_PACKAGE) & \
 	$(GO) install $(XGO_PACKAGE) & \
 	$(GO) install $(GOVULNCHECK_PACKAGE) & \
-	$(GO) install $(ACTIONLINT_PACKAGE) & \
 	wait
 
 node_modules: pnpm-lock.yaml
@@ -843,7 +702,7 @@ generate-manpage: ## generate manpage
 .PHONY: docker
 docker:
 	docker build --disable-content-trust=false -t $(DOCKER_REF) .
-# support also build args docker build --build-arg GITEA_VERSION=v1.2.3 --build-arg TAGS="bindata sqlite sqlite_unlock_notify"  .
+# support also build args docker build --build-arg GITEA_VERSION=v1.2.3 --build-arg TAGS="bindata"  .
 
 # Fast local image: webpack on host (make frontend), Docker only compiles Go — faster for backend-only work.
 #   make docker-fast

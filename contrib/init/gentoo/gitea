@@ -26,8 +26,6 @@ depend()
     # Don't forget to add the database service requirements
     ###
     #after postgresql
-    #after mysql
-    #after mariadb
     #after memcached
     #after redis
 }

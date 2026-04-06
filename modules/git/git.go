@@ -19,7 +19,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/tempdir"
 	"github.com/gitjet-ru/core-scm/modules/testlogger"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/gitjet-ru/core-scm/modules/semver"
 )
 
 const RequiredVersion = "2.6.0" // the minimum Git version required

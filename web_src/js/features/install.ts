@@ -17,11 +17,7 @@ function initPreInstall() {
   const defaultDbUser = 'gitea';
   const defaultDbName = 'gitea';
 
-  const defaultDbHosts: Record<string, string> = {
-    mysql: '127.0.0.1:3306',
-    postgres: '127.0.0.1:5432',
-    mssql: '127.0.0.1:1433',
-  };
+  const defaultDbHost = '127.0.0.1:5432';
 
   const dbHost = document.querySelector<HTMLInputElement>('#db_host')!;
   const dbUser = document.querySelector<HTMLInputElement>('#db_user')!;
@@ -33,19 +29,15 @@ function initPreInstall() {
     hideElem('div[data-db-setting-for]');
     showElem(`div[data-db-setting-for=${dbType}]`);
 
-    if (dbType !== 'sqlite3') {
-      // for most remote database servers
-      showElem('div[data-db-setting-for=common-host]');
-      const lastDbHost = dbHost.value;
-      const isDbHostDefault = !lastDbHost || Object.values(defaultDbHosts).includes(lastDbHost);
-      if (isDbHostDefault) {
-        dbHost.value = defaultDbHosts[dbType] ?? '';
-      }
-      if (!dbUser.value && !dbName.value) {
-        dbUser.value = defaultDbUser;
-        dbName.value = defaultDbName;
-      }
-    } // else: for SQLite3, the default path is always prepared by backend code (setting)
+    showElem('div[data-db-setting-for=common-host]');
+    const isDbHostDefault = !dbHost.value || dbHost.value === defaultDbHost;
+    if (isDbHostDefault) {
+      dbHost.value = defaultDbHost;
+    }
+    if (!dbUser.value && !dbName.value) {
+      dbUser.value = defaultDbUser;
+      dbName.value = defaultDbName;
+    }
   });
   document.querySelector('#db_type')!.dispatchEvent(new Event('change'));
 

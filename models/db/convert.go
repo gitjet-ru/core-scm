@@ -4,73 +4,18 @@
 package db
 
 import (
-	"fmt"
-
-	"github.com/gitjet-ru/core-scm/modules/setting"
-
 	"xorm.io/xorm"
 	"xorm.io/xorm/convert"
-	"xorm.io/xorm/schemas"
 )
 
-// ConvertDatabaseTable converts database and tables from utf8 to utf8mb4 if it's mysql and set ROW_FORMAT=dynamic
+// ConvertDatabaseTable is a no-op in PostgreSQL-only mode.
 func ConvertDatabaseTable() error {
-	if xormEngine.Dialect().URI().DBType != schemas.MYSQL {
-		return nil
-	}
-
-	r, err := CheckCollations(xormEngine)
-	if err != nil {
-		return err
-	}
-
-	_, err = xormEngine.Exec(fmt.Sprintf("ALTER DATABASE `%s` CHARACTER SET utf8mb4 COLLATE %s", setting.Database.Name, r.ExpectedCollation))
-	if err != nil {
-		return err
-	}
-
-	tables, err := xormEngine.DBMetas()
-	if err != nil {
-		return err
-	}
-	for _, table := range tables {
-		if _, err := xormEngine.Exec(fmt.Sprintf("ALTER TABLE `%s` ROW_FORMAT=dynamic", table.Name)); err != nil {
-			return err
-		}
-
-		if _, err := xormEngine.Exec(fmt.Sprintf("ALTER TABLE `%s` CONVERT TO CHARACTER SET utf8mb4 COLLATE %s", table.Name, r.ExpectedCollation)); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
-// ConvertVarcharToNVarchar converts database and tables from varchar to nvarchar if it's mssql
+// ConvertVarcharToNVarchar is a no-op in PostgreSQL-only mode.
 func ConvertVarcharToNVarchar() error {
-	if xormEngine.Dialect().URI().DBType != schemas.MSSQL {
-		return nil
-	}
-
-	sess := xormEngine.NewSession()
-	defer sess.Close()
-	res, err := sess.QuerySliceString(`SELECT 'ALTER TABLE ' + OBJECT_NAME(SC.object_id) + ' MODIFY SC.name NVARCHAR(' + CONVERT(VARCHAR(5),SC.max_length) + ')'
-FROM SYS.columns SC
-JOIN SYS.types ST
-ON SC.system_type_id = ST.system_type_id
-AND SC.user_type_id = ST.user_type_id
-WHERE ST.name ='varchar'`)
-	if err != nil {
-		return err
-	}
-	for _, row := range res {
-		if len(row) == 1 {
-			if _, err = sess.Exec(row[0]); err != nil {
-				return err
-			}
-		}
-	}
-	return err
+	return nil
 }
 
 // CellToInt converts a xorm.Cell field value to an int value

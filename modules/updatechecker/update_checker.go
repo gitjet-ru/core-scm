@@ -13,7 +13,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/setting"
 	"github.com/gitjet-ru/core-scm/modules/system"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/gitjet-ru/core-scm/modules/semver"
 )
 
 // CheckerState stores the remote version from the JSON endpoint

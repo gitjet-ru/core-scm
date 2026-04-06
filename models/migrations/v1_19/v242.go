@@ -3,24 +3,9 @@
 
 package v1_19
 
-import (
-	"github.com/gitjet-ru/core-scm/modules/setting"
-
-	"xorm.io/xorm"
-)
+import "xorm.io/xorm"
 
 // AlterPublicGPGKeyImportContentFieldToMediumText: set GPGKeyImport Content field to MEDIUMTEXT
 func AlterPublicGPGKeyImportContentFieldToMediumText(x *xorm.Engine) error {
-	sess := x.NewSession()
-	defer sess.Close()
-	if err := sess.Begin(); err != nil {
-		return err
-	}
-
-	if setting.Database.Type.IsMySQL() {
-		if _, err := sess.Exec("ALTER TABLE `gpg_key_import` CHANGE `content` `content` MEDIUMTEXT"); err != nil {
-			return err
-		}
-	}
-	return sess.Commit()
+	return nil
 }

@@ -75,7 +75,6 @@
                   # backend
                   go
                   gofumpt
-                  sqlite
                 ]
                 ++ linuxOnlyInputs;
 
@@ -83,7 +82,7 @@
                 GO = "${go}/bin/go";
                 GOROOT = "${go}/share/go";
 
-                TAGS = "sqlite sqlite_unlock_notify";
+                TAGS = "";
                 STATIC = "true";
               }
               // linuxOnlyEnv;
