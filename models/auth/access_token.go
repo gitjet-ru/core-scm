@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/gitjet-ru/core-scm/models/db"
+	lru "github.com/gitjet-ru/core-scm/modules/lru"
 	"github.com/gitjet-ru/core-scm/modules/setting"
 	"github.com/gitjet-ru/core-scm/modules/timeutil"
 	"github.com/gitjet-ru/core-scm/modules/util"
 
-	lru "github.com/hashicorp/golang-lru/v2"
 	"xorm.io/builder"
 )
 

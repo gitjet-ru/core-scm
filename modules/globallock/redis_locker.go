@@ -5,15 +5,15 @@ package globallock
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/gitjet-ru/core-scm/modules/nosql"
-
-	"github.com/go-redsync/redsync/v4"
-	"github.com/go-redsync/redsync/v4/redis/goredis/v9"
+	"github.com/redis/go-redis/v9"
 )
 
 const redisLockKeyPrefix = "gitea:globallock:"
@@ -23,7 +23,7 @@ const redisLockKeyPrefix = "gitea:globallock:"
 var redisLockExpiry = 30 * time.Second
 
 type redisLocker struct {
-	rs *redsync.Redsync
+	redis redis.UniversalClient
 
 	mutexM   sync.Map
 	closed   atomic.Bool
@@ -34,11 +34,7 @@ var _ Locker = &redisLocker{}
 
 func NewRedisLocker(connection string) Locker {
 	l := &redisLocker{
-		rs: redsync.New(
-			goredis.NewPool(
-				nosql.GetManager().GetRedisClient(connection),
-			),
-		),
+		redis: nosql.GetManager().GetRedisClient(connection),
 	}
 
 	l.extendWg.Add(1)
@@ -53,12 +49,7 @@ func (l *redisLocker) Lock(ctx context.Context, key string) (ReleaseFunc, error)
 
 func (l *redisLocker) TryLock(ctx context.Context, key string) (bool, ReleaseFunc, error) {
 	f, err := l.lock(ctx, key, 1)
-
-	var (
-		errTaken     *redsync.ErrTaken
-		errNodeTaken *redsync.ErrNodeTaken
-	)
-	if errors.As(err, &errTaken) || errors.As(err, &errNodeTaken) {
+	if errors.Is(err, errLockTaken) {
 		return false, f, nil
 	}
 	return err == nil, f, err
@@ -80,30 +71,39 @@ func (l *redisLocker) lock(ctx context.Context, key string, tries int) (ReleaseF
 		return func() {}, errors.New("locker is closed")
 	}
 
-	options := []redsync.Option{
-		redsync.WithExpiry(redisLockExpiry),
-	}
-	if tries > 0 {
-		options = append(options, redsync.WithTries(tries))
-	}
-	mutex := l.rs.NewMutex(redisLockKeyPrefix+key, options...)
-	if err := mutex.LockContext(ctx); err != nil {
-		return func() {}, err
+	m := &redisMutex{
+		key:   redisLockKeyPrefix + key,
+		value: randomLockValue(),
 	}
 
-	l.mutexM.Store(key, mutex)
+	tryOnce := tries > 0
+	for {
+		ok, err := l.redis.SetNX(ctx, m.key, m.value, redisLockExpiry).Result()
+		if err != nil {
+			return func() {}, err
+		}
+		if ok {
+			m.until = time.Now().Add(redisLockExpiry)
+			l.mutexM.Store(key, m)
 
-	releaseOnce := sync.Once{}
-	return func() {
-		releaseOnce.Do(func() {
-			l.mutexM.Delete(key)
+			releaseOnce := sync.Once{}
+			return func() {
+				releaseOnce.Do(func() {
+					l.mutexM.Delete(key)
+					_ = l.unlock(context.Background(), m)
+				})
+			}, nil
+		}
+		if tryOnce {
+			return func() {}, errLockTaken
+		}
 
-			// It's safe to ignore the error here,
-			// if it failed to unlock, it will be released automatically after the lock expires.
-			// Do not call mutex.UnlockContext(ctx) here, or it will fail to release when ctx has timed out.
-			_, _ = mutex.Unlock()
-		})
-	}, nil
+		select {
+		case <-ctx.Done():
+			return func() {}, ctx.Err()
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
 }
 
 func (l *redisLocker) startExtend() {
@@ -112,15 +112,15 @@ func (l *redisLocker) startExtend() {
 		return
 	}
 
-	toExtend := make([]*redsync.Mutex, 0)
+	toExtend := make([]*redisMutex, 0)
 	l.mutexM.Range(func(_, value any) bool {
-		m := value.(*redsync.Mutex)
+		m := value.(*redisMutex)
 
 		// Extend the lock if it is not expired.
 		// Although the mutex will be removed from the map before it is released,
 		// it still can be expired because of a failed extension.
 		// If it happens, it does not need to be extended anymore.
-		if time.Now().After(m.Until()) {
+		if time.Now().After(m.until) {
 			return true
 		}
 
@@ -128,9 +128,55 @@ func (l *redisLocker) startExtend() {
 		return true
 	})
 	for _, v := range toExtend {
-		// If it failed to extend, it will be released automatically after the lock expires.
-		_, _ = v.Extend()
+		_ = l.extend(context.Background(), v)
 	}
 
 	time.AfterFunc(redisLockExpiry/2, l.startExtend)
+}
+
+var errLockTaken = errors.New("lock is already held")
+
+type redisMutex struct {
+	key   string
+	value string
+	until time.Time
+}
+
+const unlockScript = `
+if redis.call("GET", KEYS[1]) == ARGV[1] then
+	return redis.call("DEL", KEYS[1])
+end
+return 0
+`
+
+const extendScript = `
+if redis.call("GET", KEYS[1]) == ARGV[1] then
+	return redis.call("PEXPIRE", KEYS[1], ARGV[2])
+end
+return 0
+`
+
+func (l *redisLocker) unlock(ctx context.Context, m *redisMutex) error {
+	_, err := l.redis.Eval(ctx, unlockScript, []string{m.key}, m.value).Result()
+	return err
+}
+
+func (l *redisLocker) extend(ctx context.Context, m *redisMutex) error {
+	ms := redisLockExpiry.Milliseconds()
+	res, err := l.redis.Eval(ctx, extendScript, []string{m.key}, m.value, ms).Int64()
+	if err != nil {
+		return err
+	}
+	if res == 1 {
+		m.until = time.Now().Add(redisLockExpiry)
+	}
+	return nil
+}
+
+func randomLockValue() string {
+	buf := make([]byte, 16)
+	if _, err := rand.Read(buf); err != nil {
+		return time.Now().Format(time.RFC3339Nano)
+	}
+	return base64.StdEncoding.EncodeToString(buf)
 }

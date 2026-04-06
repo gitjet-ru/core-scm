@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redsync/redsync/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -170,8 +169,8 @@ func testRedisLocker(t *testing.T, locker *redisLocker) {
 		// It simulates that there are some problems with extending like network issues or redis server down.
 		v, ok := locker.mutexM.Load("test")
 		require.True(t, ok)
-		m := v.(*redsync.Mutex)
-		_, _ = m.Unlock() // release it to make it impossible to extend
+		m := v.(*redisMutex)
+		require.NoError(t, locker.unlock(t.Context(), m)) // release it to make it impossible to extend
 
 		// In current design, callers can't know the lock can't be extended.
 		// Just keep this case to improve the test coverage.

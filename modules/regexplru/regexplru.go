@@ -8,7 +8,7 @@ import (
 
 	"github.com/gitjet-ru/core-scm/modules/log"
 
-	lru "github.com/hashicorp/golang-lru/v2"
+	lru "github.com/gitjet-ru/core-scm/modules/lru"
 )
 
 var lruCache *lru.Cache[string, any]

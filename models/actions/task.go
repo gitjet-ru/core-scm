@@ -16,12 +16,12 @@ import (
 	"github.com/gitjet-ru/core-scm/models/unit"
 	"github.com/gitjet-ru/core-scm/modules/actions/jobparser"
 	"github.com/gitjet-ru/core-scm/modules/log"
+	lru "github.com/gitjet-ru/core-scm/modules/lru"
 	"github.com/gitjet-ru/core-scm/modules/setting"
 	"github.com/gitjet-ru/core-scm/modules/timeutil"
 	"github.com/gitjet-ru/core-scm/modules/util"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
-	lru "github.com/hashicorp/golang-lru/v2"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"xorm.io/builder"
 )

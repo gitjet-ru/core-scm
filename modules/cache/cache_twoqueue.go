@@ -11,7 +11,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/json"
 
 	mc "gitea.com/go-chi/cache" //nolint:depguard // we wrap this package here
-	lru "github.com/hashicorp/golang-lru/v2"
+	lru "github.com/gitjet-ru/core-scm/modules/lru"
 )
 
 // TwoQueueCache represents a LRU 2Q cache adapter implementation
