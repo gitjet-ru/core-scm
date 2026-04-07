@@ -20,7 +20,7 @@ import (
 	"github.com/gitjet-ru/core-scm/services/context"
 	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 func apiError(ctx *context.Context, status int, obj any) {
@@ -138,7 +138,7 @@ func EnumeratePackageVersions(ctx *context.Context) {
 func UploadPackageFile(ctx *context.Context) {
 	boxName := ctx.PathParam("name")
 	boxVersion := ctx.PathParam("version")
-	_, err := version.NewSemver(boxVersion)
+	_, err := semver.NewVersion(boxVersion)
 	if err != nil {
 		apiError(ctx, http.StatusBadRequest, err)
 		return

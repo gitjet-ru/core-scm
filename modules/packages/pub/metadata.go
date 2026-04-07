@@ -13,7 +13,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/util"
 	"github.com/gitjet-ru/core-scm/modules/validation"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -122,7 +122,7 @@ func ParsePubspecMetadata(r io.Reader) (*Package, error) {
 		return nil, ErrInvalidName
 	}
 
-	v, err := version.NewSemver(p.Version)
+	v, err := semver.NewVersion(p.Version)
 	if err != nil {
 		return nil, ErrInvalidVersion
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/util"
 	"github.com/gitjet-ru/core-scm/modules/validation"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -118,7 +118,7 @@ func ParseChartFile(r io.Reader) (*Metadata, error) {
 		return nil, ErrInvalidName
 	}
 
-	if _, err := version.NewSemver(metadata.Version); err != nil {
+	if _, err := semver.NewVersion(metadata.Version); err != nil {
 		return nil, ErrInvalidVersion
 	}
 

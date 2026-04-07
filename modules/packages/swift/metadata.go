@@ -15,7 +15,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/util"
 	"github.com/gitjet-ru/core-scm/modules/validation"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 var (
@@ -148,7 +148,7 @@ func ParsePackage(sr io.ReaderAt, size int64, mr io.Reader) (*Package, error) {
 
 		swiftVersion := ""
 		if len(manifestMatch) == 2 && manifestMatch[1] != "" {
-			v, err := version.NewSemver(manifestMatch[1])
+			v, err := semver.NewVersion(manifestMatch[1])
 			if err != nil {
 				return nil, ErrInvalidManifestVersion
 			}
@@ -161,7 +161,7 @@ func ParsePackage(sr io.ReaderAt, size int64, mr io.Reader) (*Package, error) {
 
 		toolsMatch := toolsVersionPattern.FindStringSubmatch(manifest.Content)
 		if len(toolsMatch) == 2 {
-			v, err := version.NewSemver(toolsMatch[1])
+			v, err := semver.NewVersion(toolsMatch[1])
 			if err != nil {
 				return nil, ErrInvalidManifestVersion
 			}
@@ -209,13 +209,13 @@ func ParsePackage(sr io.ReaderAt, size int64, mr io.Reader) (*Package, error) {
 }
 
 // TrimmedVersionString returns the version string without the patch segment if it is zero
-func TrimmedVersionString(v *version.Version) string {
-	segments := v.Segments64()
+func TrimmedVersionString(v *semver.Version) string {
+	maj, min, pat := v.Major(), v.Minor(), v.Patch()
 
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d.%d", segments[0], segments[1])
-	if segments[2] != 0 {
-		fmt.Fprintf(&b, ".%d", segments[2])
+	fmt.Fprintf(&b, "%d.%d", maj, min)
+	if pat != 0 {
+		fmt.Fprintf(&b, ".%d", pat)
 	}
 	return b.String()
 }

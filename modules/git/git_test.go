@@ -6,7 +6,7 @@ package git
 import (
 	"testing"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,7 +35,7 @@ func TestParseGitVersion(t *testing.T) {
 }
 
 func TestCheckGitVersionCompatibility(t *testing.T) {
-	assert.NoError(t, checkGitVersionCompatibility(version.Must(version.NewVersion("2.43.0"))))
-	assert.ErrorContains(t, checkGitVersionCompatibility(version.Must(version.NewVersion("2.43.1"))), "regression bug of GIT_FLUSH")
-	assert.NoError(t, checkGitVersionCompatibility(version.Must(version.NewVersion("2.43.2"))))
+	assert.NoError(t, checkGitVersionCompatibility(semver.MustParse("2.43.0")))
+	assert.ErrorContains(t, checkGitVersionCompatibility(semver.MustParse("2.43.1")), "regression bug of GIT_FLUSH")
+	assert.NoError(t, checkGitVersionCompatibility(semver.MustParse("2.43.2")))
 }

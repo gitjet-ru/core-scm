@@ -35,7 +35,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/packages/vagrant"
 	"github.com/gitjet-ru/core-scm/modules/util"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 // PackagePropertyList is a list of package properties
@@ -57,7 +57,7 @@ type PackageDescriptor struct {
 	Owner             *user_model.User
 	Repository        *repo_model.Repository
 	Version           *PackageVersion
-	SemVer            *version.Version
+	SemVer            *semver.Version
 	Creator           *user_model.User
 	PackageProperties PackagePropertyList
 	VersionProperties PackagePropertyList
@@ -130,9 +130,9 @@ func GetPackageDescriptorWithCache(ctx context.Context, pv *PackageVersion, c *c
 			return nil, err
 		}
 	}
-	var semVer *version.Version
+	var semVer *semver.Version
 	if p.SemverCompatible {
-		semVer, err = version.NewVersion(pv.Version)
+		semVer, err = semver.NewVersion(pv.Version)
 		if err != nil {
 			return nil, err
 		}

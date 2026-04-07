@@ -24,7 +24,7 @@ import (
 	"github.com/gitjet-ru/core-scm/services/context"
 	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 // https://github.com/swiftlang/swift-package-manager/blob/main/Documentation/PackageRegistry/Registry.md#35-api-versioning
@@ -260,7 +260,7 @@ func DownloadManifest(ctx *context.Context) {
 
 	swiftVersion := ctx.FormTrim("swift-version")
 	if swiftVersion != "" {
-		v, err := version.NewVersion(swiftVersion)
+		v, err := semver.NewVersion(swiftVersion)
 		if err == nil {
 			swiftVersion = swift_module.TrimmedVersionString(v)
 		}
@@ -310,14 +310,14 @@ func UploadPackageFile(ctx *context.Context) {
 	packageScope := ctx.PathParam("scope")
 	packageName := ctx.PathParam("name")
 
-	v, err := version.NewVersion(ctx.PathParam("version"))
+	v, err := semver.NewVersion(ctx.PathParam("version"))
 
 	if !scopePattern.MatchString(packageScope) || !namePattern.MatchString(packageName) || err != nil {
 		apiError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	packageVersion := v.Core().String()
+	packageVersion := fmt.Sprintf("%d.%d.%d", v.Major(), v.Minor(), v.Patch())
 
 	file, err := formFileOptionalReadCloser(ctx, "source-archive")
 	if file == nil || err != nil {

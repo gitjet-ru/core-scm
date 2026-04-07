@@ -13,7 +13,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/setting"
 	"github.com/gitjet-ru/core-scm/modules/system"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 // CheckerState stores the remote version from the JSON endpoint
@@ -78,7 +78,7 @@ func GetRemoteVersion(ctx context.Context) string {
 
 // GetNeedUpdate returns true whether a newer version of Gitea is available
 func GetNeedUpdate(ctx context.Context) bool {
-	curVer, err := version.NewVersion(setting.AppVer)
+	curVer, err := semver.NewVersion(setting.AppVer)
 	if err != nil {
 		// return false to fail silently
 		return false
@@ -88,7 +88,7 @@ func GetNeedUpdate(ctx context.Context) bool {
 		// no remote version is known
 		return false
 	}
-	remoteVer, err := version.NewVersion(remoteVerStr)
+	remoteVer, err := semver.NewVersion(remoteVerStr)
 	if err != nil {
 		// return false to fail silently
 		return false

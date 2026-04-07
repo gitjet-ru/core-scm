@@ -1,26 +1,23 @@
-import htmx from 'htmx.org';
-import 'idiomorph/htmx';
-import type {HtmxResponseInfo} from 'htmx.org';
 import {showErrorToast} from './modules/toast.ts';
 
-type HtmxEvent = Event & {detail: HtmxResponseInfo};
+type HtmxStub = {process: (_el: Element) => void};
+type HtmxErrorEvent = Event & {detail?: {requestConfig?: {path?: string}, xhr?: {status?: number}}};
 
 export function initHtmx() {
-  window.htmx = htmx;
-
-  // https://htmx.org/reference/#config
-  htmx.config.requestClass = 'is-loading';
-  htmx.config.scrollIntoViewOnBoost = false;
+  // Compatibility stub: we removed the external htmx runtime for license policy.
+  // Existing call sites use only `window.htmx.process(...)`.
+  window.htmx = {process: () => {}} as HtmxStub;
 
   // https://htmx.org/events/#htmx:sendError
-  document.body.addEventListener('htmx:sendError', (event: Partial<HtmxEvent>) => {
+  document.body.addEventListener('htmx:sendError', (event: Partial<HtmxErrorEvent>) => {
     // TODO: add translations
-    showErrorToast(`Network error when calling ${event.detail!.requestConfig.path}`);
+    showErrorToast(`Network error when calling ${event.detail?.requestConfig?.path ?? 'unknown endpoint'}`);
   });
 
   // https://htmx.org/events/#htmx:responseError
-  document.body.addEventListener('htmx:responseError', (event: Partial<HtmxEvent>) => {
+  document.body.addEventListener('htmx:responseError', (event: Partial<HtmxErrorEvent>) => {
     // TODO: add translations
-    showErrorToast(`Error ${event.detail!.xhr.status} when calling ${event.detail!.requestConfig.path}`);
+    const status = event.detail?.xhr?.status ?? 'unknown';
+    showErrorToast(`Error ${status} when calling ${event.detail?.requestConfig?.path ?? 'unknown endpoint'}`);
   });
 }

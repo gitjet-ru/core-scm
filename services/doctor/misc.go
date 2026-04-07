@@ -19,7 +19,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/setting"
 	"github.com/gitjet-ru/core-scm/modules/structs"
 
-	lru "github.com/hashicorp/golang-lru/v2"
+	lru "github.com/gitjet-ru/core-scm/modules/lru"
 	"xorm.io/builder"
 )
 

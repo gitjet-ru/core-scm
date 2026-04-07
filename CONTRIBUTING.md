@@ -267,7 +267,7 @@ PRs without a milestone may not be merged.
 
 Almost all labels used inside Gitea can be classified as one of the following:
 
-- `modifies/…`: Determines which parts of the codebase are affected. These labels will be set through the CI.
+- `modifies/…`: Determines which parts of the codebase are affected. These labels are set automatically by repository automation.
 - `topic/…`:  Determines the conceptual component of Gitea that is affected, i.e. issues, projects, or authentication. At best, PRs should only target one component but there might be overlap. Must be set manually.
 - `type/…`: Determines the type of an issue or PR (feature, refactoring, docs, bug, …). If GitHub supported scoped labels, these labels would be exclusive, so you should set **exactly** one, not more or less (every PR should fall into one of the provided categories, and only one).
 - `issue/…` / `pr/…`: Labels that are specific to issues or PRs respectively and that are only necessary in a given context, i.e. `issue/not-a-bug` or `pr/need-2-approvals`
@@ -311,7 +311,7 @@ Breaking PRs will not be merged as long as not both of these requirements are me
 The moment you create a non-draft PR or the moment you convert a draft PR to a non-draft PR is the moment code review starts for it. \
 Once that happens, do not rebase or squash your branch anymore as it makes it difficult to review the new changes. \
 Merge the base branch into your branch only when you really need to, i.e. because of conflicting changes in the mean time. \
-This reduces unnecessary CI runs. \
+This reduces unnecessary automation runs. \
 Don't worry about merge commits messing up your commit history as every PR will be squash merged. \
 This means that all changes are joined into a single new commit whose message is as described below.
 
@@ -615,13 +615,13 @@ be reviewed by two maintainers and must pass the automatic tests.
 - Before releasing, confirm all the version's milestone issues or PRs has been resolved. Then discuss the release on Discord channel #maintainers and get agreed with almost all the owners and mergers. Or you can declare the version and if nobody is against it in about several hours.
 - If this is a big version first you have to create PR for changelog on branch `main` with PRs with label `changelog` and after it has been merged do following steps:
   - Create `-dev` tag as `git tag -s -F release.notes v$vmaj.$vmin.0-dev` and push the tag as `git push origin v$vmaj.$vmin.0-dev`.
-  - When CI has finished building tag then you have to create a new branch named `release/v$vmaj.$vmin`
+  - When automated release build has finished for the tag then you have to create a new branch named `release/v$vmaj.$vmin`
 - If it is bugfix version create PR for changelog on branch `release/v$vmaj.$vmin` and wait till it is reviewed and merged.
 - Add a tag as `git tag -s -F release.notes v$vmaj.$vmin.$`, release.notes file could be a temporary file to only include the changelog this version which you added to `CHANGELOG.md`.
-- And then push the tag as `git push origin v$vmaj.$vmin.$`. Drone CI will automatically create a release and upload all the compiled binary. (But currently it doesn't add the release notes automatically. Maybe we should fix that.)
+- And then push the tag as `git push origin v$vmaj.$vmin.$`. The release automation will create a release and upload all the compiled binaries. (It may still require manual release-note adjustments.)
 - If needed send a frontport PR for the changelog to branch `main` and update the version in `docs/config.yaml` to refer to the new version.
 - Send PR to [blog repository](https://gitea.com/gitea/blog) announcing the release.
-- Verify all release assets were correctly published through CI on dl.gitea.com and GitHub releases. Once ACKed:
+- Verify all release assets were correctly published by release automation on dl.gitea.com and GitHub releases. Once ACKed:
   - bump the version of https://dl.gitea.com/gitea/version.json
   - merge the blog post PR
   - announce the release in discord `#announcements`

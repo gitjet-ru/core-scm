@@ -16,7 +16,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/util"
 	"github.com/gitjet-ru/core-scm/modules/validation"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 var (
@@ -175,7 +175,7 @@ func ParseNuspecMetaData(archive *zip.Reader, r io.Reader) (*Package, error) {
 		return nil, ErrNuspecInvalidID
 	}
 
-	v, err := version.NewSemver(p.Metadata.Version)
+	v, err := semver.NewVersion(p.Metadata.Version)
 	if err != nil {
 		return nil, ErrNuspecInvalidVersion
 	}
@@ -261,13 +261,10 @@ func ParseNuspecMetaData(archive *zip.Reader, r io.Reader) (*Package, error) {
 
 // https://learn.microsoft.com/en-us/nuget/concepts/package-versioning#normalized-version-numbers
 // https://github.com/NuGet/NuGet.Client/blob/dccbd304b11103e08b97abf4cf4bcc1499d9235a/src/NuGet.Core/NuGet.Versioning/VersionFormatter.cs#L121
-func toNormalizedVersion(v *version.Version) string {
+func toNormalizedVersion(v *semver.Version) string {
 	var buf bytes.Buffer
-	segments := v.Segments64()
-	_, _ = fmt.Fprintf(&buf, "%d.%d.%d", segments[0], segments[1], segments[2])
-	if len(segments) > 3 && segments[3] > 0 {
-		_, _ = fmt.Fprintf(&buf, ".%d", segments[3])
-	}
+	maj, min, pat := v.Major(), v.Minor(), v.Patch()
+	_, _ = fmt.Fprintf(&buf, "%d.%d.%d", maj, min, pat)
 	pre := v.Prerelease()
 	if pre != "" {
 		_, _ = fmt.Fprint(&buf, "-", pre)

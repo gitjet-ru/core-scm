@@ -1,0 +1,28 @@
+{
+  "policy": {
+    "allowedLicenses": ["MIT", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "ISC"],
+    "blockedLicenses": ["MPL", "LGPL", "GPL", "AGPL", "CC0", "Public Domain", "Unknown", "Proprietary"]
+  },
+  "go": {
+    "blockedModules": [
+      "github.com/hashicorp/go-version",
+      "github.com/hashicorp/go-multierror",
+      "github.com/hashicorp/go-retryablehttp",
+      "github.com/hashicorp/golang-lru/v2",
+      "github.com/go-sql-driver/mysql",
+      "github.com/mattn/go-sqlite3",
+      "github.com/xi2/xz",
+      "github.com/zeebo/blake3",
+      "gitlab.com/gitlab-org/api/client-go"
+    ]
+  },
+  "npm": {
+    "blockedPackages": [
+      "@resvg/resvg-wasm",
+      "eslint-plugin-sonarjs",
+      "stylelint-value-no-unknown-custom-properties",
+      "htmx.org",
+      "idiomorph"
+    ]
+  }
+}

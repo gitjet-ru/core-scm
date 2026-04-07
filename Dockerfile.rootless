@@ -1,15 +1,16 @@
-# syntax=docker/dockerfile:1
+ARG GOLANG_BASE_REF=REGISTRY_BASE/golang-base@sha256:REPLACE_GOLANG_DIGEST
+ARG ALPINE_BASE_REF=REGISTRY_BASE/alpine-base@sha256:REPLACE_ALPINE_3_23_DIGEST
 # Build frontend on the native platform to avoid QEMU-related issues with esbuild/webpack
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26-alpine3.23 AS frontend-build
+FROM --platform=$BUILDPLATFORM ${GOLANG_BASE_REF} AS frontend-build
 RUN apk --no-cache add build-base git nodejs pnpm
 WORKDIR /src
 COPY package.json pnpm-lock.yaml .npmrc ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
-COPY --exclude=.git/ . .
+COPY . .
 RUN make frontend
 
 # Build backend for each target platform
-FROM docker.io/library/golang:1.26-alpine3.23 AS build-env
+FROM ${GOLANG_BASE_REF} AS build-env
 
 ARG GITEA_VERSION
 ARG TAGS="sqlite sqlite_unlock_notify"
@@ -25,7 +26,7 @@ WORKDIR ${GOPATH}/src/github.com/gitjet-ru/core-scm
 COPY go.mod go.sum ./
 RUN go mod download
 # See the comments in Dockerfile
-COPY --exclude=.git/ . .
+COPY . .
 COPY --from=frontend-build /src/public/assets public/assets
 
 # Build gitea, .git mount is required for version data
@@ -39,7 +40,7 @@ COPY docker/rootless /tmp/local
 RUN chmod 755 /tmp/local/usr/local/bin/* \
               /go/src/github.com/gitjet-ru/core-scm/gitea
 
-FROM docker.io/library/alpine:3.23 AS gitea-rootless
+FROM ${ALPINE_BASE_REF} AS gitea-rootless
 
 EXPOSE 2222 3000
 

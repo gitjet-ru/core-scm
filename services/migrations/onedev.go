@@ -18,7 +18,7 @@ import (
 	base "github.com/gitjet-ru/core-scm/modules/migration"
 	"github.com/gitjet-ru/core-scm/modules/structs"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 const OneDevRequiredVersion = "12.0.1"
@@ -136,12 +136,12 @@ func (d *OneDevDownloader) callAPI(ctx context.Context, endpoint string, paramet
 	defer resp.Body.Close()
 
 	// special case to read OneDev server version, which is not valid JSON
-	if presult, ok := result.(**version.Version); ok {
+	if presult, ok := result.(**semver.Version); ok {
 		bytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
-		vers, err := version.NewVersion(string(bytes))
+		vers, err := semver.NewVersion(string(bytes))
 		if err != nil {
 			return err
 		}
@@ -156,7 +156,7 @@ func (d *OneDevDownloader) callAPI(ctx context.Context, endpoint string, paramet
 // GetRepoInfo returns repository information
 func (d *OneDevDownloader) GetRepoInfo(ctx context.Context) (*base.Repository, error) {
 	// check OneDev server version
-	var serverVersion *version.Version
+	var serverVersion *semver.Version
 	err := d.callAPI(
 		ctx,
 		"/~api/version/server",
@@ -166,7 +166,7 @@ func (d *OneDevDownloader) GetRepoInfo(ctx context.Context) (*base.Repository, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OneDev server version; OneDev %s or newer required", OneDevRequiredVersion)
 	}
-	requiredVersion, _ := version.NewVersion(OneDevRequiredVersion)
+	requiredVersion, _ := semver.NewVersion(OneDevRequiredVersion)
 	if serverVersion.LessThan(requiredVersion) {
 		return nil, fmt.Errorf("OneDev %s or newer required; currently running OneDev %s", OneDevRequiredVersion, serverVersion)
 	}

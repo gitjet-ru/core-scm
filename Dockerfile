@@ -1,15 +1,16 @@
-# syntax=docker/dockerfile:1
+ARG GOLANG_BASE_REF=REGISTRY_BASE/golang-base@sha256:REPLACE_GOLANG_DIGEST
+ARG ALPINE_BASE_REF=REGISTRY_BASE/alpine-base@sha256:REPLACE_ALPINE_3_23_DIGEST
 # Build frontend on the native platform to avoid QEMU-related issues with esbuild/webpack
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26-alpine3.23 AS frontend-build
+FROM --platform=$BUILDPLATFORM ${GOLANG_BASE_REF} AS frontend-build
 RUN apk --no-cache add build-base git nodejs pnpm
 WORKDIR /src
 COPY package.json pnpm-lock.yaml .npmrc ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
-COPY --exclude=.git/ . .
+COPY . .
 RUN make frontend
 
 # Build backend for each target platform
-FROM docker.io/library/golang:1.26-alpine3.23 AS build-env
+FROM ${GOLANG_BASE_REF} AS build-env
 
 ARG GITEA_VERSION
 ARG TAGS="sqlite sqlite_unlock_notify"
@@ -26,7 +27,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 # Use COPY instead of bind mount as read-only one breaks makefile state tracking and read-write one needs binary to be moved as it's discarded.
 # ".git" directory is mounted separately later only for version data extraction.
-COPY --exclude=.git/ . .
+COPY . .
 COPY --from=frontend-build /src/public/assets public/assets
 
 # Build gitea, .git mount is required for version data
@@ -44,7 +45,7 @@ RUN chmod 755 /tmp/local/usr/bin/entrypoint \
               /tmp/local/etc/s6/.s6-svscan/* \
               /go/src/github.com/gitjet-ru/core-scm/gitea
 
-FROM docker.io/library/alpine:3.23 AS gitea
+FROM ${ALPINE_BASE_REF} AS gitea
 
 EXPOSE 22 3000
 
@@ -86,17 +87,22 @@ ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/usr/bin/s6-svscan", "/etc/s6"]
 
 # Build geesefs once (for local/dev S3 mount image)
-FROM docker.io/library/alpine:3.23 AS geesefs-build
+FROM ${ALPINE_BASE_REF} AS geesefs-build
 ARG GEESEFS_VERSION=0.43.5
 ARG TARGETARCH
-RUN apk add --no-cache curl && \
+RUN apk add --no-cache curl jq && \
     case "${TARGETARCH}" in \
       amd64) ARCH=amd64 ;; \
       arm64) ARCH=arm64 ;; \
       *) echo "Unsupported TARGETARCH: ${TARGETARCH}" && exit 1 ;; \
     esac && \
-    curl -fsSL "https://github.com/yandex-cloud/geesefs/releases/download/v${GEESEFS_VERSION}/geesefs-linux-${ARCH}" \
-      -o /usr/local/bin/geesefs && \
+    ASSET_URL="https://github.com/yandex-cloud/geesefs/releases/download/v${GEESEFS_VERSION}/geesefs-linux-${ARCH}" && \
+    curl -fsSL "${ASSET_URL}" -o /usr/local/bin/geesefs && \
+    EXPECTED_SHA="$(curl -fsSL "https://api.github.com/repos/yandex-cloud/geesefs/releases/tags/v${GEESEFS_VERSION}" \
+      | jq -r ".assets[] | select(.name==\"geesefs-linux-${ARCH}\") | .digest" \
+      | sed 's/^sha256://')" && \
+    test -n "${EXPECTED_SHA}" && \
+    echo "${EXPECTED_SHA}  /usr/local/bin/geesefs" | sha256sum -c - && \
     chmod +x /usr/local/bin/geesefs
 
 # Local / dev image: mount S3 over /data/git via geesefs before starting Gitea.

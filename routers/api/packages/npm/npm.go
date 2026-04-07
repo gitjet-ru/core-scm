@@ -26,7 +26,7 @@ import (
 	"github.com/gitjet-ru/core-scm/services/context"
 	packages_service "github.com/gitjet-ru/core-scm/services/packages"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 // errInvalidTagName indicates an invalid tag name
@@ -247,7 +247,7 @@ func UploadPackage(ctx *context.Context) {
 }
 
 // DeletePreview does nothing
-// The client tells the server what package version it knows about after deleting a version.
+// The client tells the server what package version it knows about after deleting a semver.
 func DeletePreview(ctx *context.Context) {
 	ctx.Status(http.StatusOK)
 }
@@ -386,7 +386,7 @@ func setPackageTag(ctx std_ctx.Context, tag string, pv *packages_model.PackageVe
 	if tag == "" {
 		return errInvalidTagName
 	}
-	_, err := version.NewVersion(tag)
+	_, err := semver.NewVersion(tag)
 	if err == nil {
 		return errInvalidTagName
 	}

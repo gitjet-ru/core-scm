@@ -21,11 +21,12 @@ MISSPELL_PACKAGE ?= github.com/golangci/misspell/cmd/misspell@v0.8.0
 SWAGGER_PACKAGE ?= github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
 XGO_PACKAGE ?= src.techknowlogick.com/xgo@latest
 GOVULNCHECK_PACKAGE ?= golang.org/x/vuln/cmd/govulncheck@v1
-ACTIONLINT_PACKAGE ?= github.com/rhysd/actionlint/cmd/actionlint@v1.7.11
 
 DOCKER_IMAGE ?= gitea/gitea
 DOCKER_TAG ?= latest
 DOCKER_REF := $(DOCKER_IMAGE):$(DOCKER_TAG)
+REGISTRY_BASE ?= REGISTRY_BASE
+BASE_IMAGES_LOCK ?= compliance/base-images.lock
 
 ifeq ($(HAS_GO), yes)
 	CGO_EXTRA_CFLAGS := -DSQLITE_MAX_VARIABLE_NUMBER=32766
@@ -149,8 +150,8 @@ WEB_DIRS := web_src/js web_src/css
 
 ESLINT_FILES := web_src/js tools *.ts tests/e2e
 STYLELINT_FILES := web_src/css web_src/js/components/*.vue
-SPELLCHECK_FILES := $(GO_DIRS) $(WEB_DIRS) templates options/locale/locale_en-US.json .github $(filter-out CHANGELOG.md, $(wildcard *.go *.md *.yml *.yaml *.toml))
-EDITORCONFIG_FILES := templates .github/workflows options/locale/locale_en-US.json
+SPELLCHECK_FILES := $(GO_DIRS) $(WEB_DIRS) templates options/locale/locale_en-US.json $(filter-out CHANGELOG.md, $(wildcard *.go *.md *.yml *.yaml *.toml))
+EDITORCONFIG_FILES := templates options/locale/locale_en-US.json
 
 GO_SOURCES := $(wildcard *.go)
 GO_SOURCES += $(shell find $(GO_DIRS) -type f -name "*.go")
@@ -338,7 +339,7 @@ lint-go: ## lint go files
 lint-go-fix: ## lint go files and fix issues
 	$(GO) run $(GOLANGCI_LINT_PACKAGE) run --fix
 
-# workaround step for the lint-go-windows CI task because 'go run' can not
+# workaround step for Windows lint task because 'go run' can not
 # have distinct GOOS/GOARCH for its build and run steps
 .PHONY: lint-go-windows
 lint-go-windows:
@@ -354,10 +355,6 @@ lint-go-gitea-vet: ## lint go files with gitea-vet
 lint-editorconfig:
 	@echo "Running editorconfig check..."
 	@$(GO) run $(EDITORCONFIG_CHECKER_PACKAGE) $(EDITORCONFIG_FILES)
-
-.PHONY: lint-actions
-lint-actions: ## lint action workflow files
-	$(GO) run $(ACTIONLINT_PACKAGE)
 
 .PHONY: lint-templates
 lint-templates: .venv node_modules ## lint template files
@@ -454,6 +451,34 @@ go-licenses: $(GO_LICENSE_FILE) ## regenerate go licenses
 $(GO_LICENSE_FILE): go.mod go.sum
 	GO=$(GO) $(GO) run build/generate-go-licenses.go $(GO_LICENSE_FILE)
 
+.PHONY: compliance-license-gate
+compliance-license-gate: ## run strict license denylist gate
+	node tools/license-gate.mjs
+
+.PHONY: base-images-build
+base-images-build: ## build internal independent base images
+	REGISTRY_BASE=$(REGISTRY_BASE) node tools/base-images.mjs build
+
+.PHONY: base-images-verify-sources
+base-images-verify-sources: ## verify local source artifact checksums
+	node tools/base-images.mjs verify-artifacts
+
+.PHONY: base-images-push
+base-images-push: ## push internal independent base images
+	REGISTRY_BASE=$(REGISTRY_BASE) node tools/base-images.mjs push
+
+.PHONY: base-images-lock-sync
+base-images-lock-sync: ## update digest refs in compliance/base-images.lock
+	REGISTRY_BASE=$(REGISTRY_BASE) node tools/sync-base-images-lock.mjs
+
+.PHONY: base-images-sbom
+base-images-sbom: ## generate SBOM for base images
+	REGISTRY_BASE=$(REGISTRY_BASE) node tools/base-images.mjs sbom
+
+.PHONY: base-images-sign
+base-images-sign: ## sign digest-pinned base images using cosign
+	REGISTRY_BASE=$(REGISTRY_BASE) node tools/base-images.mjs sign
+
 generate-ini-sqlite:
 	sed -e 's|{{WORK_PATH}}|$(CURDIR)/tests/$(or $(TEST_TYPE),integration)/gitea-$(or $(TEST_TYPE),integration)-sqlite|g' \
 		-e 's|{{TEST_LOGGER}}|$(or $(TEST_LOGGER),test$(COMMA)file)|g' \
@@ -539,8 +564,8 @@ test-mssql-migration: test-pgsql-migration ## deprecated alias
 
 .PHONY: playwright
 playwright: deps-frontend
-	@# on GitHub Actions VMs, playwright's system deps are pre-installed
-	@$(NODE_VARS) pnpm exec playwright install $(if $(GITHUB_ACTIONS),,--with-deps) chromium $(if $(CI),firefox) $(PLAYWRIGHT_FLAGS)
+	@# in pre-provisioned environments, playwright's system deps may be pre-installed
+	@$(NODE_VARS) pnpm exec playwright install --with-deps chromium firefox $(PLAYWRIGHT_FLAGS)
 
 .PHONY: test-e2e
 test-e2e: playwright $(EXECUTABLE_E2E)
@@ -752,7 +777,6 @@ deps-tools: ## install tool dependencies
 	$(GO) install $(SWAGGER_PACKAGE) & \
 	$(GO) install $(XGO_PACKAGE) & \
 	$(GO) install $(GOVULNCHECK_PACKAGE) & \
-	$(GO) install $(ACTIONLINT_PACKAGE) & \
 	wait
 
 node_modules: pnpm-lock.yaml

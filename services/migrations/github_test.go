@@ -16,7 +16,7 @@ import (
 )
 
 func TestGitHubDownloadRepo(t *testing.T) {
-	GithubLimitRateRemaining = 3 // Wait at 3 remaining since we could have 3 CI in //
+	GithubLimitRateRemaining = 3 // Keep margin for parallel test runs.
 	token := os.Getenv("GITHUB_READ_TOKEN")
 	if token == "" {
 		t.Skip("Skipping GitHub migration test because GITHUB_READ_TOKEN is empty")
@@ -462,4 +462,8 @@ func TestGithubMultiToken(t *testing.T) {
 			assert.Equal(t, tC.expectedCloneURL, cloneURL)
 		})
 	}
+}
+
+func ptrTime(t time.Time) *time.Time {
+	return &t
 }

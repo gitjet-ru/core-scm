@@ -61,7 +61,7 @@ func getModules(goCmd string) []ModuleInfo {
 		"{{if .Module}}{{.Module.Path}}\t{{.Module.Dir}}\t{{.Dir}}{{end}}", "./...")
 	cmd.Stderr = os.Stderr
 	// Use GOOS=linux with CGO to ensure we capture all platform-specific
-	// dependencies, matching the CI environment.
+	// dependencies, matching the production-like build environment.
 	cmd.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=1")
 	output, err := cmd.Output()
 	if err != nil {

@@ -18,7 +18,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/util"
 	"github.com/gitjet-ru/core-scm/modules/validation"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 var (
@@ -211,7 +211,7 @@ func ParsePackage(r io.Reader) (*Package, error) {
 			return nil, ErrInvalidPackageName
 		}
 
-		v, err := version.NewSemver(meta.Version)
+		v, err := semver.NewVersion(meta.Version)
 		if err != nil {
 			return nil, ErrInvalidPackageVersion
 		}

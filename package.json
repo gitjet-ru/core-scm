@@ -16,7 +16,6 @@
     "@mcaptcha/vanilla-glue": "0.1.0-alpha-3",
     "@mermaid-js/layout-elk": "0.2.1",
     "@primer/octicons": "19.23.1",
-    "@resvg/resvg-wasm": "2.6.2",
     "@silverwind/vue3-calendar-heatmap": "2.1.1",
     "@techknowlogick/license-checker-webpack-plugin": "0.3.0",
     "add-asset-webpack-plugin": "3.1.1",
@@ -34,8 +33,6 @@
     "dropzone": "6.0.0-beta.2",
     "easymde": "2.20.0",
     "esbuild-loader": "4.4.2",
-    "htmx.org": "2.0.8",
-    "idiomorph": "0.7.4",
     "jquery": "4.0.0",
     "js-yaml": "4.1.1",
     "katex": "0.16.43",
@@ -93,7 +90,6 @@
     "eslint-plugin-import-x": "4.16.2",
     "eslint-plugin-playwright": "2.10.1",
     "eslint-plugin-regexp": "3.1.0",
-    "eslint-plugin-sonarjs": "4.0.2",
     "eslint-plugin-unicorn": "63.0.0",
     "eslint-plugin-vue": "10.8.0",
     "eslint-plugin-vue-scoped-css": "3.0.0",
@@ -110,7 +106,6 @@
     "stylelint-config-recommended": "18.0.0",
     "stylelint-declaration-block-no-ignored-properties": "3.0.0",
     "stylelint-declaration-strict-value": "1.11.1",
-    "stylelint-value-no-unknown-custom-properties": "6.1.1",
     "svgo": "4.0.1",
     "typescript": "5.9.3",
     "typescript-eslint": "8.57.2",
@@ -118,6 +113,9 @@
     "vite-string-plugin": "2.0.2",
     "vitest": "4.1.2",
     "vue-tsc": "3.2.6"
+  },
+  "scripts": {
+    "compliance:license-gate": "node tools/license-gate.mjs"
   },
   "pnpm": {
     "peerDependencyRules": {

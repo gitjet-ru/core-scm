@@ -6,7 +6,6 @@ import globals from 'globals';
 import importPlugin from 'eslint-plugin-import-x';
 import playwright from 'eslint-plugin-playwright';
 import regexp from 'eslint-plugin-regexp';
-import sonarjs from 'eslint-plugin-sonarjs';
 import stylistic from '@stylistic/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import typescriptPlugin from 'typescript-eslint';
@@ -67,7 +66,6 @@ export default defineConfig([
       'de-morgan': deMorgan,
       'import-x': importPlugin as unknown as ESLint.Plugin, // https://github.com/un-ts/eslint-plugin-import-x/issues/203
       regexp,
-      sonarjs,
       unicorn,
       github,
       wc,
@@ -613,7 +611,7 @@ export default defineConfig([
       'no-useless-constructor': [2],
       'no-useless-escape': [2],
       'no-useless-rename': [2],
-      'no-useless-return': [0], // handled by sonarjs/no-redundant-jump
+      'no-useless-return': [2],
       'no-var': [2],
       'no-void': [2],
       'no-warning-comments': [0],
@@ -721,37 +719,6 @@ export default defineConfig([
       'require-await': [0], // handled by @typescript-eslint/require-await
       'require-unicode-regexp': [0],
       'require-yield': [2],
-      'sonarjs/cognitive-complexity': [0],
-      'sonarjs/elseif-without-else': [0],
-      'sonarjs/max-switch-cases': [0],
-      'sonarjs/no-all-duplicated-branches': [2],
-      'sonarjs/no-collapsible-if': [0],
-      'sonarjs/no-collection-size-mischeck': [2],
-      'sonarjs/no-duplicate-string': [0],
-      'sonarjs/no-duplicated-branches': [0],
-      'sonarjs/no-element-overwrite': [2],
-      'sonarjs/no-empty-collection': [2],
-      'sonarjs/no-extra-arguments': [2],
-      'sonarjs/no-gratuitous-expressions': [2],
-      'sonarjs/no-identical-conditions': [0], // handled by no-dupe-else-if
-      'sonarjs/no-identical-expressions': [2],
-      'sonarjs/no-identical-functions': [2, 5],
-      'sonarjs/no-ignored-return': [2],
-      'sonarjs/no-inverted-boolean-check': [2],
-      'sonarjs/no-nested-switch': [0],
-      'sonarjs/no-nested-template-literals': [0],
-      'sonarjs/no-redundant-boolean': [2],
-      'sonarjs/no-redundant-jump': [2],
-      'sonarjs/no-same-line-conditional': [2],
-      'sonarjs/no-small-switch': [0],
-      'sonarjs/no-unused-collection': [2],
-      'sonarjs/no-use-of-empty-return-value': [2],
-      'sonarjs/no-useless-catch': [0], // handled by no-useless-catch
-      'sonarjs/non-existent-operator': [2],
-      'sonarjs/prefer-immediate-return': [0],
-      'sonarjs/prefer-object-literal': [0],
-      'sonarjs/prefer-single-boolean-return': [0],
-      'sonarjs/prefer-while': [2],
       'sort-imports': [0],
       'sort-keys': [0],
       'sort-vars': [0],

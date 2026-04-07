@@ -19,13 +19,13 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/tempdir"
 	"github.com/gitjet-ru/core-scm/modules/testlogger"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 const RequiredVersion = "2.6.0" // the minimum Git version required
 
 type Features struct {
-	gitVersion *version.Version
+	gitVersion *semver.Version
 
 	UsingGogit                 bool
 	SupportProcReceive         bool           // >= 2.29
@@ -39,7 +39,11 @@ type Features struct {
 var defaultFeatures *Features
 
 func (f *Features) CheckVersionAtLeast(atLeast string) bool {
-	return f.gitVersion.Compare(version.Must(version.NewVersion(atLeast))) >= 0
+	atLeastVer, err := semver.NewVersion(atLeast)
+	if err != nil {
+		return false
+	}
+	return f.gitVersion.Compare(atLeastVer) >= 0
 }
 
 // VersionInfo returns git version information
@@ -83,7 +87,7 @@ func loadGitVersionFeatures() (*Features, error) {
 	return features, nil
 }
 
-func parseGitVersionLine(s string) (*version.Version, error) {
+func parseGitVersionLine(s string) (*semver.Version, error) {
 	fields := strings.Fields(s)
 	if len(fields) < 3 {
 		return nil, fmt.Errorf("invalid git version: %q", s)
@@ -99,15 +103,15 @@ func parseGitVersionLine(s string) (*version.Version, error) {
 	if len(versionFields) > 3 {
 		versionFields = versionFields[:3]
 	}
-	return version.NewVersion(strings.Join(versionFields, "."))
+	return semver.NewVersion(strings.Join(versionFields, "."))
 }
 
-func checkGitVersionCompatibility(gitVer *version.Version) error {
+func checkGitVersionCompatibility(gitVer *semver.Version) error {
 	badVersions := []struct {
-		Version *version.Version
+		Version *semver.Version
 		Reason  string
 	}{
-		{version.Must(version.NewVersion("2.43.1")), "regression bug of GIT_FLUSH"},
+		{semver.MustParse("2.43.1"), "regression bug of GIT_FLUSH"},
 	}
 	for _, bad := range badVersions {
 		if gitVer.Equal(bad.Version) {

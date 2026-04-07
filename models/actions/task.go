@@ -21,7 +21,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/util"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
-	lru "github.com/hashicorp/golang-lru/v2"
+	lru "github.com/gitjet-ru/core-scm/modules/lru"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"xorm.io/builder"
 )

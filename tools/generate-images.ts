@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {initWasm, Resvg} from '@resvg/resvg-wasm';
+import {chromium} from '@playwright/test';
 import {optimize} from 'svgo';
 import {readFile, writeFile} from 'node:fs/promises';
 import {argv, exit} from 'node:process';
@@ -24,15 +24,18 @@ async function generate(svg: string, path: string, {size, bg}: {size: number, bg
     return;
   }
 
-  const resvgJS = new Resvg(svg, {
-    fitTo: {
-      mode: 'width',
-      value: size,
-    },
-    ...(bg && {background: 'white'}),
+  const browser = await chromium.launch();
+  const page = await browser.newPage({
+    viewport: {width: size, height: size},
+    deviceScaleFactor: 1,
   });
-  const renderedImage = resvgJS.render();
-  const pngBytes = renderedImage.asPng();
+
+  const content = bg
+    ? `<body style="margin:0;background:white">${svg}</body>`
+    : `<body style="margin:0;background:transparent">${svg}</body>`;
+  await page.setContent(content);
+  const pngBytes = await page.screenshot({omitBackground: !bg});
+  await browser.close();
   await writeFile(outputFile, Buffer.from(pngBytes));
 }
 
@@ -40,8 +43,6 @@ async function main() {
   const gitea = argv.slice(2).includes('gitea');
   const logoSvg = await readFile(new URL('../assets/logo.svg', import.meta.url), 'utf8');
   const faviconSvg = await readFile(new URL('../assets/favicon.svg', import.meta.url), 'utf8');
-  await initWasm(await readFile(new URL(import.meta.resolve('@resvg/resvg-wasm/index_bg.wasm'))));
-
   await Promise.all([
     generate(logoSvg, '../public/assets/img/logo.svg', {size: 32}),
     generate(logoSvg, '../public/assets/img/logo.png', {size: 512}),

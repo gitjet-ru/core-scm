@@ -16,7 +16,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/timeutil"
 	"github.com/gitjet-ru/core-scm/modules/util"
 
-	lru "github.com/hashicorp/golang-lru/v2"
+	lru "github.com/gitjet-ru/core-scm/modules/lru"
 	"xorm.io/builder"
 )
 

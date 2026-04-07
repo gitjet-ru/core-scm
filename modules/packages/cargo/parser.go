@@ -12,7 +12,7 @@ import (
 	"github.com/gitjet-ru/core-scm/modules/json"
 	"github.com/gitjet-ru/core-scm/modules/validation"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 )
 
 const PropertyYanked = "cargo.yanked"
@@ -120,7 +120,7 @@ func parsePackage(r io.Reader) (*Package, error) {
 		return nil, ErrInvalidName
 	}
 
-	if _, err := version.NewSemver(meta.Vers); err != nil {
+	if _, err := semver.NewVersion(meta.Vers); err != nil {
 		return nil, ErrInvalidVersion
 	}
 

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-version"
+	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -144,35 +144,35 @@ func TestParsePackage(t *testing.T) {
 
 func TestTrimmedVersionString(t *testing.T) {
 	cases := []struct {
-		Version  *version.Version
+		Version  *semver.Version
 		Expected string
 	}{
 		{
-			Version:  version.Must(version.NewVersion("1")),
+			Version:  semver.MustParse("1"),
 			Expected: "1.0",
 		},
 		{
-			Version:  version.Must(version.NewVersion("1.0")),
+			Version:  semver.MustParse("1.0"),
 			Expected: "1.0",
 		},
 		{
-			Version:  version.Must(version.NewVersion("1.0.0")),
+			Version:  semver.MustParse("1.0.0"),
 			Expected: "1.0",
 		},
 		{
-			Version:  version.Must(version.NewVersion("1.0.1")),
+			Version:  semver.MustParse("1.0.1"),
 			Expected: "1.0.1",
 		},
 		{
-			Version:  version.Must(version.NewVersion("1.0+meta")),
+			Version:  semver.MustParse("1.0+meta"),
 			Expected: "1.0",
 		},
 		{
-			Version:  version.Must(version.NewVersion("1.0.0+meta")),
+			Version:  semver.MustParse("1.0.0+meta"),
 			Expected: "1.0",
 		},
 		{
-			Version:  version.Must(version.NewVersion("1.0.1+meta")),
+			Version:  semver.MustParse("1.0.1+meta"),
 			Expected: "1.0.1",
 		},
 	}

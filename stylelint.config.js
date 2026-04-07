@@ -17,7 +17,6 @@ export default {
   plugins: [
     'stylelint-declaration-strict-value',
     'stylelint-declaration-block-no-ignored-properties',
-    'stylelint-value-no-unknown-custom-properties',
     '@stylistic/stylelint-plugin',
   ],
   ignoreFiles: [
