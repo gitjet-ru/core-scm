@@ -1,3 +1,8 @@
-ce8f782f1628d046fb6360eff880b898e5205ed91106d9d14ff4fcb97431bbde  artifacts/rootfs/alpine-minirootfs-3.23.0-x86_64.tar.gz
-f2b6248c9cbcb0993744d86ca9f67a058706f4ef5bf8c3c47d1cca8acf2013e0  artifacts/rootfs/alpine-minirootfs-3.19.0-x86_64.tar.gz
+ce8f782f1628d046fb6360eff880b898e5205ed91106d9d14ff4fcb97431bbde  artifacts/rootfs/alpine-minirootfs-3.23.0-amd64.tar.gz
+f2b6248c9cbcb0993744d86ca9f67a058706f4ef5bf8c3c47d1cca8acf2013e0  artifacts/rootfs/alpine-minirootfs-3.19.0-amd64.tar.gz
 031f088e5d955bab8657ede27ad4e3bc5b7c1ba281f05f245bcc304f327c987a  artifacts/go/go1.26.1.linux-amd64.tar.gz
+5552106ac866be0c46fdff7a2991a1ed85c0464301a1ac87454c41739d5b6431  artifacts/rootfs/alpine-minirootfs-3.23.0-arm64.tar.gz
+ee6d3597c078e50a837a2d124594c439957fbd9e653d1286afb355c43370d0d1  artifacts/rootfs/alpine-minirootfs-3.19.0-arm64.tar.gz
+a290581cfe4fe28ddd737dde3095f3dbeb7f2e4065cab4eae44dfc53b760c2f7  artifacts/go/go1.26.1.linux-arm64.tar.gz
+ee81a54cfa0f7e62de84783ff3ee20626a9e45f6b943346f1cf431761983da0c  artifacts/python/python3.12.11-linux-amd64.tar.gz
+a549cc9109c4610c107a42a95d100cde07dd5728b477ff6054e73e8fa5a48730  artifacts/python/python3.12.11-linux-arm64.tar.gz

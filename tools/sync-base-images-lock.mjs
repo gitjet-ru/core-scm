@@ -7,9 +7,9 @@ const execFileAsync = promisify(execFile);
 
 const registryBase = process.env.REGISTRY_BASE || 'REGISTRY_BASE';
 const images = [
-  {imageKey: 'ALPINE_3_23_IMAGE', refKey: 'ALPINE_3_23_REF', image: `${registryBase}/alpine-base:3.23`},
-  {imageKey: 'ALPINE_3_19_IMAGE', refKey: 'ALPINE_3_19_REF', image: `${registryBase}/alpine-base:3.19`},
-  {imageKey: 'GOLANG_1_26_ALPINE_3_23_IMAGE', refKey: 'GOLANG_1_26_ALPINE_3_23_REF', image: `${registryBase}/golang-base:1.26-alpine3.23`},
+  {imageKey: 'ALPINE_3_23_IMAGE', refKey: 'ALPINE_3_23_REF', image: `${registryBase}/alpine:3.23`},
+  {imageKey: 'ALPINE_3_19_IMAGE', refKey: 'ALPINE_3_19_REF', image: `${registryBase}/alpine:3.19`},
+  {imageKey: 'GOLANG_1_26_ALPINE_3_23_IMAGE', refKey: 'GOLANG_1_26_ALPINE_3_23_REF', image: `${registryBase}/go:1.26.1`},
 ];
 
 function parseDigest(output, imageRef) {

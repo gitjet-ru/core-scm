@@ -1,7 +1,7 @@
 # etcd v3.4.x из официального релиза (linux-${TARGETARCH}).
 # Нужен v3.4: Patroni в Spilo использует API v2 (в 3.5+ снят). В compose задайте --enable-v2=true (в 3.4.x по умолчанию false).
 # Сборка под архитектуру хоста избегает эмуляции amd64 на arm64 (mmap bbolt → "cannot allocate memory").
-ARG ALPINE_BASE_REF=REGISTRY_BASE/alpine-base@sha256:REPLACE_ALPINE_3_19_DIGEST
+ARG ALPINE_BASE_REF=registry.gitjet.ru/alpine:3.19
 FROM ${ALPINE_BASE_REF}
 
 ARG ETCD_VERSION=3.4.33

@@ -1,51 +1,542 @@
 {{template "base/head" .}}
-<div role="main" aria-label="{{if .IsSigned}}{{ctx.Locale.Tr "dashboard"}}{{else}}{{ctx.Locale.Tr "home_title"}}{{end}}" class="page-content home">
-	<div class="tw-mb-8 tw-px-8">
-		<div class="center">
-			<img class="logo" width="220" height="220" src="{{AssetUrlPrefix}}/img/logo.svg" alt="{{ctx.Locale.Tr "logo"}}">
-			<div class="hero">
-				<h1 class="ui icon header title tw-text-balance">
-					{{AppName}}
-				</h1>
-				<h2 class="tw-text-balance">{{ctx.Locale.Tr "startpage.app_desc"}}</h2>
+<style>
+	:root {
+		--gj-cyan: #00D2FF;
+		--gj-navy: #0A2B5E;
+		--gj-dark-bg: #07121F;
+		--gj-dark-card: rgba(14, 30, 54, 0.85);
+		--gj-dark-text: #EAF4FF;
+		--gj-dark-muted: #9CB8D6;
+		--gj-light-bg: #F4F9FF;
+		--gj-light-card: rgba(255, 255, 255, 0.92);
+		--gj-light-text: #0E2241;
+		--gj-light-muted: #456083;
+	}
+
+	.gj-landing {
+		font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+		background: var(--gj-light-bg);
+		color: var(--gj-light-text);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.gj-grid-bg {
+		position: absolute;
+		inset: 0;
+		background-image:
+			linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+		background-size: 34px 34px;
+		mask-image: radial-gradient(circle at center, black 45%, transparent 95%);
+		pointer-events: none;
+	}
+
+	.gj-glow {
+		position: absolute;
+		inset: -20% -10% auto;
+		height: 360px;
+		background: radial-gradient(circle at 20% 50%, rgba(0, 210, 255, 0.22), transparent 55%),
+			radial-gradient(circle at 80% 20%, rgba(10, 43, 94, 0.35), transparent 60%);
+		animation: gjPulse 8s ease-in-out infinite alternate;
+		pointer-events: none;
+	}
+
+	@keyframes gjPulse {
+		from { transform: translateY(-8px) scale(1); }
+		to { transform: translateY(8px) scale(1.03); }
+	}
+
+	.gj-wrap {
+		max-width: 1160px;
+		margin: 0 auto;
+		padding: 1.25rem 1rem 3rem;
+		position: relative;
+		z-index: 1;
+	}
+
+	.gj-section {
+		padding-top: 3.5rem;
+	}
+
+	.gj-top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+
+	.gj-brand {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.gj-brand img {
+		width: 36px;
+		height: 36px;
+	}
+
+	.gj-brand strong {
+		font-size: 1rem;
+		letter-spacing: 0.02em;
+	}
+
+	.gj-menu-btn {
+		border: 1px solid rgba(0, 210, 255, 0.35);
+		background: rgba(255, 255, 255, 0.02);
+		color: inherit;
+		border-radius: 0.7rem;
+		padding: 0.5rem 0.75rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.gj-menu-btn:hover {
+		border-color: var(--gj-cyan);
+		background: rgba(0, 210, 255, 0.15);
+	}
+
+	.gj-lang-select {
+		border: 1px solid rgba(0, 210, 255, 0.35);
+		background: rgba(255, 255, 255, 0.85);
+		color: inherit;
+		border-radius: 0.7rem;
+		padding: 0.5rem 0.75rem;
+		cursor: pointer;
+	}
+
+	.gj-menu {
+		display: none;
+		gap: 1rem;
+		margin-top: 0.8rem;
+		padding: 0.9rem;
+		border-radius: 0.9rem;
+		border: 1px solid rgba(0, 210, 255, 0.2);
+		background: rgba(0, 0, 0, 0.24);
+	}
+
+	.gj-menu a {
+		color: inherit;
+		text-decoration: none;
+		opacity: 0.9;
+	}
+
+	.gj-menu a:hover {
+		color: var(--gj-cyan);
+	}
+
+	.gj-hero h1 {
+		font-size: clamp(2rem, 5vw, 3.25rem);
+		line-height: 1.08;
+		margin: 0 0 1rem;
+	}
+
+	.gj-hero p {
+		font-size: clamp(1rem, 2vw, 1.2rem);
+		max-width: 760px;
+		margin: 0;
+		color: var(--gj-light-muted);
+	}
+
+	.gj-cta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.8rem;
+		margin-top: 1.5rem;
+	}
+
+	.gj-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1.1rem;
+		border-radius: 0.8rem;
+		border: 1px solid transparent;
+		text-decoration: none;
+		font-weight: 600;
+		transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+	}
+
+	.gj-btn-primary {
+		background: linear-gradient(135deg, var(--gj-cyan), #4DE6FF);
+		color: #00162B;
+	}
+
+	.gj-btn-secondary {
+		background: rgba(255, 255, 255, 0.03);
+		color: inherit;
+		border-color: rgba(0, 210, 255, 0.35);
+	}
+
+	.gj-btn:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 8px 22px rgba(0, 210, 255, 0.25);
+	}
+
+	.gj-title {
+		font-size: clamp(1.45rem, 2.4vw, 2rem);
+		margin: 0 0 1.2rem;
+	}
+
+	.gj-grid-3 {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+
+	.gj-card {
+		border-radius: 1rem;
+		padding: 1rem;
+		border: 1px solid rgba(0, 210, 255, 0.2);
+		background: var(--gj-light-card);
+		backdrop-filter: blur(2px);
+		transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.gj-card:hover {
+		transform: translateY(-2px);
+		border-color: var(--gj-cyan);
+		box-shadow: 0 12px 22px rgba(0, 210, 255, 0.18);
+	}
+
+	.gj-icon {
+		width: 1.35rem;
+		height: 1.35rem;
+		color: var(--gj-cyan);
+		display: inline-block;
+		margin-bottom: 0.5rem;
+	}
+
+	.gj-card h3 {
+		margin: 0 0 0.55rem;
+		font-size: 1.02rem;
+	}
+
+	.gj-card p {
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.5;
+		color: var(--gj-light-muted);
+	}
+
+	.gj-table-wrap {
+		overflow-x: auto;
+		border-radius: 1rem;
+		border: 1px solid rgba(0, 210, 255, 0.2);
+		background: var(--gj-light-card);
+	}
+
+	.gj-table {
+		width: 100%;
+		border-collapse: collapse;
+		min-width: 720px;
+	}
+
+	.gj-table th, .gj-table td {
+		padding: 0.8rem;
+		border-bottom: 1px solid rgba(140, 177, 220, 0.18);
+		text-align: left;
+	}
+
+	.gj-table th {
+		font-weight: 650;
+	}
+
+	.gj-ok { color: #4ADE80; font-weight: 700; }
+	.gj-no { color: #F87171; font-weight: 700; }
+
+	.gj-steps {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+
+	.gj-step-num {
+		font-size: 0.8rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 999px;
+		background: rgba(0, 210, 255, 0.2);
+		color: var(--gj-cyan);
+		margin-bottom: 0.5rem;
+	}
+
+	.gj-beta-note {
+		margin-top: 0.9rem;
+		border-radius: 0.8rem;
+		padding: 0.8rem 0.95rem;
+		border: 1px dashed rgba(0, 210, 255, 0.5);
+		color: var(--gj-light-muted);
+	}
+
+	.gj-footer {
+		margin-top: 3.2rem;
+		border-top: 1px solid rgba(0, 210, 255, 0.2);
+		padding-top: 1.3rem;
+	}
+
+	.gj-footer-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+
+	.gj-meta {
+		font-size: 0.9rem;
+		color: var(--gj-light-muted);
+		line-height: 1.5;
+	}
+
+	.gj-links a {
+		color: inherit;
+		text-decoration: none;
+		margin-right: 0.9rem;
+	}
+
+	.gj-links a:hover { color: var(--gj-cyan); }
+
+	@media (min-width: 768px) {
+		.gj-wrap {
+			padding: 1.4rem 1.5rem 3.5rem;
+		}
+		.gj-menu {
+			display: flex !important;
+			background: transparent;
+			border: 0;
+			padding: 0;
+			margin-top: 0;
+		}
+		.gj-menu-btn { display: none; }
+		.gj-grid-3 {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		.gj-steps {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		.gj-footer-grid {
+			grid-template-columns: 1fr 1.3fr;
+		}
+	}
+</style>
+
+<div
+	role="main"
+	aria-label="{{if .IsSigned}}{{ctx.Locale.Tr "dashboard"}}{{else}}{{ctx.Locale.Tr "home_title"}}{{end}}"
+	class="page-content home gj-landing"
+	id="gj-landing"
+>
+	<div class="gj-grid-bg"></div>
+	<div class="gj-glow"></div>
+
+	<div class="gj-wrap">
+		<div class="gj-top" aria-label="Landing navigation">
+			<div class="gj-brand">
+				<img src="{{AssetUrlPrefix}}/img/logo.svg" alt="{{ctx.Locale.Tr "logo"}}">
+				<strong>GitJet</strong>
+			</div>
+			<div style="display:flex; align-items:center; gap:.6rem;">
+				<select class="gj-lang-select" id="gj-lang-select" aria-label="{{ctx.Locale.Tr "settings.language"}}">
+					{{range .AllLangs}}
+						<option value="{{AppSubUrl}}/?lang={{.Lang}}" {{if eq ctx.Locale.Lang .Lang}}selected{{end}}>{{.Name}}</option>
+					{{end}}
+				</select>
+				<button class="gj-menu-btn" id="gj-menu-toggle" type="button" aria-controls="gj-mobile-menu" aria-expanded="false">Menu</button>
 			</div>
 		</div>
-	</div>
-	<div class="ui stackable middle very relaxed page grid">
-		<div class="eight wide center column">
-			<h1 class="hero ui icon header">
-				{{svg "octicon-flame"}} {{ctx.Locale.Tr "startpage.install"}}
-			</h1>
-			<p class="large tw-text-balance">
-				{{ctx.Locale.Tr "startpage.install_desc" "https://docs.gitea.com/installation/install-from-binary" "https://github.com/gitjet-ru/core-scm/tree/master/docker" "https://docs.gitea.com/installation/install-from-package"}}
-			</p>
-		</div>
-		<div class="eight wide center column">
-			<h1 class="hero ui icon header">
-				{{svg "octicon-device-desktop"}} {{ctx.Locale.Tr "startpage.platform"}}
-			</h1>
-			<p class="large tw-text-balance">
-				{{ctx.Locale.Tr "startpage.platform_desc" "https://go.dev/"}}
-			</p>
-		</div>
-	</div>
-	<div class="ui stackable middle very relaxed page grid">
-		<div class="eight wide center column">
-			<h1 class="hero ui icon header">
-				{{svg "octicon-rocket"}} {{ctx.Locale.Tr "startpage.lightweight"}}
-			</h1>
-			<p class="large tw-text-balance">
-				{{ctx.Locale.Tr "startpage.lightweight_desc"}}
-			</p>
-		</div>
-		<div class="eight wide center column">
-			<h1 class="hero ui icon header">
-				{{svg "octicon-code"}} {{ctx.Locale.Tr "startpage.license"}}
-			</h1>
-			<p class="large tw-text-balance">
-				{{ctx.Locale.Tr "startpage.license_desc" "https://github.com/gitjet-ru/core-scm" "github.com/gitjet-ru/core-scm" "https://github.com/gitjet-ru/core-scm"}}
-			</p>
-		</div>
+		<nav id="gj-mobile-menu" class="gj-menu" aria-label="Landing sections">
+			<a href="#features">Features</a>
+			<a href="#beta">Pricing</a>
+			<a href="https://docs.gitjet.ru" target="_blank" rel="noopener noreferrer">Docs</a>
+		</nav>
+
+		<section class="gj-hero gj-section" id="hero">
+			<h1>GitJet: High-speed DevOps with AI</h1>
+			<p>Go-powered CI/CD, on-premise AI agents, and lightweight SCM - all in one platform.</p>
+			<div class="gj-cta">
+				<a class="gj-btn gj-btn-primary" href="#beta" id="gj-start-free">Start Free</a>
+				<a class="gj-btn gj-btn-secondary" href="https://github.com/gitjet-ru/core-scm" target="_blank" rel="noopener noreferrer">GitHub</a>
+			</div>
+		</section>
+
+		<section class="gj-section" id="features">
+			<h2 class="gj-title">Core Features</h2>
+			<div class="gj-grid-3">
+				<article class="gj-card">
+					<span class="gj-icon">{{svg "octicon-zap"}}</span>
+					<h3>High-Speed CI/CD (Go-native)</h3>
+					<p>Fast runner startup and stable throughput for enterprise-grade pipelines, typically 3-5x faster than Python-based execution paths.</p>
+				</article>
+				<article class="gj-card">
+					<span class="gj-icon">{{svg "octicon-code-review"}}</span>
+					<h3>AI Code Reviewer (On-Prem)</h3>
+					<p>Automated merge request analysis with explanations and safe refactoring hints inside your private perimeter.</p>
+				</article>
+				<article class="gj-card">
+					<span class="gj-icon">{{svg "octicon-book"}}</span>
+					<h3>AI Docs Agent</h3>
+					<p>Generates release notes, architecture summaries, and internal docs from code changes to reduce routine work.</p>
+				</article>
+				<article class="gj-card">
+					<span class="gj-icon">{{svg "octicon-pulse"}}</span>
+					<h3>K8s Log Analysis Agent</h3>
+					<p>Analyzes Kubernetes logs and events, detects likely root causes, and suggests practical remediation steps.</p>
+				</article>
+				<article class="gj-card">
+					<span class="gj-icon">{{svg "octicon-database"}}</span>
+					<h3>S3-backed Git Storage</h3>
+					<p>Reliable object-backed repository storage with scalable capacity and strong operational resilience.</p>
+				</article>
+				<article class="gj-card">
+					<span class="gj-icon">{{svg "octicon-plug"}}</span>
+					<h3>One-hour Install + Integrations</h3>
+					<p>Deploy via Helm chart in about one hour and connect GitFlic/GitVerse or use built-in SCM for new projects.</p>
+				</article>
+			</div>
+		</section>
+
+		<section class="gj-section" id="comparison">
+			<h2 class="gj-title">Performance Comparison</h2>
+			<div class="gj-table-wrap">
+				<table class="gj-table" aria-label="Git platform comparison">
+					<thead>
+						<tr>
+							<th>Criteria</th>
+							<th>GitJet</th>
+							<th>GitFlic</th>
+							<th>GitLab Self-Managed</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>CI speed</td>
+							<td>Go-native, optimized (<span class="gj-ok">+</span>)</td>
+							<td>Standard runner (<span class="gj-no">-</span>)</td>
+							<td>Standard runner (<span class="gj-no">-</span>)</td>
+						</tr>
+						<tr>
+							<td>AI availability</td>
+							<td>Integrated on-prem agents (<span class="gj-ok">+</span>)</td>
+							<td>Limited/optional (<span class="gj-no">-</span>)</td>
+							<td>Depends on add-ons (<span class="gj-no">-</span>)</td>
+						</tr>
+						<tr>
+							<td>Infrastructure footprint</td>
+							<td>Lean runtime profile (<span class="gj-ok">+</span>)</td>
+							<td>Medium (<span class="gj-no">-</span>)</td>
+							<td>Higher baseline (<span class="gj-no">-</span>)</td>
+						</tr>
+						<tr>
+							<td>Setup time</td>
+							<td>~1 hour via Helm (<span class="gj-ok">+</span>)</td>
+							<td>Moderate (<span class="gj-no">-</span>)</td>
+							<td>Longer setup path (<span class="gj-no">-</span>)</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section class="gj-section" id="how-it-works">
+			<h2 class="gj-title">How It Works</h2>
+			<div class="gj-steps">
+				<article class="gj-card">
+					<span class="gj-step-num">1</span>
+					<h3>Install via Helm Chart</h3>
+					<p>Deploy GitJet in your environment in about one hour with production-ready defaults.</p>
+				</article>
+				<article class="gj-card">
+					<span class="gj-step-num">2</span>
+					<h3>Connect Repositories</h3>
+					<p>Import existing projects or start with built-in SCM and configure CI/CD pipelines.</p>
+				</article>
+				<article class="gj-card">
+					<span class="gj-step-num">3</span>
+					<h3>Enable AI Agents</h3>
+					<p>Turn on code review, docs generation, and Kubernetes incident analysis in your secure perimeter.</p>
+				</article>
+			</div>
+		</section>
+
+		<section class="gj-section" id="beta">
+			<h2 class="gj-title">Beta Access</h2>
+			<div class="gj-grid-3">
+				<article class="gj-card">
+					<h3>Private Beta (Enterprise)</h3>
+					<p>On-prem deployment, priority onboarding, architecture sessions, and direct feedback channel with the core team.</p>
+				</article>
+				<article class="gj-card">
+					<h3>Open Source Beta</h3>
+					<p>Free access for open source and small teams. Includes core CI/CD and AI preview capabilities.</p>
+				</article>
+				<article class="gj-card">
+					<h3>Contact & Demo</h3>
+					<p>Get an implementation plan, migration path, and live demo tailored to your infrastructure constraints.</p>
+				</article>
+			</div>
+			<div class="gj-beta-note">AI modules are in beta and enabled by request. No public pricing during beta phase.</div>
+			<div class="gj-cta">
+				<a class="gj-btn gj-btn-primary" href="mailto:hello@gitjet.ru">Join Beta</a>
+				<a class="gj-btn gj-btn-secondary" href="mailto:hello@gitjet.ru">Request Demo</a>
+			</div>
+		</section>
+
+		<section class="gj-footer" aria-label="Footer information">
+			<div class="gj-footer-grid">
+				<div>
+					<div class="gj-brand" style="margin-bottom:.8rem;">
+						<img src="{{AssetUrlPrefix}}/img/logo.svg" alt="{{ctx.Locale.Tr "logo"}}">
+						<strong>GitJet</strong>
+					</div>
+					<div class="gj-meta">2026 GitJet. All rights reserved.</div>
+					<div class="gj-links" style="margin-top:.6rem;">
+						<a href="https://docs.gitjet.ru" target="_blank" rel="noopener noreferrer">Docs</a>
+						<a href="mailto:hello@gitjet.ru">hello@gitjet.ru</a>
+					</div>
+				</div>
+				<div class="gj-meta">
+					<strong style="display:block; margin-bottom:.5rem;">Реквизиты</strong>
+					Полное наименование: Общество с ограниченной ответственностью «ЭКОМАКС»<br>
+					Сокращенное наименование: ООО «ЭКОМАКС»<br>
+					ИНН: 5321203234, КПП: 502445001, ОГРН: 1205300002270<br>
+					Юридический адрес: 143440, МО, Красногорск г.о., Путилково д., Новотушинская ул., д. 4, пом. 16<br>
+					Генеральный директор: Прусаков Александр Витальевич<br>
+					Расчетный счет: 40702810110001734737 в АО «ТБанк»<br>
+					Кор.счет: 30101810145250000974, БИК: 044525974
+				</div>
+			</div>
+		</section>
 	</div>
 </div>
+
+<script>
+	(() => {
+		const menu = document.getElementById('gj-mobile-menu');
+		const menuToggle = document.getElementById('gj-menu-toggle');
+		const langSelect = document.getElementById('gj-lang-select');
+
+		langSelect?.addEventListener('change', (e) => {
+			const target = e.target;
+			if (!(target instanceof HTMLSelectElement) || !target.value) return;
+			window.location.href = target.value;
+		});
+
+		menuToggle?.addEventListener('click', () => {
+			if (!menu) return;
+			const opened = menu.style.display === 'flex';
+			menu.style.display = opened ? 'none' : 'flex';
+			menuToggle.setAttribute('aria-expanded', opened ? 'false' : 'true');
+		});
+
+		document.getElementById('gj-start-free')?.addEventListener('click', (e) => {
+			e.preventDefault();
+			document.getElementById('beta')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+		});
+	})();
+</script>
 {{template "base/footer" .}}

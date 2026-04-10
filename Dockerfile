@@ -1,5 +1,5 @@
-ARG GOLANG_BASE_REF=REGISTRY_BASE/golang-base@sha256:REPLACE_GOLANG_DIGEST
-ARG ALPINE_BASE_REF=REGISTRY_BASE/alpine-base@sha256:REPLACE_ALPINE_3_23_DIGEST
+ARG GOLANG_BASE_REF=registry.gitjet.ru/go:1.26.1
+ARG ALPINE_BASE_REF=registry.gitjet.ru/alpine:3.23
 # Build frontend on the native platform to avoid QEMU-related issues with esbuild/webpack
 FROM --platform=$BUILDPLATFORM ${GOLANG_BASE_REF} AS frontend-build
 RUN apk --no-cache add build-base git nodejs pnpm
@@ -9,8 +9,19 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --froze
 COPY . .
 RUN make frontend
 
+# Fetch modules on the builder's native CPU. `go mod download` under QEMU
+# (e.g. linux/amd64 image on Apple Silicon) often crashes the Go runtime; the
+# module cache is architecture-independent until compile.
+FROM --platform=$BUILDPLATFORM ${GOLANG_BASE_REF} AS mod-cache
+ENV GOMODCACHE=/go/pkg/mod
+WORKDIR /src
+COPY go.mod go.sum ./
+COPY third_party ./third_party
+RUN mkdir -p /go/pkg/mod && go mod download
+
 # Build backend for each target platform
 FROM ${GOLANG_BASE_REF} AS build-env
+ENV GOMODCACHE=/go/pkg/mod
 
 ARG GITEA_VERSION
 ARG TAGS="sqlite sqlite_unlock_notify"
@@ -24,7 +35,8 @@ RUN apk --no-cache add \
 
 WORKDIR ${GOPATH}/src/github.com/gitjet-ru/core-scm
 COPY go.mod go.sum ./
-RUN go mod download
+COPY third_party ./third_party
+COPY --from=mod-cache /go/pkg/mod /go/pkg/mod
 # Use COPY instead of bind mount as read-only one breaks makefile state tracking and read-write one needs binary to be moved as it's discarded.
 # ".git" directory is mounted separately later only for version data extraction.
 COPY . .

@@ -25,8 +25,14 @@ GOVULNCHECK_PACKAGE ?= golang.org/x/vuln/cmd/govulncheck@v1
 DOCKER_IMAGE ?= gitea/gitea
 DOCKER_TAG ?= latest
 DOCKER_REF := $(DOCKER_IMAGE):$(DOCKER_TAG)
+RELEASE_IMAGE_REPO ?= registry.gitjet.ru/core-scm
+SOURCE_IMAGE_REF ?= $(DOCKER_REF)
+RELEASE_VERSION ?=
 REGISTRY_BASE ?= REGISTRY_BASE
+BASE_IMAGE_PLATFORMS ?= linux/amd64,linux/arm64
 BASE_IMAGES_LOCK ?= compliance/base-images.lock
+BASE_GOLANG_REF ?= $(shell awk -F= '/^GOLANG_1_26_ALPINE_3_23_IMAGE=/{print $$2}' $(BASE_IMAGES_LOCK))
+BASE_ALPINE_REF ?= $(shell awk -F= '/^ALPINE_3_23_IMAGE=/{print $$2}' $(BASE_IMAGES_LOCK))
 
 ifeq ($(HAS_GO), yes)
 	CGO_EXTRA_CFLAGS := -DSQLITE_MAX_VARIABLE_NUMBER=32766
@@ -457,15 +463,15 @@ compliance-license-gate: ## run strict license denylist gate
 
 .PHONY: base-images-build
 base-images-build: ## build internal independent base images
-	REGISTRY_BASE=$(REGISTRY_BASE) node tools/base-images.mjs build
+	REGISTRY_BASE=$(REGISTRY_BASE) BASE_IMAGE_PLATFORMS=$(BASE_IMAGE_PLATFORMS) node tools/base-images.mjs build
 
 .PHONY: base-images-verify-sources
 base-images-verify-sources: ## verify local source artifact checksums
-	node tools/base-images.mjs verify-artifacts
+	BASE_IMAGE_PLATFORMS=$(BASE_IMAGE_PLATFORMS) node tools/base-images.mjs verify-artifacts
 
 .PHONY: base-images-push
 base-images-push: ## push internal independent base images
-	REGISTRY_BASE=$(REGISTRY_BASE) node tools/base-images.mjs push
+	REGISTRY_BASE=$(REGISTRY_BASE) BASE_IMAGE_PLATFORMS=$(BASE_IMAGE_PLATFORMS) node tools/base-images.mjs push
 
 .PHONY: base-images-lock-sync
 base-images-lock-sync: ## update digest refs in compliance/base-images.lock
@@ -478,6 +484,23 @@ base-images-sbom: ## generate SBOM for base images
 .PHONY: base-images-sign
 base-images-sign: ## sign digest-pinned base images using cosign
 	REGISTRY_BASE=$(REGISTRY_BASE) node tools/base-images.mjs sign
+
+.PHONY: compose-build-local
+compose-build-local: ## build gitea with base refs from compliance/base-images.lock
+	@if [ -z "$(BASE_GOLANG_REF)" ] || [ -z "$(BASE_ALPINE_REF)" ]; then \
+		echo "Missing refs in $(BASE_IMAGES_LOCK). Run make base-images-lock-sync REGISTRY_BASE=... first."; \
+		exit 1; \
+	fi
+	docker compose build --build-arg GOLANG_BASE_REF="$(BASE_GOLANG_REF)" --build-arg ALPINE_BASE_REF="$(BASE_ALPINE_REF)" gitea
+
+.PHONY: compose-up-local
+compose-up-local: ## build and run local stack with pinned internal base refs
+	@if [ -z "$(BASE_GOLANG_REF)" ] || [ -z "$(BASE_ALPINE_REF)" ]; then \
+		echo "Missing refs in $(BASE_IMAGES_LOCK). Run make base-images-lock-sync REGISTRY_BASE=... first."; \
+		exit 1; \
+	fi
+	docker compose build --build-arg GOLANG_BASE_REF="$(BASE_GOLANG_REF)" --build-arg ALPINE_BASE_REF="$(BASE_ALPINE_REF)" gitea
+	docker compose up -d --remove-orphans
 
 generate-ini-sqlite:
 	sed -e 's|{{WORK_PATH}}|$(CURDIR)/tests/$(or $(TEST_TYPE),integration)/gitea-$(or $(TEST_TYPE),integration)-sqlite|g' \
@@ -862,6 +885,15 @@ generate-manpage: ## generate manpage
 docker:
 	docker build --disable-content-trust=false -t $(DOCKER_REF) .
 # support also build args docker build --build-arg GITEA_VERSION=v1.2.3 --build-arg TAGS="bindata sqlite sqlite_unlock_notify"  .
+
+.PHONY: release-image-tag
+release-image-tag: ## tag and push release image v0.0.N (auto patch by default)
+	@chmod +x tools/release-image-tag.sh
+	@if [ -n "$(RELEASE_VERSION)" ]; then \
+		tools/release-image-tag.sh --image "$(RELEASE_IMAGE_REPO)" --source "$(SOURCE_IMAGE_REF)" --version "$(RELEASE_VERSION)"; \
+	else \
+		tools/release-image-tag.sh --image "$(RELEASE_IMAGE_REPO)" --source "$(SOURCE_IMAGE_REF)"; \
+	fi
 
 # Disable parallel execution because it would break some targets that don't
 # specify exact dependencies like 'backend' which does currently not depend

@@ -1,27 +1,9 @@
-# Локальный запуск: PostgreSQL 17 (single) + образ core-scm.
-# Внешний Postgres на хосте: docker-compose.host.yml
-# Сборка: docker compose up -d --build
+# Запуск на хосте: только core-scm (Gitea), PostgreSQL снаружи.
+# БД по умолчанию: 10.0.185.2:5432 (переопределите DB_HOST при необходимости).
+# Сборка: docker compose -f docker-compose.host.yml up -d --build
 # UI: http://localhost:3000/
 
 services:
-  postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-gitea}
-      POSTGRES_USER: ${POSTGRES_USER:-gitea}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gitea}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PUBLISH_PORT:-5432}:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U ${POSTGRES_USER:-gitea} -d ${POSTGRES_DB:-gitea}"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 20s
-
   gitea:
     build:
       context: .
@@ -31,16 +13,13 @@ services:
         ALPINE_BASE_REF: ${ALPINE_BASE_REF:-registry.gitjet.ru/alpine:3.23}
         TAGS: ""
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       DB_TYPE: postgres
-      DB_HOST: postgres:5432
+      DB_HOST: ${DB_HOST:-10.0.185.2:5432}
       DB_NAME: ${POSTGRES_DB:-gitea}
       DB_USER: ${POSTGRES_USER:-gitea}
       DB_PASSWD: ${POSTGRES_PASSWORD:-gitea}
-      GITEA__database__SSL_MODE: disable
+      GITEA__database__SSL_MODE: ${GITEA__database__SSL_MODE:-disable}
       DOMAIN: ${DOMAIN:-localhost}
       SSH_DOMAIN: ${SSH_DOMAIN:-localhost}
       HTTP_PORT: "3000"
@@ -55,5 +34,4 @@ services:
       - gitea_data:/data
 
 volumes:
-  postgres_data:
   gitea_data:
